@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 clipboard = "0.5.0"
 dioxus-core = "0.2.1"
+notify-rust = "4.5.10"
 windows = { version = "0.43.0", features = ["Foundation", "Devices_Geolocation"] }
 

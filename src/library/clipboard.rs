@@ -1,23 +1,23 @@
-
+//! Provides a clipboard abstraction to access the target system's clipboard.
 
 use clipboard::{ClipboardContext, ClipboardProvider};
 
 use crate::DioxusStdError;
 
-/// Provides a clipboard abstraction to access the target system's clipboard.
+/// Contains the context for interacting with the clipboard.
 /// 
 /// # Examples
-/// 
+///
 /// ```
 /// use dioxus_std;
-/// 
+///
 /// // Access the clipboard abstraction
 /// let mut clipboard = dioxus_std::clipboard::Clipboard::new().unwrap();
-/// 
+///
 /// // Get clipboard content
 /// let contents = clipboard.get_contents().unwrap();
 /// println!("{}", contents);
-/// 
+///
 /// // Set clipboard content
 /// clipboard.set_content("Hello, Dioxus!".to_string()).unwrap();
 ///  
