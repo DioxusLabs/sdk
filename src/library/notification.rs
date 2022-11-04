@@ -94,7 +94,8 @@ impl Notification {
         self
     }
 
-    /// Not currently working.. Set full path to image.
+    /// Set full path to image.
+    /// Only works on Linux.
     pub fn icon_path(&mut self, value: String) -> &mut Self {
         self.icon_path = value;
         self

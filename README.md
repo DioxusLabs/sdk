@@ -31,6 +31,8 @@ fn app() {
 }
 ```
 
+> `dioxus-std` is extremely immature. Things will often break during this period.
+
 ## Platform Support
 Currently `dioxus-std` only supports desktop targets. It is planned to support all of Dioxus' targets in the future.
 
