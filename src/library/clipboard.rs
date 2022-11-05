@@ -69,7 +69,7 @@ fn test_clipboard() {
     // Get the new content
     let content = clipboard.get_contents().unwrap();
     
-    // Return previous content - For some reason this only works if the test panics??
+    // Return previous content - For some reason this only works if the test panics..?
     clipboard.set_content(initial_content).unwrap(); 
 
     // Check if the abstraction worked

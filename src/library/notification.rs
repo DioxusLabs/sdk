@@ -5,7 +5,7 @@ use notify_rust::Timeout;
 use crate::DioxusStdError;
 
 /// Provides a builder API and contains relevant notification info.
-/// 
+///
 /// # Examples
 ///
 /// ```

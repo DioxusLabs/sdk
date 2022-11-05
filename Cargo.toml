@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#dioxus-core = "0.2.1"
+#dioxus = "0.2"
 clipboard = "0.5.0"
+nokhwa = { version = "0.9.4", features = ["input-v4l", "input-msmf", "input-avfoundation", "input-jscam"] }
 notify-rust = "4.5.10"
 

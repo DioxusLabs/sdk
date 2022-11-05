@@ -25,13 +25,13 @@
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
+**This library is extremely immature. Expect breaking changes.**
+
 ```rust, ignore
 fn app() {
     // TODO: Add example
 }
 ```
-
-> `dioxus-std` is extremely immature. Things will often break during this period.
 
 ## Platform Support
 Currently `dioxus-std` only supports desktop targets. It is planned to support all of Dioxus' targets in the future.
