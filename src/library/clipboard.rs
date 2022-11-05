@@ -5,7 +5,7 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 use crate::DioxusStdError;
 
 /// Contains the context for interacting with the clipboard.
-/// 
+///
 /// # Examples
 ///
 /// ```
@@ -52,4 +52,26 @@ impl Clipboard {
             Err(e) => Err(DioxusStdError::Clipboard(e.to_string())),
         }
     }
+}
+
+
+#[test]
+fn test_clipboard() {
+    let mut clipboard = Clipboard::new().unwrap();
+
+    // Preserve user's clipboard contents when testing
+    let initial_content = clipboard.get_contents().unwrap();
+    
+    // Set the content
+    let new_content = String::from("Hello, Dioxus!");
+    clipboard.set_content(new_content.clone()).unwrap();
+
+    // Get the new content
+    let content = clipboard.get_contents().unwrap();
+    
+    // Return previous content - For some reason this only works if the test panics??
+    clipboard.set_content(initial_content).unwrap(); 
+
+    // Check if the abstraction worked
+    assert_eq!(new_content, content);
 }
