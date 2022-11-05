@@ -1,11 +1,11 @@
 <div align="center">
   <h1>🧰 Dioxus Standard Library 🚀</h1>
-  <p><strong>A platform agnostic library for supercharging your productivity with Dioxus</strong></p>
+  <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
 </div>
 
 <div align="center">
   <!-- Crates version -->
-  <a href="https://crates.io/crates/dioxus">
+  <a href="https://crates.io/crates/dioxus-std">
     <img src="https://img.shields.io/crates/v/dioxus-std.svg?style=flat-square"
     alt="Crates.io version" />
   </a>
@@ -25,7 +25,16 @@
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
-**This library is extremely immature. Expect breaking changes.**
+**Current & Planned Features**
+- [x] Clipboard
+- [x] Notifications
+- [ ] Camera
+- [ ] GPS
+- [ ] Mobile File System
+- [ ] WiFi
+- [ ] Bluetooth
+
+**This library is current under development. Expect breaking changes.**
 
 ```rust, ignore
 fn app() {
@@ -52,3 +61,10 @@ You can add `dioxus-std` to your application by adding it to your dependencies.
 dioxus-std = "0.1.0"
 ```
 
+## License
+This project is licensed under the [MIT license].
+
+[mit license]: ./LICENSE
+
+Every contribution intentionally submitted for inclusion in `dioxus-std` by you, shall be licensed as MIT, without any additional
+terms or conditions.
