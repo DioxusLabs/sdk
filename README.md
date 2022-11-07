@@ -28,7 +28,8 @@
 **Current & Planned Features**
 - [x] Clipboard
 - [x] Notifications
-- [ ] Camera
+- [ ] Utility Hooks - In Progress (use_prefererred_color_scheme: web only)
+- [ ] Camera - In Progress
 - [ ] GPS
 - [ ] Mobile File System
 - [ ] WiFi

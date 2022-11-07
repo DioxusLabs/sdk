@@ -3,11 +3,15 @@ name = "dioxus-std"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+clipboard = ["dep:clipboard"]
+notifications = ["dep:notify-rust"]
+camera = ["dep:nokhwa"]
 
 [dependencies]
 #dioxus = "0.2"
-clipboard = "0.5.0"
-nokhwa = { version = "0.9.4", features = ["input-v4l", "input-msmf", "input-avfoundation", "input-jscam"] }
-notify-rust = "4.5.10"
+clipboard = { version = "0.5.0", optional = true }
+nokhwa = { version = "0.9.4", features = ["input-v4l", "input-msmf", "input-avfoundation", "input-jscam"], optional = true }
+notify-rust = { version = "4.5.10", optional = true }
 
