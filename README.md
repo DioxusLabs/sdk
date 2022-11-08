@@ -28,7 +28,7 @@
 **Current & Planned Features**
 - [x] Clipboard
 - [x] Notifications
-- [ ] Utility Hooks - In Progress (use_prefererred_color_scheme: web only)
+- [x] Utility Hooks - (use_prefererred_color_scheme: web only, half-implemented)
 - [ ] Camera - In Progress
 - [ ] GPS
 - [ ] Mobile File System
@@ -44,7 +44,7 @@ fn app() {
 ```
 
 ## Platform Support
-Currently `dioxus-std` only supports desktop targets. It is planned to support all of Dioxus' targets in the future.
+Currently `dioxus-std` primarily supports desktop targets. It is planned to support all of Dioxus' targets in the future.
 
 - [x] Desktop (Windows, MacOS, Linux)
 - [ ] Mobile  (Android, iOS)

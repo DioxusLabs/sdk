@@ -8,9 +8,13 @@ edition = "2021"
 clipboard = ["dep:clipboard"]
 notifications = ["dep:notify-rust"]
 camera = ["dep:nokhwa"]
+hooks-use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen"]
 
 [dependencies]
-#dioxus = "0.2"
+dioxus = { version = "0.2", optional = true }
+web-sys = { version = "0.3.60", features = ["Window", "MediaQueryList"], optional = true }
+wasm-bindgen = { version = "0.2.83", optional = true }
+
 clipboard = { version = "0.5.0", optional = true }
 nokhwa = { version = "0.9.4", features = ["input-v4l", "input-msmf", "input-avfoundation", "input-jscam"], optional = true }
 notify-rust = { version = "4.5.10", optional = true }
