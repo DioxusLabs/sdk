@@ -22,7 +22,7 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
         }
     };
 
-    let media_query = match window.match_media("(prefers-color-scheme: dark)") {
+    let media_query_list = match window.match_media("(prefers-color-scheme: dark)") {
         Ok(opt) => match opt {
             Some(m) => m,
             None => {
@@ -42,13 +42,21 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
 
     // Create closure that listens to the event of matchMedia and calls write to scheme
     INIT.call_once(|| {
-        let listener = Closure::<dyn Fn()>::new(move || {
+        let listener = Closure::wrap(Box::new(move || {
             update_callback();
-        });
-        media_query.set_onchange(Some(listener.as_ref().unchecked_ref()));
+        }) as Box<dyn Fn()>);
+
+        // Create a reference to the closure to pass to JavaScript.
+        let cb = listener.as_ref().clone();
+
+        // Prevent the closure from being dropped. 
+        // This normally isn't good practice, however the idea is that this callback should live forever.
+        listener.forget();
+
+        media_query_list.set_onchange(Some(cb.unchecked_ref()));
     });
 
-    determine_scheme(media_query.matches())
+    determine_scheme(media_query_list.matches())
 }
 
 fn determine_scheme(value: bool) -> PreferredColorScheme {
