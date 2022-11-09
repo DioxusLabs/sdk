@@ -11,6 +11,7 @@ pub enum PreferredColorScheme {
 
 static INIT: Once = Once::new();
 
+/// Retrieves (as well as listens for changes) to the user's preferred color scheme (dark or light) so your application can adapt accordingly.
 pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
     // This code is kinda messy..
     let window = match web_sys::window() {
@@ -49,7 +50,7 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
         // Create a reference to the closure to pass to JavaScript.
         let cb = listener.as_ref().clone();
 
-        // Prevent the closure from being dropped. 
+        // Prevent the closure from being dropped.
         // This normally isn't good practice, however the idea is that this callback should live forever.
         listener.forget();
 
