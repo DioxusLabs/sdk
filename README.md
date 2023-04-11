@@ -4,6 +4,8 @@
 </div>
 
 -----
+<p align="center"><i>This library is still under development and not ready for production use.</i></p>
+<br/>
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
