@@ -3,15 +3,25 @@ name = "dioxus-std"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = ["./examples/color_scheme"]
 
 [features]
+# Features
 clipboard = ["dep:clipboard"]
 notifications = ["dep:notify-rust"]
 camera = ["dep:nokhwa"]
 hooks-use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen"]
 
+# Platform-specific features
+web = ["hooks-use_preferred_color_scheme"]
+desktop = ["camera", "notifications", "clipboard"]
+
+# Default features
+default = ["web"]
+
 [dependencies]
-dioxus = { version = "0.2", optional = true }
+dioxus = { version = "0.3", optional = true }
 web-sys = { version = "0.3.60", features = ["Window", "MediaQueryList"], optional = true }
 wasm-bindgen = { version = "0.2.83", optional = true }
 
