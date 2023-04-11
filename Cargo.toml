@@ -1,8 +1,13 @@
 [package]
 name = "dioxus-std"
 version = "0.1.0"
+authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark"]
 edition = "2021"
-
+description = "Platform agnostic library for supercharging your productivity with Dioxus"
+license = "MIT"
+repository = "https://github.com/DioxusLabs/dioxus-std/"
+homepage = "https://dioxuslabs.com"
+keywords = ["dom", "gui", "dioxus", "standard", "hooks"]
 
 [features]
 clipboard = ["dep:clipboard"]
