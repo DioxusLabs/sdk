@@ -6,20 +6,17 @@ use wasm_bindgen::{prelude::Closure, JsCast};
 pub enum PreferredColorScheme {
     Light,
     Dark,
-    Err(String),
 }
 
 static INIT: Once = Once::new();
 
 /// Retrieves (as well as listens for changes) to the user's preferred color scheme (dark or light) so your application can adapt accordingly.
-pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
+pub fn use_preferred_color_scheme(cx: &ScopeState) -> Result<PreferredColorScheme, String> {
     // This code is kinda messy..
     let window = match web_sys::window() {
         Some(w) => w,
         None => {
-            return PreferredColorScheme::Err(
-                "not running in wasm context: window doesn't exist".to_string(),
-            )
+            return Err("Not running in wasm context: window doesn't exist".to_string())
         }
     };
 
@@ -27,15 +24,11 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
         Ok(opt) => match opt {
             Some(m) => m,
             None => {
-                return PreferredColorScheme::Err(
-                    "failed to determine preferred scheme".to_string(),
-                )
+                return Err("Failed to determine preferred scheme".to_string())
             }
         },
         Err(e) => {
-            return PreferredColorScheme::Err(e.as_string().unwrap_or(
-                "failed to determine preferred scheme and couldn't retrieve error".to_string(),
-            ))
+            return Err(e.as_string().unwrap_or("Failed to determine preferred scheme and couldn't retrieve error".to_string()))
         }
     };
 
@@ -57,7 +50,7 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> PreferredColorScheme {
         media_query_list.set_onchange(Some(cb.unchecked_ref()));
     });
 
-    determine_scheme(media_query_list.matches())
+    Ok(determine_scheme(media_query_list.matches()))
 }
 
 fn determine_scheme(value: bool) -> PreferredColorScheme {
