@@ -40,7 +40,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { version = "1.0", features = [] }
+dioxus-std =  { version = "0.1.0", features = [] }
 ```
 
 ## License
