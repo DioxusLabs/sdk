@@ -4,7 +4,7 @@
 </div>
 
 -----
-<p align="center"><i>This library is still under development and not ready for production use.</i></p>
+<p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
 <br/>
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
@@ -17,8 +17,6 @@
 - [ ] GPS
 - [ ] WiFi
 - [ ] Bluetooth
-
-**This library is current under development. Expect breaking changes.**
 
 ```rust, ignore
 fn app() {
@@ -42,7 +40,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { git="https://github.com/DioxusLabs/dioxus-std" }
+dioxus-std =  { version = "1.0", features = [] }
 ```
 
 ## License
