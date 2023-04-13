@@ -14,7 +14,7 @@
 - [x] Notifications
 - [x] Utility Hooks - (use_prefererred_color_scheme: web only)
 - [ ] Camera - In Progress
-- [ ] GPS
+- [x] Geolocation (GPS)
 - [ ] Mobile File System
 - [ ] WiFi
 - [ ] Bluetooth
