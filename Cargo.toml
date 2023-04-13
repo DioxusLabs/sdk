@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/DioxusLabs/dioxus-std/"
 homepage = "https://dioxuslabs.com"
 keywords = ["dom", "gui", "dioxus", "standard", "hooks"]
+categories = ["multimedia","os", "wasm"]
 
 [workspace]
 members = ["./examples/color_scheme"]
