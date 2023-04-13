@@ -10,7 +10,7 @@ homepage = "https://dioxuslabs.com"
 keywords = ["dom", "gui", "dioxus", "standard", "hooks"]
 
 [workspace]
-members = ["./examples/color_scheme"]
+members = ["./examples/*"]
 
 [features]
 # Features

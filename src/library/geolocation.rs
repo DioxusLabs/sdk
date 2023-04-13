@@ -13,6 +13,13 @@ pub enum GeolocationError {
     AccessDenied,
     AccessUnspecified,
     Unknown,
+    FailedToFetchCoordinates,
+}
+
+pub struct Geocoordinates {
+    pub latitude: f64,
+    pub longitude: f64,
+    pub altitude: f64,
 }
 
 pub struct Geolocator {
@@ -104,6 +111,61 @@ impl Geolocator {
         }
 
         Ok(())
+    }
+
+    pub fn get_current_coordinates(self) -> Result<Geocoordinates, DioxusStdError> {
+        let geolocation = self.device_geolocator.GetGeopositionAsync();
+
+        let geolocation = match geolocation {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(DioxusStdError::Geolocation(
+                    GeolocationError::FailedToFetchCoordinates,
+                ))
+            }
+        };
+
+        let geolocation = match geolocation.get() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(DioxusStdError::Geolocation(
+                    GeolocationError::FailedToFetchCoordinates,
+                ))
+            }
+        };
+
+        let geolocation_coordinate = match geolocation.Coordinate() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(DioxusStdError::Geolocation(
+                    GeolocationError::FailedToFetchCoordinates,
+                ))
+            }
+        };
+
+        let geolocation_point = match geolocation_coordinate.Point() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(DioxusStdError::Geolocation(
+                    GeolocationError::FailedToFetchCoordinates,
+                ))
+            }
+        };
+
+        let position = match geolocation_point.Position() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(DioxusStdError::Geolocation(
+                    GeolocationError::FailedToFetchCoordinates,
+                ))
+            }
+        };
+
+        Ok(Geocoordinates {
+            latitude: position.Latitude,
+            longitude: position.Longitude,
+            altitude: position.Altitude,
+        })
     }
 }
 
