@@ -1,8 +1,7 @@
 //! Provides a clipboard abstraction to access the target system's clipboard.
 
 use clipboard::{ClipboardContext, ClipboardProvider};
-
-use crate::DioxusStdError;
+use std::fmt;
 
 /// Contains the context for interacting with the clipboard.
 ///
@@ -28,45 +27,68 @@ pub struct Clipboard {
 
 impl Clipboard {
     /// Creates a new struct to utilize the clipboard abstraction.
-    pub fn new() -> Result<Self, DioxusStdError> {
+    pub fn new() -> Result<Self, ClipboardError> {
         let ctx: ClipboardContext = match ClipboardProvider::new() {
             Ok(ctx) => ctx,
-            Err(e) => return Err(DioxusStdError::Clipboard(e.to_string())),
+            Err(e) => return Err(ClipboardError::FailedToInit(e.to_string())),
         };
 
         Ok(Self { ctx })
     }
 
     /// Provides a [`String`] of the target system's current clipboard content.
-    pub fn get_contents(&mut self) -> Result<String, DioxusStdError> {
+    pub fn get_content(&mut self) -> Result<String, ClipboardError> {
         match self.ctx.get_contents() {
             Ok(content) => Ok(content),
-            Err(e) => return Err(DioxusStdError::Clipboard(e.to_string())),
+            Err(e) => return Err(ClipboardError::FailedToFetchContent(e.to_string())),
         }
     }
 
     /// Set the clipboard's content to the provided [`String`]
-    pub fn set_content(&mut self, value: String) -> Result<(), DioxusStdError> {
+    pub fn set_content(&mut self, value: String) -> Result<(), ClipboardError> {
         match self.ctx.set_contents(value) {
             Ok(()) => Ok(()),
-            Err(e) => Err(DioxusStdError::Clipboard(e.to_string())),
+            Err(e) => Err(ClipboardError::FailedToSetContent(e.to_string())),
         }
     }
 }
 
+/// Represents errors when utilizing the clipboard abstraction.
+#[derive(Debug)]
+pub enum ClipboardError {
+    /// Failure when initializing the clipboard.
+    FailedToInit(String),
+    /// Failure to retrieve clipboard content.
+    FailedToFetchContent(String),
+    /// Failure to set clipboard content.
+    FailedToSetContent(String),
+}
+
+impl std::error::Error for ClipboardError {}
+impl fmt::Display for ClipboardError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ClipboardError::FailedToInit(s) => write!(f, "{}", s),
+            ClipboardError::FailedToFetchContent(s) => write!(f, "{}", s),
+            ClipboardError::FailedToSetContent(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+// Tests
 #[test]
 fn test_clipboard() {
     let mut clipboard = Clipboard::new().unwrap();
 
     // Preserve user's clipboard contents when testing
-    let initial_content = clipboard.get_contents().unwrap();
+    let initial_content = clipboard.get_content().unwrap();
 
     // Set the content
     let new_content = String::from("Hello, Dioxus!");
     clipboard.set_content(new_content.clone()).unwrap();
 
     // Get the new content
-    let content = clipboard.get_contents().unwrap();
+    let content = clipboard.get_content().unwrap();
 
     // Return previous content - For some reason this only works if the test panics..?
     clipboard.set_content(initial_content).unwrap();
