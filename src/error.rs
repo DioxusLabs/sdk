@@ -7,8 +7,6 @@ pub enum DioxusStdError {
     Clipboard(String),
     /// Represents an error related to the [`crate::library::notification`] abstraction.
     Notification(String),
-    /// Represents an error related to the [`crate::library::camera`] abstraction.
-    Camera(String),
 }
 
 impl std::error::Error for DioxusStdError {}
@@ -18,7 +16,6 @@ impl fmt::Display for DioxusStdError {
         match self {
             DioxusStdError::Clipboard(s) => write!(f, "clipboard error: {}", s),
             DioxusStdError::Notification(s) => write!(f, "notification error: {}", s),
-            DioxusStdError::Camera(s) => write!(f, "camera error: {}", s),
         }
     }
 }

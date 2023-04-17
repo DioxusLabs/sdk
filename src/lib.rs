@@ -1,6 +1,5 @@
 mod error;
 pub mod hooks;
-mod library;
+pub mod library;
 
 pub use error::DioxusStdError;
-pub use library::*;

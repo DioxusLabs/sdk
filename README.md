@@ -13,7 +13,7 @@
 - [x] Clipboard
 - [x] Notifications
 - [x] Utility Hooks - (use_prefererred_color_scheme: web only)
-- [ ] Camera - In Progress
+- [ ] Camera
 - [ ] GPS
 - [ ] WiFi
 - [ ] Bluetooth
