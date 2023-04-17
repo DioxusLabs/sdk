@@ -3,7 +3,26 @@
   <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
 </div>
 
+<div align="center">
+  <!-- Crates version -->
+  <a href="https://crates.io/crates/dioxus-std">
+    <img src="https://img.shields.io/crates/v/dioxus-std.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/dioxus-std">
+    <img src="https://img.shields.io/crates/d/dioxus-std.svg?style=flat-square"
+      alt="Download" />
+  </a>
+  <!-- docs -->
+  <a href="https://docs.rs/dioxus-std">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+</div>
+
 -----
+
 <p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
 <br/>
 
