@@ -1,7 +1,8 @@
 use dioxus::prelude::ScopeState;
-use std::sync::Once;
+use std::{fmt, sync::Once};
 use wasm_bindgen::{prelude::Closure, JsCast};
 
+/// Identifies the user's preferred color scheme.
 #[derive(Debug, Clone)]
 pub enum PreferredColorScheme {
     Light,
@@ -11,12 +12,16 @@ pub enum PreferredColorScheme {
 static INIT: Once = Once::new();
 
 /// Retrieves (as well as listens for changes) to the user's preferred color scheme (dark or light) so your application can adapt accordingly.
-pub fn use_preferred_color_scheme(cx: &ScopeState) -> Result<PreferredColorScheme, String> {
+pub fn use_preferred_color_scheme(
+    cx: &ScopeState,
+) -> Result<PreferredColorScheme, PreferredColorSchemeError> {
     // This code is kinda messy..
     let window = match web_sys::window() {
         Some(w) => w,
         None => {
-            return Err("Not running in wasm context: window doesn't exist".to_string())
+            return Err(PreferredColorSchemeError::NotSupported(
+                "this feature is only supported on web assembly".to_string(),
+            ))
         }
     };
 
@@ -24,11 +29,17 @@ pub fn use_preferred_color_scheme(cx: &ScopeState) -> Result<PreferredColorSchem
         Ok(opt) => match opt {
             Some(m) => m,
             None => {
-                return Err("Failed to determine preferred scheme".to_string())
+                return Err(PreferredColorSchemeError::SchemeCheckFailed(
+                    "failed to determine color scheme".to_string(),
+                ))
             }
         },
         Err(e) => {
-            return Err(e.as_string().unwrap_or("Failed to determine preferred scheme and couldn't retrieve error".to_string()))
+            return Err(PreferredColorSchemeError::SchemeCheckFailed(
+                e.as_string().unwrap_or(
+                    "Failed to determine preferred scheme and couldn't retrieve error".to_string(),
+                ),
+            ))
         }
     };
 
@@ -57,5 +68,24 @@ fn determine_scheme(value: bool) -> PreferredColorScheme {
     match value {
         true => PreferredColorScheme::Dark,
         false => PreferredColorScheme::Light,
+    }
+}
+
+/// Represents errors when utilizing the preferred color scheme hook.
+#[derive(Debug)]
+pub enum PreferredColorSchemeError {
+    /// Returned when used on an unsupported platform.
+    NotSupported(String),
+    /// Represents a failure when determining the user's preferred color scheme.
+    SchemeCheckFailed(String),
+}
+
+impl std::error::Error for PreferredColorSchemeError {}
+impl fmt::Display for PreferredColorSchemeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PreferredColorSchemeError::SchemeCheckFailed(s) => write!(f, "{}", s),
+            PreferredColorSchemeError::NotSupported(s) => write!(f, "{}", s),
+        }
     }
 }
