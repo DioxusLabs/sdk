@@ -4,3 +4,9 @@
 pub mod use_preferred_color_scheme;
 #[cfg(feature = "hooks-use_preferred_color_scheme")]
 pub use use_preferred_color_scheme::*;
+
+#[cfg(feature = "use_cannel")]
+pub mod use_cannel;
+#[cfg(feature = "use_cannel")]
+pub use use_cannel::*;
+
