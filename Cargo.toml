@@ -17,8 +17,8 @@ members = ["./examples/color_scheme"]
 # Features
 clipboard = ["dep:clipboard"]
 notifications = ["dep:notify-rust"]
-hooks-use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen"]
-
+use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen"]
+default = ["use_preferred_color_scheme"]
 
 
 [dependencies]
