@@ -1,8 +1,7 @@
 //! Provides a notification abstraction to access the target system's notification feature.
 
 use notify_rust::Timeout;
-
-use crate::DioxusStdError;
+use std::fmt;
 
 /// Provides a builder API and contains relevant notification info.
 ///
@@ -60,7 +59,7 @@ impl Notification {
     }
 
     /// Show the final notification.
-    pub fn show(&self) -> Result<(), DioxusStdError> {
+    pub fn show(&self) -> Result<(), NotificationError> {
         let result = notify_rust::Notification::new()
             .appname(&self.app_name)
             .summary(&self.summary)
@@ -71,7 +70,7 @@ impl Notification {
 
         match result {
             Ok(_) => Ok(()),
-            Err(e) => Err(DioxusStdError::Notification(e.to_string())),
+            Err(e) => Err(NotificationError::FailedToShowNotification(e.to_string())),
         }
     }
 
@@ -116,4 +115,20 @@ fn test_notification() {
         .body("lorem ipsum??".to_string())
         .show()
         .unwrap();
+}
+
+/// Represents errors when utilizing the notification abstraction.
+#[derive(Debug)]
+pub enum NotificationError {
+    /// Failure to show a notification.
+    FailedToShowNotification(String),
+}
+
+impl std::error::Error for NotificationError {}
+impl fmt::Display for NotificationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            NotificationError::FailedToShowNotification(s) => write!(f, "{}", s),
+        }
+    }
 }

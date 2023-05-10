@@ -3,8 +3,27 @@
   <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
 </div>
 
+<div align="center">
+  <!-- Crates version -->
+  <a href="https://crates.io/crates/dioxus-std">
+    <img src="https://img.shields.io/crates/v/dioxus-std.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/dioxus-std">
+    <img src="https://img.shields.io/crates/d/dioxus-std.svg?style=flat-square"
+      alt="Download" />
+  </a>
+  <!-- docs -->
+  <a href="https://docs.rs/dioxus-std">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+</div>
+
 -----
-<p align="center"><i>This library is still under development and not ready for production use.</i></p>
+
+<p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
 <br/>
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
@@ -13,13 +32,10 @@
 - [x] Clipboard
 - [x] Notifications
 - [x] Utility Hooks - (use_prefererred_color_scheme: web only)
-- [ ] Camera - In Progress
-- [x] Geolocation (GPS)
-- [ ] Mobile File System
+- [ ] Camera
+- [ ] GPS
 - [ ] WiFi
 - [ ] Bluetooth
-
-**This library is current under development. Expect breaking changes.**
 
 ```rust, ignore
 fn app() {
@@ -43,7 +59,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { git="https://github.com/DioxusLabs/dioxus-std" }
+dioxus-std =  { version = "0.1.0", features = [] }
 ```
 
 ## License

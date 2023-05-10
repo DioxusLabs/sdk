@@ -1,10 +1,9 @@
-//#[cfg(feature = "camera")]
-//pub mod camera;
+//! Useful cross-platform abstractions for common use-cases.
 
-#[cfg(feature = "clipboard")]
+#[cfg(any(feature = "clipboard", doc))]
 pub mod clipboard;
 
-#[cfg(feature = "notifications")]
+#[cfg(any(feature = "notifications", doc))]
 pub mod notification;
 
 #[cfg(feature = "geolocation")]
