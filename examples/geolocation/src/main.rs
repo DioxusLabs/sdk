@@ -1,16 +1,15 @@
 use dioxus::prelude::*;
+use dioxus_std::library::*;
 
 fn main() {
-    // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
-    console_error_panic_hook::set_once();
-
     dioxus_desktop::launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let geolocator = dioxus_std::geolocation::Geolocator::new().unwrap();
-    let coords = geolocator.get_current_coordinates().unwrap();
+    //let geolocator = geolocation::Geolocator::new().unwrap();
+    //let coords = geolocator.get_current_coordinates().unwrap();
+    let geolocator = geolocation::Geolocator::new().unwrap();
+    let coords = geolocator.get_coordinates().unwrap();
 
     cx.render(rsx! (
         div {

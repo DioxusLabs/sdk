@@ -6,5 +6,5 @@ pub mod clipboard;
 #[cfg(any(feature = "notifications", doc))]
 pub mod notification;
 
-#[cfg(feature = "geolocation")]
+#[cfg(any(feature = "geolocation", doc))]
 pub mod geolocation;

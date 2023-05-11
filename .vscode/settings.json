@@ -1,3 +1,7 @@
 {
     "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.check.allTargets": true,
+    "rust-analyzer.cargo.extraEnv": {
+        "RUSTFLAGS": "--cfg rust_analzyer"
+    }
 }
