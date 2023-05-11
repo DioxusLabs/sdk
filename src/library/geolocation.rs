@@ -1,5 +1,10 @@
 use crate::sys;
 
+/// Default report interval in ms.
+const DEFAULT_REPORT_INTERVAL: u32 = 1000;
+/// Default movement threshold in meters.
+const DEFAULT_MOVEMENT_THRESHOLD: u32 = 0;
+
 #[cfg(windows)]
 use windows::Devices::Geolocation::Geolocator as WindowsGeolocator;
 
@@ -31,27 +36,49 @@ type DeviceGeolocator = WindowsGeolocator;
 pub struct Geolocator {
     access: GeolocationAccess,
     device_geolocator: DeviceGeolocator,
+    report_interval: u32,
+    movement_threshold: u32,
 }
 
 impl Geolocator {
     /// Create a new geolocator. This function will initialize a geolocator for the target platform and will request location permissions.
-    pub fn new() -> Result<Self, GeolocationError> {
+    pub fn new(
+        report_interval: Option<u32>,
+        movement_threshold: Option<u32>,
+    ) -> Result<Self, GeolocationError> {
+        // Set defaults for report interval and movement threshold.
+        let report_interval = match report_interval {
+            Some(v) => v,
+            None => DEFAULT_REPORT_INTERVAL,
+        };
+
+        let movement_threshold = match movement_threshold {
+            Some(v) => v,
+            None => DEFAULT_MOVEMENT_THRESHOLD,
+        };
+
+        // Check access and get device geolocator
         let access = sys::geolocation::request_access()?;
-        let device_geolocator = sys::geolocation::get_geolocator()?;
+        let device_geolocator = sys::geolocation::get_geolocator(report_interval, movement_threshold)?;
+
         Ok(Self {
             access,
             device_geolocator,
+            report_interval,
+            movement_threshold,
         })
     }
 
-    pub fn request_access(&self) -> Result<GeolocationAccess, GeolocationError> {
+    // Commented out as once access is prompted, it generally can't be prompted (shown to the user) again. 
+    // Instead, the user will need to manually go into their device's settings to enable location services.
+    /*pub fn request_access(&self) -> Result<GeolocationAccess, GeolocationError> {
         // Prevent double-asking
         if self.access == GeolocationAccess::Allowed {
             return Ok(GeolocationAccess::Allowed);
         }
 
         sys::geolocation::request_access()
-    }
+    }*/
 
     pub fn get_coordinates(&self) -> Result<Geocoordinates, GeolocationError> {
         if self.access != GeolocationAccess::Allowed {

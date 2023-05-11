@@ -1,8 +1,24 @@
 use crate::library::geolocation::{Geocoordinates, GeolocationAccess, GeolocationError};
 use windows::Devices::Geolocation::{GeolocationAccessStatus, Geolocator as WindowsGeolocator};
 
-pub fn get_geolocator() -> Result<WindowsGeolocator, GeolocationError> {
-    WindowsGeolocator::new().map_err(|e| GeolocationError::DeviceError(e.to_string()))
+pub fn get_geolocator(
+    report_interval: u32,
+    movement_threshold: u32,
+) -> Result<WindowsGeolocator, GeolocationError> {
+    let geolocator =
+        WindowsGeolocator::new().map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+
+    // Set report interval
+    geolocator
+        .SetReportInterval(report_interval)
+        .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+
+    // Set movement threshold
+    geolocator
+        .SetMovementThreshold(movement_threshold as f64)
+        .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+
+    Ok(geolocator)
 }
 
 pub fn request_access() -> Result<GeolocationAccess, GeolocationError> {
@@ -57,3 +73,15 @@ pub fn get_coordinates(geolocator: &WindowsGeolocator) -> Result<Geocoordinates,
         altitude: position.Altitude,
     })
 }
+
+pub fn subscribe_status_changed(geolocator: &WindowsGeolocator, callback: fn()) {}
+
+pub fn subscribe_position_changed(geolocator: &WindowsGeolocator, callback: fn()) {}
+
+/*
+TODO
+- Implement status changed subscriber (defines the geolocator's ability to provide location data)
+- Implement position changed subscriber (provides updates on devices' location based on report interval and movement threshold)
+- Implement use_geolocation hook
+- Create an initialization function to easily add geolocation to dioxus app using provide context api.
+ */
