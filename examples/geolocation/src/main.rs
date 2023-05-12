@@ -1,12 +1,15 @@
 use dioxus::prelude::*;
-use dioxus_std::hooks::{self, use_geolocation};
+use dioxus_std::{
+    hooks::{self, use_geolocation},
+    library::geolocation::PowerMode,
+};
 
 fn main() {
     dioxus_desktop::launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let geolocator = hooks::init_geolocator(cx, None, None).unwrap();
+    let geolocator = hooks::init_geolocator(cx, PowerMode::High, None, None).unwrap();
     let initial_coords = use_state(cx, || geolocator.get_coordinates().unwrap());
     let latest_coords = use_geolocation(cx).unwrap();
 

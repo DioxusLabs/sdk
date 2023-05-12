@@ -1,15 +1,16 @@
 use crate::library::geolocation::{
-    DeviceStatus, Geocoordinates, GeolocationAccess, GeolocationError,
+    DeviceStatus, Geocoordinates, GeolocationAccess, GeolocationError, PowerMode,
 };
 use windows::{
     Devices::Geolocation::{
         BasicGeoposition, GeolocationAccessStatus, Geolocator as WindowsGeolocator,
-        PositionChangedEventArgs, PositionStatus, StatusChangedEventArgs,
+        PositionAccuracy, PositionChangedEventArgs, PositionStatus, StatusChangedEventArgs,
     },
     Foundation::TypedEventHandler,
 };
 
 pub fn get_geolocator(
+    power_mode: PowerMode,
     report_interval: u32,
     movement_threshold: u32,
 ) -> Result<WindowsGeolocator, GeolocationError> {
@@ -25,6 +26,21 @@ pub fn get_geolocator(
     geolocator
         .SetMovementThreshold(movement_threshold as f64)
         .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+
+    // Set desired accuracy/power mode
+    match power_mode {
+        PowerMode::High => geolocator
+            .SetDesiredAccuracy(PositionAccuracy::High)
+            .map_err(|e| GeolocationError::DeviceError(e.to_string()))?,
+        PowerMode::Low => geolocator
+            .SetDesiredAccuracy(PositionAccuracy::Default)
+            .map_err(|e| GeolocationError::DeviceError(e.to_string()))?,
+        /*PowerMode::DesiredAccuracy(v) => {
+            geolocator
+                .SetDesiredAccuracyInMeters(v)
+                .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+        }*/
+    }
 
     Ok(geolocator)
 }

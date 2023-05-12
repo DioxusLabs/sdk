@@ -5,8 +5,12 @@ const DEFAULT_REPORT_INTERVAL: u32 = 5000;
 /// Default movement threshold in meters.
 const DEFAULT_MOVEMENT_THRESHOLD: u32 = 0;
 
-#[cfg(windows)]
-use windows::Devices::Geolocation::Geolocator as WindowsGeolocator;
+cfg_if::cfg_if! {
+    if #[cfg(windows)] {
+        use windows::Devices::Geolocation::Geolocator as WindowsGeolocator;
+        type DeviceGeolocator = WindowsGeolocator;
+    }
+}
 
 /// Describes errors that may occur when utilizing the geolocation abstraction.
 #[derive(Debug, Clone)]
@@ -14,6 +18,18 @@ pub enum GeolocationError {
     AccessDenied,
     DeviceError(String),
     FailedToFetchCoordinates(String),
+}
+
+/// To conserve battery, some devices allow setting a desired accuracy based on your use-case.
+#[derive(Debug)]
+pub enum PowerMode {
+    /// Will generally enable the on-board GPS for precise coordinates.
+    High,
+    /// Will generally use cell towers or WiFi beacons to determine the device's location.
+    Low,
+    // For precise control of desired accuracy. A device will determine the ideal method of
+    // determining it's location based on the specified distance in ***meters***.
+    //DesiredAccuracy(u32),
 }
 
 /// Defines whether your application has access or not.
@@ -41,9 +57,6 @@ impl Geocoordinates {
     }
 }
 
-#[cfg(windows)]
-type DeviceGeolocator = WindowsGeolocator;
-
 #[derive(Debug, PartialEq)]
 pub enum DeviceStatus {
     /// Location service or device is ready and has geo data.
@@ -68,6 +81,7 @@ pub struct Geolocator {
 impl Geolocator {
     /// Create a new geolocator. This function will initialize a geolocator for the target platform and will request location permissions.
     pub fn new(
+        power_mode: PowerMode,
         report_interval: Option<u32>,
         movement_threshold: Option<u32>,
     ) -> Result<Self, GeolocationError> {
@@ -90,7 +104,7 @@ impl Geolocator {
 
         // Get geolocator
         let device_geolocator =
-            sys::geolocation::get_geolocator(report_interval, movement_threshold)?;
+            sys::geolocation::get_geolocator(power_mode, report_interval, movement_threshold)?;
 
         Ok(Self {
             access,

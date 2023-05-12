@@ -1,6 +1,8 @@
 use std::{rc::Rc, sync::Once};
 
-use crate::library::geolocation::{DeviceStatus, Geocoordinates, GeolocationError, Geolocator};
+use crate::library::geolocation::{
+    DeviceStatus, Geocoordinates, GeolocationError, Geolocator, PowerMode,
+};
 use dioxus::prelude::ScopeState;
 
 use super::{use_rw, UseRw};
@@ -44,10 +46,11 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, GeolocationErr
 
 pub fn init_geolocator(
     cx: &ScopeState,
+    power_mode: PowerMode,
     report_interval: Option<u32>,
     movement_threshold: Option<u32>,
 ) -> Result<Rc<Geolocator>, GeolocationError> {
-    let geolocator = Geolocator::new(report_interval, movement_threshold)?;
+    let geolocator = Geolocator::new(power_mode, report_interval, movement_threshold)?;
     let shared_locator = Rc::new(geolocator);
     cx.provide_context(shared_locator.clone());
     Ok(shared_locator)
