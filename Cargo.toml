@@ -32,6 +32,7 @@ wasm-bindgen = { version = "0.2.83", optional = true }
 clipboard = { version = "0.5.0", optional = true }
 windows = { version = "0.48.0", features = ["Foundation", "Devices_Geolocation"], optional = true }
 notify-rust = { version = "4.8.0", optional = true }
+cfg-if = "1.0.0"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -1,7 +1,7 @@
 use crate::sys;
 
 /// Default report interval in ms.
-const DEFAULT_REPORT_INTERVAL: u32 = 1000;
+const DEFAULT_REPORT_INTERVAL: u32 = 5000;
 /// Default movement threshold in meters.
 const DEFAULT_MOVEMENT_THRESHOLD: u32 = 0;
 
@@ -24,20 +24,45 @@ pub enum GeolocationAccess {
     Unspecified,
 }
 
+#[derive(Debug, Clone)]
 pub struct Geocoordinates {
     pub latitude: f64,
     pub longitude: f64,
     pub altitude: f64,
 }
 
+impl Geocoordinates {
+    pub fn empty() -> Self {
+        Self {
+            latitude: 0.0,
+            longitude: 0.0,
+            altitude: 0.0,
+        }
+    }
+}
+
 #[cfg(windows)]
 type DeviceGeolocator = WindowsGeolocator;
+
+#[derive(Debug, PartialEq)]
+pub enum DeviceStatus {
+    /// Location service or device is ready and has geo data.
+    Ready,
+    /// Location service or device is disabled.
+    Disabled,
+    /// Location service or device is not available.
+    NotAvailable,
+    /// Location service or device is initializing.
+    Initializing,
+    /// Unable to determine location service or device status. (This shouldn't happen)
+    Unknown,
+}
 
 pub struct Geolocator {
     access: GeolocationAccess,
     device_geolocator: DeviceGeolocator,
-    report_interval: u32,
-    movement_threshold: u32,
+    //report_interval: u32,
+    //movement_threshold: u32,
 }
 
 impl Geolocator {
@@ -57,19 +82,38 @@ impl Geolocator {
             None => DEFAULT_MOVEMENT_THRESHOLD,
         };
 
-        // Check access and get device geolocator
+        // Check access and return error if no access.
         let access = sys::geolocation::request_access()?;
-        let device_geolocator = sys::geolocation::get_geolocator(report_interval, movement_threshold)?;
+        if access == GeolocationAccess::Denied {
+            return Err(GeolocationError::AccessDenied);
+        }
+
+        // Get geolocator
+        let device_geolocator =
+            sys::geolocation::get_geolocator(report_interval, movement_threshold)?;
 
         Ok(Self {
             access,
             device_geolocator,
-            report_interval,
-            movement_threshold,
+            //report_interval,
+            //movement_threshold,
         })
     }
 
-    // Commented out as once access is prompted, it generally can't be prompted (shown to the user) again. 
+    pub fn on_status_changed<F: Fn(DeviceStatus) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> Result<(), GeolocationError> {
+        sys::geolocation::subscribe_status_changed(&self.device_geolocator, callback)
+    }
+    pub fn on_position_changed<F: Fn(Geocoordinates) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> Result<(), GeolocationError> {
+        sys::geolocation::subscribe_position_changed(&self.device_geolocator, callback)
+    }
+
+    // Commented out as once access is prompted, it generally can't be prompted (shown to the user) again.
     // Instead, the user will need to manually go into their device's settings to enable location services.
     /*pub fn request_access(&self) -> Result<GeolocationAccess, GeolocationError> {
         // Prevent double-asking

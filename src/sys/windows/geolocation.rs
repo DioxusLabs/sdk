@@ -1,5 +1,13 @@
-use crate::library::geolocation::{Geocoordinates, GeolocationAccess, GeolocationError};
-use windows::Devices::Geolocation::{GeolocationAccessStatus, Geolocator as WindowsGeolocator};
+use crate::library::geolocation::{
+    DeviceStatus, Geocoordinates, GeolocationAccess, GeolocationError,
+};
+use windows::{
+    Devices::Geolocation::{
+        BasicGeoposition, GeolocationAccessStatus, Geolocator as WindowsGeolocator,
+        PositionChangedEventArgs, PositionStatus, StatusChangedEventArgs,
+    },
+    Foundation::TypedEventHandler,
+};
 
 pub fn get_geolocator(
     report_interval: u32,
@@ -67,16 +75,80 @@ pub fn get_coordinates(geolocator: &WindowsGeolocator) -> Result<Geocoordinates,
         Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
     };
 
-    Ok(Geocoordinates {
-        latitude: position.Latitude,
-        longitude: position.Longitude,
-        altitude: position.Altitude,
-    })
+    Ok(position.into())
 }
 
-pub fn subscribe_status_changed(geolocator: &WindowsGeolocator, callback: fn()) {}
+pub fn subscribe_status_changed<F: Fn(DeviceStatus) + Send + Sync + 'static>(
+    geolocator: &WindowsGeolocator,
+    callback: F,
+) -> Result<(), GeolocationError> {
+    // Subcribe to event
+    let result = geolocator.StatusChanged(&TypedEventHandler::new(
+        move |_geolocator: &Option<WindowsGeolocator>,
+              event_args: &Option<StatusChangedEventArgs>| {
+            if let Some(status_event) = event_args {
+                let status = status_event.Status()?;
 
-pub fn subscribe_position_changed(geolocator: &WindowsGeolocator, callback: fn()) {}
+                (callback)(status.into())
+            }
+            Ok(())
+        },
+    ));
+
+    // Return result
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(GeolocationError::DeviceError(e.to_string())),
+    }
+}
+
+pub fn subscribe_position_changed<F: Fn(Geocoordinates) + Send + Sync + 'static>(
+    geolocator: &WindowsGeolocator,
+    callback: F,
+) -> Result<(), GeolocationError> {
+    // Subscribe to event
+    let result = geolocator.PositionChanged(&TypedEventHandler::new(
+        move |_geolocator: &Option<WindowsGeolocator>,
+              event_args: &Option<PositionChangedEventArgs>| {
+            if let Some(position) = event_args {
+                // Get coordinate
+                let position = position.Position()?.Coordinate()?.Point()?.Position()?;
+
+                // Run callback
+                (callback)(position.into())
+            }
+            Ok(())
+        },
+    ));
+
+    // Return result
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(GeolocationError::DeviceError(e.to_string())),
+    }
+}
+
+impl From<PositionStatus> for DeviceStatus {
+    fn from(value: PositionStatus) -> Self {
+        match value.0 {
+            0 => DeviceStatus::Ready,
+            1 => DeviceStatus::Initializing,
+            3 => DeviceStatus::Disabled,
+            5 => DeviceStatus::NotAvailable,
+            _ => DeviceStatus::Unknown,
+        }
+    }
+}
+
+impl From<BasicGeoposition> for Geocoordinates {
+    fn from(position: BasicGeoposition) -> Self {
+        Geocoordinates {
+            latitude: position.Latitude,
+            longitude: position.Longitude,
+            altitude: position.Altitude,
+        }
+    }
+}
 
 /*
 TODO
