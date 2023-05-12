@@ -1,3 +1,4 @@
+//! Essentially the use_ref hook except Send + Sync using Arc and RwLock.
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use dioxus::prelude::ScopeState;

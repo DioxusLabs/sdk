@@ -1,3 +1,4 @@
+//! Provides an initialization and use_geolocation hook.
 use std::{rc::Rc, sync::Once};
 
 use crate::library::geolocation::{
@@ -9,6 +10,7 @@ use super::{use_rw, UseRw};
 
 static INIT: Once = Once::new();
 
+/// Provides the latest geocoordinates. Good for navigation-type apps.
 pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, GeolocationError> {
     let current_result: &mut UseRw<Result<Geocoordinates, GeolocationError>> =
         use_rw(cx, || Ok(Geocoordinates::empty()));
@@ -44,6 +46,7 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, GeolocationErr
     result
 }
 
+/// Must be called before any use of the geolocation abstraction.
 pub fn init_geolocator(
     cx: &ScopeState,
     power_mode: PowerMode,

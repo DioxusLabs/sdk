@@ -1,3 +1,4 @@
+//! Provides access to the target device's geolocation system.
 use crate::sys;
 
 /// Default report interval in ms.
@@ -40,6 +41,7 @@ pub enum GeolocationAccess {
     Unspecified,
 }
 
+/// Describes a position in the world.
 #[derive(Debug, Clone)]
 pub struct Geocoordinates {
     pub latitude: f64,
@@ -57,6 +59,7 @@ impl Geocoordinates {
     }
 }
 
+/// Describes the geolocation device's status.
 #[derive(Debug, PartialEq)]
 pub enum DeviceStatus {
     /// Location service or device is ready and has geo data.
@@ -71,6 +74,7 @@ pub enum DeviceStatus {
     Unknown,
 }
 
+/// Primary struct for interacting with the geolocation abstraction.
 pub struct Geolocator {
     access: GeolocationAccess,
     device_geolocator: DeviceGeolocator,

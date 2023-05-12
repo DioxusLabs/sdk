@@ -19,8 +19,9 @@ clipboard = ["dep:clipboard"]
 notifications = ["dep:notify-rust"]
 geolocation = ["dep:windows"]
 
-# Default features
 use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen"]
+use_rw = ["dep:dioxus"]
+
 default = ["use_preferred_color_scheme"]
 
 

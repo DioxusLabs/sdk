@@ -1,3 +1,4 @@
+//! Provides a hook to access the user's preferred color scheme.
 use dioxus::prelude::ScopeState;
 use std::{fmt, sync::Once};
 use wasm_bindgen::{prelude::Closure, JsCast};
