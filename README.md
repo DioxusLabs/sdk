@@ -31,9 +31,9 @@
 **Current & Planned Features**
 - [x] Clipboard
 - [x] Notifications
-- [x] Utility Hooks - (use_prefererred_color_scheme: web only)
+- [x] Utility Hooks - (use_rw, use_prefererred_color_scheme: web only)
+- [x] Geolocation (Windows, Web)
 - [ ] Camera
-- [ ] GPS
 - [ ] WiFi
 - [ ] Bluetooth
 
