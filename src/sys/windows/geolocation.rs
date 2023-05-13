@@ -1,6 +1,5 @@
-use crate::library::geolocation::{
-    DeviceStatus, Geocoordinates, GeolocationAccess, GeolocationError, PowerMode,
-};
+use std::sync::Arc;
+
 use windows::{
     Devices::Geolocation::{
         BasicGeoposition, GeolocationAccessStatus, Geolocator as WindowsGeolocator,
@@ -9,149 +8,136 @@ use windows::{
     Foundation::TypedEventHandler,
 };
 
-pub fn get_geolocator(
-    power_mode: PowerMode,
-    report_interval: u32,
-    movement_threshold: u32,
-) -> Result<WindowsGeolocator, GeolocationError> {
-    let geolocator =
-        WindowsGeolocator::new().map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
+use crate::library::geolocation::{
+    DeviceGeolocator, Error, Event, Geocoordinates, PowerMode, Status,
+};
 
-    // Set report interval
-    geolocator
-        .SetReportInterval(report_interval)
-        .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
-
-    // Set movement threshold
-    geolocator
-        .SetMovementThreshold(movement_threshold as f64)
-        .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
-
-    // Set desired accuracy/power mode
-    match power_mode {
-        PowerMode::High => geolocator
-            .SetDesiredAccuracy(PositionAccuracy::High)
-            .map_err(|e| GeolocationError::DeviceError(e.to_string()))?,
-        PowerMode::Low => geolocator
-            .SetDesiredAccuracy(PositionAccuracy::Default)
-            .map_err(|e| GeolocationError::DeviceError(e.to_string()))?,
-        /*PowerMode::DesiredAccuracy(v) => {
-            geolocator
-                .SetDesiredAccuracyInMeters(v)
-                .map_err(|e| GeolocationError::DeviceError(e.to_string()))?;
-        }*/
-    }
-
-    Ok(geolocator)
+pub struct Geolocator {
+    device_geolocator: WindowsGeolocator,
 }
 
-pub fn request_access() -> Result<GeolocationAccess, GeolocationError> {
-    let access_status = match WindowsGeolocator::RequestAccessAsync() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::DeviceError(e.to_string())),
-    };
+impl Geolocator {
+    pub fn new() -> Result<Self, Error> {
+        // Check access
+        let access_status = match WindowsGeolocator::RequestAccessAsync() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    let access_status = match access_status.get() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::DeviceError(e.to_string())),
-    };
+        let access_status = match access_status.get() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    match access_status {
-        GeolocationAccessStatus::Allowed => Ok(GeolocationAccess::Allowed),
-        GeolocationAccessStatus::Denied => Ok(GeolocationAccess::Denied),
-        _ => Ok(GeolocationAccess::Unspecified),
+        if access_status != GeolocationAccessStatus::Allowed {
+            return Err(Error::AccessDenied);
+        }
+
+        // Get geolocator
+        let device_geolocator =
+            WindowsGeolocator::new().map_err(|e| Error::DeviceError(e.to_string()))?;
+
+        Ok(Self { device_geolocator })
     }
 }
 
-pub fn get_coordinates(geolocator: &WindowsGeolocator) -> Result<Geocoordinates, GeolocationError> {
-    let location = geolocator.GetGeopositionAsync();
+impl DeviceGeolocator for Geolocator {
+    fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
+        let location = self.device_geolocator.GetGeopositionAsync();
 
-    let location = match location {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
-    };
+        let location = match location {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    let location = match location.get() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
-    };
+        let location = match location.get() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    let location_coordinate = match location.Coordinate() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
-    };
+        let location_coordinate = match location.Coordinate() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    let location_point = match location_coordinate.Point() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
-    };
+        let location_point = match location_coordinate.Point() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    let position = match location_point.Position() {
-        Ok(v) => v,
-        Err(e) => return Err(GeolocationError::FailedToFetchCoordinates(e.to_string())),
-    };
+        let position = match location_point.Position() {
+            Ok(v) => v,
+            Err(e) => return Err(Error::DeviceError(e.to_string())),
+        };
 
-    Ok(position.into())
-}
+        Ok(position.into())
+    }
 
-pub fn subscribe_status_changed<F: Fn(DeviceStatus) + Send + Sync + 'static>(
-    geolocator: &WindowsGeolocator,
-    callback: F,
-) -> Result<(), GeolocationError> {
-    // Subcribe to event
-    let result = geolocator.StatusChanged(&TypedEventHandler::new(
-        move |_geolocator: &Option<WindowsGeolocator>,
-              event_args: &Option<StatusChangedEventArgs>| {
-            if let Some(status_event) = event_args {
-                let status = status_event.Status()?;
+    fn listen(&self, callback: Arc<dyn Fn(Event) + Send + Sync>) -> Result<(), Error> {
+        let callback1 = callback.clone();
+        let callback2 = callback.clone();
 
-                (callback)(status.into())
-            }
-            Ok(())
-        },
-    ));
+        // Subscribe to status changed
+        self.device_geolocator
+            .StatusChanged(&TypedEventHandler::new(
+                move |_geolocator: &Option<WindowsGeolocator>,
+                      event_args: &Option<StatusChangedEventArgs>| {
+                    if let Some(status) = event_args {
+                        // Get status
+                        let status = status.Status()?;
 
-    // Return result
-    match result {
-        Ok(_) => Ok(()),
-        Err(e) => Err(GeolocationError::DeviceError(e.to_string())),
+                        // Run callback
+                        (callback1)(Event::StatusChanged(status.into()))
+                    }
+                    Ok(())
+                },
+            ))
+            .map_err(|e| Error::DeviceError(e.to_string()))?;
+
+        // Subscribe to position changed
+        self.device_geolocator
+            .PositionChanged(&TypedEventHandler::new(
+                move |_geolocator: &Option<WindowsGeolocator>,
+                      event_args: &Option<PositionChangedEventArgs>| {
+                    if let Some(position) = event_args {
+                        // Get coordinate
+                        let position = position.Position()?.Coordinate()?.Point()?.Position()?;
+
+                        // Run callback
+                        (callback2)(Event::NewGeocoordinates(position.into()))
+                    }
+                    Ok(())
+                },
+            ))
+            .map_err(|e| Error::DeviceError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    fn set_power_mode(&mut self, power_mode: PowerMode) -> Result<(), Error> {
+        match power_mode {
+            PowerMode::High => self
+                .device_geolocator
+                .SetDesiredAccuracy(PositionAccuracy::High)
+                .map_err(|e| Error::DeviceError(e.to_string()))?,
+            PowerMode::Low => self
+                .device_geolocator
+                .SetDesiredAccuracy(PositionAccuracy::Default)
+                .map_err(|e| Error::DeviceError(e.to_string()))?,
+        };
+
+        Ok(())
     }
 }
 
-pub fn subscribe_position_changed<F: Fn(Geocoordinates) + Send + Sync + 'static>(
-    geolocator: &WindowsGeolocator,
-    callback: F,
-) -> Result<(), GeolocationError> {
-    // Subscribe to event
-    let result = geolocator.PositionChanged(&TypedEventHandler::new(
-        move |_geolocator: &Option<WindowsGeolocator>,
-              event_args: &Option<PositionChangedEventArgs>| {
-            if let Some(position) = event_args {
-                // Get coordinate
-                let position = position.Position()?.Coordinate()?.Point()?.Position()?;
-
-                // Run callback
-                (callback)(position.into())
-            }
-            Ok(())
-        },
-    ));
-
-    // Return result
-    match result {
-        Ok(_) => Ok(()),
-        Err(e) => Err(GeolocationError::DeviceError(e.to_string())),
-    }
-}
-
-impl From<PositionStatus> for DeviceStatus {
+impl From<PositionStatus> for Status {
     fn from(value: PositionStatus) -> Self {
         match value.0 {
-            0 => DeviceStatus::Ready,
-            1 => DeviceStatus::Initializing,
-            3 => DeviceStatus::Disabled,
-            5 => DeviceStatus::NotAvailable,
-            _ => DeviceStatus::Unknown,
+            0 => Status::Ready,
+            1 => Status::Initializing,
+            3 => Status::Disabled,
+            5 => Status::NotAvailable,
+            _ => Status::Unknown,
         }
     }
 }
@@ -161,15 +147,6 @@ impl From<BasicGeoposition> for Geocoordinates {
         Geocoordinates {
             latitude: position.Latitude,
             longitude: position.Longitude,
-            altitude: position.Altitude,
         }
     }
 }
-
-/*
-TODO
-- Implement status changed subscriber (defines the geolocator's ability to provide location data)
-- Implement position changed subscriber (provides updates on devices' location based on report interval and movement threshold)
-- Implement use_geolocation hook
-- Create an initialization function to easily add geolocation to dioxus app using provide context api.
- */

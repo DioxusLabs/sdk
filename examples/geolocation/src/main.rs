@@ -9,9 +9,17 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let geolocator = hooks::init_geolocator(cx, PowerMode::High, None, None).unwrap();
+    let geolocator = hooks::init_geolocator(cx, PowerMode::High).unwrap();
     let initial_coords = use_state(cx, || geolocator.get_coordinates().unwrap());
-    let latest_coords = use_geolocation(cx).unwrap();
+    let latest_coords = use_geolocation(cx);
+
+    let latest_coords = match latest_coords {
+        Ok(v) => v,
+        Err(e) => {
+            let e = format!("Initializing: {:?}", e);
+            return cx.render(rsx!(p { "{e}" }));
+        }
+    };
 
     // Google maps embed api key
     let key = std::env::var("DIOXUS_GEOLOCATION_MAP_KEY").unwrap();
@@ -21,9 +29,9 @@ fn app(cx: Scope) -> Element {
             style: "text-align: center;",
             h1 { "🗺️ Dioxus Geolocation Example 🛰️" }
             h3 { "Your initial location is:"}
-            p { format!("Latitude: {} | Longitude: {} | Altitude: {}", initial_coords.latitude, initial_coords.longitude, initial_coords.altitude) }
+            p { format!("Latitude: {} | Longitude: {}", initial_coords.latitude, initial_coords.longitude) }
             h3 { "Your latest location is:" }
-            p { format!("Latitude: {} | Longitude: {} | Altitude: {}", latest_coords.latitude, latest_coords.longitude, latest_coords.altitude) }
+            p { format!("Latitude: {} | Longitude: {}", latest_coords.latitude, latest_coords.longitude) }
 
             iframe {
                 width: "400",
