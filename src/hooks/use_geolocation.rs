@@ -2,7 +2,7 @@
 
 use crate::library::geolocation::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::prelude::{use_coroutine, ScopeState, UnboundedReceiver};
-use futures_lite::stream::StreamExt;
+use futures_util::stream::StreamExt;
 use std::{rc::Rc, sync::Once};
 
 use super::{use_rw, UseRw};
