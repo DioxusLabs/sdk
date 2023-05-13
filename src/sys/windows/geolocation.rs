@@ -12,11 +12,13 @@ use crate::library::geolocation::{
     DeviceGeolocator, Error, Event, Geocoordinates, PowerMode, Status,
 };
 
+/// Represents the HAL's geolocator.
 pub struct Geolocator {
     device_geolocator: WindowsGeolocator,
 }
 
 impl Geolocator {
+    /// Create a new Geolocator for the device.
     pub fn new() -> Result<Self, Error> {
         // Check access
         let access_status = match WindowsGeolocator::RequestAccessAsync() {
@@ -42,6 +44,7 @@ impl Geolocator {
 }
 
 impl DeviceGeolocator for Geolocator {
+    /// Get the latest available coordinates.
     fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
         let location = self.device_geolocator.GetGeopositionAsync();
 
@@ -73,6 +76,7 @@ impl DeviceGeolocator for Geolocator {
         Ok(position.into())
     }
 
+    /// Listen to new events with a callback.
     fn listen(&self, callback: Arc<dyn Fn(Event) + Send + Sync>) -> Result<(), Error> {
         let callback1 = callback.clone();
         let callback2 = callback.clone();
@@ -114,6 +118,7 @@ impl DeviceGeolocator for Geolocator {
         Ok(())
     }
 
+    /// Set the device's power mode.
     fn set_power_mode(&mut self, power_mode: PowerMode) -> Result<(), Error> {
         match power_mode {
             PowerMode::High => self

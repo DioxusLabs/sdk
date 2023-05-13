@@ -9,7 +9,9 @@ use super::{use_rw, UseRw};
 
 static INIT: Once = Once::new();
 
+/// Provides the latest geocoordinates. Good for navigation-type apps.
 pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
+    // Store the coords
     let coords: &mut UseRw<Result<Geocoordinates, Error>> =
         use_rw(cx, || Err(Error::NotInitialized));
 
@@ -21,6 +23,7 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
 
     let coords_cloned = coords.clone();
 
+    // Initialize the handler of events
     let listener = use_coroutine(cx, |mut rx: UnboundedReceiver<Event>| async move {
         while let Some(event) = rx.next().await {
             match event {
@@ -35,12 +38,13 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
         }
     });
 
+    // Start listening
     INIT.call_once(|| {
         let _ = geolocator.listen(listener.clone());
     });
 
+    // Get the result and return a clone
     let result = coords.read().map_err(|_| Error::Poisoned)?.clone();
-
     result
 }
 

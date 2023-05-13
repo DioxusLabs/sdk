@@ -6,11 +6,13 @@ use dioxus::prelude::Coroutine;
 
 use crate::sys;
 
+/// Represents the geolocation abstraction.
 pub struct Geolocator {
     device_geolocator: Box<dyn DeviceGeolocator>,
 }
 
 impl Geolocator {
+    /// Create a new geolocator.
     pub fn new(power_mode: PowerMode) -> Result<Self, Error> {
         let mut device_geolocator = sys::geolocation::Geolocator::new()?;
         device_geolocator.set_power_mode(power_mode)?;
@@ -20,10 +22,12 @@ impl Geolocator {
         })
     }
 
+    /// Get the latest coordinates from the device.
     pub fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
         self.device_geolocator.get_coordinates()
     }
 
+    /// Subscribe a mpsc channel to the events.
     pub fn listen(&self, listener: Coroutine<Event>) -> Result<(), Error> {
         self.device_geolocator.listen(Arc::new(move |event: Event| {
             listener.send(event);
@@ -31,9 +35,12 @@ impl Geolocator {
     }
 }
 
+/// Represents a geolocation event.
 #[derive(Debug)]
 pub enum Event {
+    /// The status of the device has changed.
     StatusChanged(Status),
+    /// New coordinates are available.
     NewGeocoordinates(Geocoordinates),
 }
 
