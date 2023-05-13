@@ -29,9 +29,9 @@
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
 **Current & Planned Features**
-- [x] Clipboard
-- [x] Notifications
-- [x] Utility Hooks - (use_rw, use_prefererred_color_scheme: web only)
+- [x] Clipboard - (Desktop)
+- [x] Notifications - (Desktop)
+- [x] Utility Hooks - (use_rw, use_prefererred_color_scheme: wasm/webview)
 - [x] Geolocation - (Windows)
 - [ ] Camera
 - [ ] WiFi
