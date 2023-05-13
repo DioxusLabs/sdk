@@ -1,0 +1,10 @@
+[package]
+name = "geolocation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus-std = { path="../../", features = ["geolocation"] }
+dioxus = "0.3"
+dioxus-desktop = "0.3"
+

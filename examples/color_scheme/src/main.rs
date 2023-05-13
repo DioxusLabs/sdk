@@ -11,7 +11,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let color_scheme = use_preferred_color_scheme(cx);
-    
+
     render!(
         div {
             style: "text-align: center;",
