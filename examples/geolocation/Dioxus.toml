@@ -5,7 +5,7 @@ name = "geolocation"
 
 # Dioxus App Default Platform
 # desktop, web, mobile, ssr
-default_platform = "desktop"
+default_platform = "web"
 
 # `build` & `serve` dist path
 out_dir = "dist"
