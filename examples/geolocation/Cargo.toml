@@ -7,4 +7,4 @@ edition = "2021"
 dioxus-std = { path="../../", features = ["geolocation"] }
 dioxus = "0.3"
 dioxus-desktop = "0.3"
-
+#dioxus-web = "0.3"

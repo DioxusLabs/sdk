@@ -3,7 +3,10 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use dioxus::prelude::ScopeState;
 
-pub fn use_rw<T: Send + Sync + 'static>(cx: &ScopeState, init_rw: impl FnOnce() -> T) -> &mut UseRw<T> {
+pub fn use_rw<T: Send + Sync + 'static>(
+    cx: &ScopeState,
+    init_rw: impl FnOnce() -> T,
+) -> &mut UseRw<T> {
     let hook = cx.use_hook(|| UseRw {
         update: cx.schedule_update(),
         value: Arc::new(RwLock::new(init_rw())),
