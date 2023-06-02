@@ -1,9 +1,8 @@
 //! Provides access to the target device's geolocation system.
 
 use core::fmt;
-use std::sync::Arc;
-
 use dioxus::prelude::Coroutine;
+use std::sync::Arc;
 
 use crate::sys;
 
@@ -58,37 +57,32 @@ pub enum Status {
 
 /// Represents the geolocation abstraction.
 pub struct Geolocator {
-    device_geolocator: Box<dyn DeviceGeolocator>,
+    device_geolocator: sys::geolocation::Geolocator,
 }
 
 impl Geolocator {
     /// Create a new geolocator.
     pub fn new(power_mode: PowerMode) -> Result<Self, Error> {
         let mut device_geolocator = sys::geolocation::Geolocator::new()?;
-        device_geolocator.set_power_mode(power_mode)?;
+        sys::geolocation::set_power_mode(&mut device_geolocator, power_mode)?;
 
-        Ok(Self {
-            device_geolocator: Box::new(device_geolocator),
-        })
+        Ok(Self { device_geolocator })
     }
 
     /// Get the latest coordinates from the device.
-    pub fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
-        self.device_geolocator.get_coordinates()
+    pub async fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
+        sys::geolocation::get_coordinates(&self.device_geolocator).await
     }
 
     /// Subscribe a mpsc channel to the events.
     pub fn listen(&self, listener: Coroutine<Event>) -> Result<(), Error> {
-        self.device_geolocator.listen(Arc::new(move |event: Event| {
-            listener.send(event);
-        }))
+        sys::geolocation::listen(
+            &self.device_geolocator,
+            Arc::new(move |event: Event| {
+                listener.send(event);
+            }),
+        )
     }
-}
-
-pub trait DeviceGeolocator {
-    fn get_coordinates(&self) -> Result<Geocoordinates, Error>;
-    fn listen(&self, callback: Arc<dyn Fn(Event) + Send + Sync>) -> Result<(), Error>;
-    fn set_power_mode(&mut self, power_mode: PowerMode) -> Result<(), Error>;
 }
 
 /// Describes errors that may occur when utilizing the geolocation abstraction.

@@ -8,9 +8,7 @@ use windows::{
     Foundation::TypedEventHandler,
 };
 
-use crate::library::geolocation::{
-    DeviceGeolocator, Error, Event, Geocoordinates, PowerMode, Status,
-};
+use crate::library::geolocation::{Error, Event, Geocoordinates, PowerMode, Status};
 
 /// Represents the HAL's geolocator.
 pub struct Geolocator {
@@ -43,96 +41,98 @@ impl Geolocator {
     }
 }
 
-impl DeviceGeolocator for Geolocator {
-    /// Get the latest available coordinates.
-    fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
-        let location = self.device_geolocator.GetGeopositionAsync();
+pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, Error> {
+    let location = geolocator.device_geolocator.GetGeopositionAsync();
 
-        let location = match location {
-            Ok(v) => v,
-            Err(e) => return Err(Error::DeviceError(e.to_string())),
-        };
+    let location = match location {
+        Ok(v) => v,
+        Err(e) => return Err(Error::DeviceError(e.to_string())),
+    };
 
-        let location = match location.get() {
-            Ok(v) => v,
-            Err(e) => return Err(Error::DeviceError(e.to_string())),
-        };
+    let location = match location.get() {
+        Ok(v) => v,
+        Err(e) => return Err(Error::DeviceError(e.to_string())),
+    };
 
-        let location_coordinate = match location.Coordinate() {
-            Ok(v) => v,
-            Err(e) => return Err(Error::DeviceError(e.to_string())),
-        };
+    let location_coordinate = match location.Coordinate() {
+        Ok(v) => v,
+        Err(e) => return Err(Error::DeviceError(e.to_string())),
+    };
 
-        let location_point = match location_coordinate.Point() {
-            Ok(v) => v,
-            Err(e) => return Err(Error::DeviceError(e.to_string())),
-        };
+    let location_point = match location_coordinate.Point() {
+        Ok(v) => v,
+        Err(e) => return Err(Error::DeviceError(e.to_string())),
+    };
 
-        let position = match location_point.Position() {
-            Ok(v) => v,
-            Err(e) => return Err(Error::DeviceError(e.to_string())),
-        };
+    let position = match location_point.Position() {
+        Ok(v) => v,
+        Err(e) => return Err(Error::DeviceError(e.to_string())),
+    };
 
-        Ok(position.into())
-    }
+    Ok(position.into())
+}
 
-    /// Listen to new events with a callback.
-    fn listen(&self, callback: Arc<dyn Fn(Event) + Send + Sync>) -> Result<(), Error> {
-        let callback1 = callback.clone();
-        let callback2 = callback.clone();
+/// Listen to new events with a callback.
+pub fn listen(
+    geolocator: &Geolocator,
+    callback: Arc<dyn Fn(Event) + Send + Sync>,
+) -> Result<(), Error> {
+    let callback1 = callback.clone();
+    let callback2 = callback.clone();
 
-        // Subscribe to status changed
-        self.device_geolocator
-            .StatusChanged(&TypedEventHandler::new(
-                move |_geolocator: &Option<WindowsGeolocator>,
-                      event_args: &Option<StatusChangedEventArgs>| {
-                    if let Some(status) = event_args {
-                        // Get status
-                        let status = status.Status()?;
+    // Subscribe to status changed
+    geolocator
+        .device_geolocator
+        .StatusChanged(&TypedEventHandler::new(
+            move |_geolocator: &Option<WindowsGeolocator>,
+                  event_args: &Option<StatusChangedEventArgs>| {
+                if let Some(status) = event_args {
+                    // Get status
+                    let status = status.Status()?;
 
-                        // Run callback
-                        (callback1)(Event::StatusChanged(status.into()))
-                    }
-                    Ok(())
-                },
-            ))
-            .map_err(|e| Error::DeviceError(e.to_string()))?;
+                    // Run callback
+                    (callback1)(Event::StatusChanged(status.into()))
+                }
+                Ok(())
+            },
+        ))
+        .map_err(|e| Error::DeviceError(e.to_string()))?;
 
-        // Subscribe to position changed
-        self.device_geolocator
-            .PositionChanged(&TypedEventHandler::new(
-                move |_geolocator: &Option<WindowsGeolocator>,
-                      event_args: &Option<PositionChangedEventArgs>| {
-                    if let Some(position) = event_args {
-                        // Get coordinate
-                        let position = position.Position()?.Coordinate()?.Point()?.Position()?;
+    // Subscribe to position changed
+    geolocator
+        .device_geolocator
+        .PositionChanged(&TypedEventHandler::new(
+            move |_geolocator: &Option<WindowsGeolocator>,
+                  event_args: &Option<PositionChangedEventArgs>| {
+                if let Some(position) = event_args {
+                    // Get coordinate
+                    let position = position.Position()?.Coordinate()?.Point()?.Position()?;
 
-                        // Run callback
-                        (callback2)(Event::NewGeocoordinates(position.into()))
-                    }
-                    Ok(())
-                },
-            ))
-            .map_err(|e| Error::DeviceError(e.to_string()))?;
+                    // Run callback
+                    (callback2)(Event::NewGeocoordinates(position.into()))
+                }
+                Ok(())
+            },
+        ))
+        .map_err(|e| Error::DeviceError(e.to_string()))?;
 
-        Ok(())
-    }
+    Ok(())
+}
 
-    /// Set the device's power mode.
-    fn set_power_mode(&mut self, power_mode: PowerMode) -> Result<(), Error> {
-        match power_mode {
-            PowerMode::High => self
-                .device_geolocator
-                .SetDesiredAccuracy(PositionAccuracy::High)
-                .map_err(|e| Error::DeviceError(e.to_string()))?,
-            PowerMode::Low => self
-                .device_geolocator
-                .SetDesiredAccuracy(PositionAccuracy::Default)
-                .map_err(|e| Error::DeviceError(e.to_string()))?,
-        };
+/// Set the device's power mode.
+pub fn set_power_mode(geolocator: &mut Geolocator, power_mode: PowerMode) -> Result<(), Error> {
+    match power_mode {
+        PowerMode::High => geolocator
+            .device_geolocator
+            .SetDesiredAccuracy(PositionAccuracy::High)
+            .map_err(|e| Error::DeviceError(e.to_string()))?,
+        PowerMode::Low => geolocator
+            .device_geolocator
+            .SetDesiredAccuracy(PositionAccuracy::Default)
+            .map_err(|e| Error::DeviceError(e.to_string()))?,
+    };
 
-        Ok(())
-    }
+    Ok(())
 }
 
 impl From<PositionStatus> for Status {
