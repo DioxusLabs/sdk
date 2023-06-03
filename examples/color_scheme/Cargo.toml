@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { path="../../" }
+dioxus-std = { path="../../", features = ["use_preferred_color_scheme"] }
 dioxus = "0.3"
 dioxus-web = "0.3"
 

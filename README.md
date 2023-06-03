@@ -28,18 +28,35 @@
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
-**Current & Planned Features**
-- [x] Clipboard
-- [x] Notifications
-- [x] Utility Hooks - (use_prefererred_color_scheme: web only)
+**Current Features**
+- [x] Geolocation - (wasm, Windows)
+- [x] Clipboard - (Desktop)
+- [x] Notifications - (Desktop)
+- [x] Utility Hooks 
+  - use_rw - (any) 
+  - use_prefererred_color_scheme - (wasm)
+
+**Planned Features**
 - [ ] Camera
-- [ ] GPS
 - [ ] WiFi
 - [ ] Bluetooth
 
-```rust, ignore
-fn app() {
-    // TODO: Add example
+```rust
+fn app(cx: Scope) -> Element {
+    let geolocator = hooks::init_geolocator(cx, PowerMode::High).unwrap();
+    let coords = use_geolocation(cx);
+
+    match coords {
+      Ok(coords) => {
+        render! { p { format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) } }
+      }
+      Err(Error::NotInitialized) => {
+        render! { p { "Initializing..." }}
+      }
+      Err(e) => {
+        render! { p { "An error occured {e}" }}
+      }
+    }
 }
 ```
 
