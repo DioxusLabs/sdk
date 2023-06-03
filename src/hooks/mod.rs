@@ -14,8 +14,8 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "use_cannel")] {
-        pub mod use_cannel;
-        pub use use_cannel::*;
+    if #[cfg(feature = "use_channel")] {
+        pub mod use_channel;
+        pub use use_channel::*;
     }
 }

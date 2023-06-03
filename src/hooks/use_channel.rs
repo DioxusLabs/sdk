@@ -1,11 +1,7 @@
 use std::future::Future;
 
+use async_broadcast::{broadcast, Receiver, RecvError, SendError, Sender};
 use dioxus::prelude::{to_owned, use_effect, use_state, ScopeState, UseState};
-use tokio::sync::broadcast::{
-    self,
-    error::{RecvError, SendError},
-    Receiver, Sender,
-};
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -26,14 +22,14 @@ impl<MessageType: Clone> Clone for UseChannel<MessageType> {
         Self {
             id: self.id,
             sender: self.sender.clone(),
-            receiver: self.sender.subscribe(),
+            receiver: self.sender.new_receiver(),
         }
     }
 }
 
 impl<MessageType: Clone> UseChannel<MessageType> {
-    pub fn send(&self, msg: impl Into<MessageType>) -> Result<(), SendError<MessageType>> {
-        self.sender.send(msg.into()).map(|_| ())
+    pub async fn send(&self, msg: impl Into<MessageType>) -> Result<(), SendError<MessageType>> {
+        self.sender.broadcast(msg.into()).await.map(|_| ())
     }
 
     pub async fn recv(&mut self) -> Result<MessageType, RecvError> {
@@ -47,12 +43,12 @@ pub fn use_channel<MessageType: Clone + 'static>(
     size: usize,
 ) -> UseChannel<MessageType> {
     let id = cx.use_hook(Uuid::new_v4);
-    let sender = cx.use_hook(|| broadcast::channel::<MessageType>(size).0);
+    let (sender, receiver) = cx.use_hook(|| broadcast::<MessageType>(size));
 
     UseChannel {
         id: *id,
         sender: sender.clone(),
-        receiver: sender.subscribe(),
+        receiver: receiver.clone(),
     }
 }
 
@@ -111,7 +107,9 @@ where
                     Err(RecvError::Closed) => {
                         break;
                     }
-                    Err(RecvError::Lagged(_)) => {}
+                    Err(RecvError::Overflowed(_)) => {
+                        log::info!("Channel overflowed.");
+                    }
                 }
                 if *listener_state.current() == ChannelListenerState::Stopped {
                     break;
