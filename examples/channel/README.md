@@ -1,6 +1,6 @@
-# color_scheme
+# use_channel
 
-Learn how to use `use_preferred_color_scheme`.
+Learn how to use `use_channel`.
 
 Run:
 
