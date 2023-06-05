@@ -14,6 +14,13 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
+    if #[cfg(any(feature = "use_rw", feature = "geolocation"))] {
+        pub mod use_rw;
+        pub use use_rw::*;
+    }
+}
+
+cfg_if::cfg_if! {
     if #[cfg(feature = "use_channel")] {
         pub mod use_channel;
         pub use use_channel::*;
