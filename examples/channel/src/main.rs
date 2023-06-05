@@ -16,7 +16,7 @@ fn app(cx: Scope) -> Element {
         log::info!("Listener: {msg}");
     });
 
-    let onclick = move |_: MouseEvent| {
+    let send = move |_: MouseEvent| {
         to_owned![channel];
         async move {
             channel.send("Hello").await.ok();
@@ -24,8 +24,8 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        p {
-            onclick: onclick,
+        button {
+            onclick: send,
             "Send hello"
         }
     )
