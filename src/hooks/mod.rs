@@ -19,3 +19,10 @@ cfg_if::cfg_if! {
         pub use use_rw::*;
     }
 }
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "use_channel")] {
+        pub mod use_channel;
+        pub use use_channel::*;
+    }
+}

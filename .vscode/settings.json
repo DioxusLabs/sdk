@@ -1,4 +1,7 @@
 {
-    "rust-analyzer.cargo.features": ["geolocation"],
+    "rust-analyzer.cargo.features": [
+        "geolocation",
+        "use_channel"
+    ],
     //"rust-analyzer.check.allTargets": true,
 }
