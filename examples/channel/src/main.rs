@@ -12,8 +12,11 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let channel = use_channel::<String>(cx, 5);
 
-    use_listen_channel(cx, &channel, move |msg| async move {
-        log::info!("Listener: {msg}");
+    use_listen_channel(cx, &channel, move |message| async move {
+        match message {
+            Ok(value) => log::info!("Incoming message: {value}"),
+            Err(err) => log::info!("Error: {err:?}"),
+        }
     });
 
     let send = move |_: MouseEvent| {

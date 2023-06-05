@@ -4,6 +4,8 @@ use async_broadcast::{broadcast, InactiveReceiver, Receiver, RecvError, SendErro
 use dioxus::prelude::{to_owned, use_effect, ScopeState};
 use uuid::Uuid;
 
+pub type UseListenChannelError = RecvError;
+
 /// Send and listen for messages between multiple components.
 #[derive(Debug, Clone)]
 pub struct UseChannel<MessageType: Clone> {
@@ -54,7 +56,7 @@ pub fn use_channel<MessageType: Clone + 'static>(
 pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
     cx: &ScopeState,
     channel: &UseChannel<MessageType>,
-    action: impl Fn(MessageType) -> Handler + 'static,
+    action: impl Fn(Result<MessageType, UseListenChannelError>) -> Handler + 'static,
 ) where
     Handler: Future<Output = ()> + 'static,
 {
@@ -66,16 +68,10 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
 
             loop {
                 let message = receiver.recv().await;
-                match message {
-                    Ok(msg) => {
-                        action(msg).await;
-                    }
-                    Err(RecvError::Closed) => {
-                        break;
-                    }
-                    Err(RecvError::Overflowed(_)) => {
-                        log::info!("Channel overflowed.");
-                    }
+                let message_err = message.clone().err();
+                action(message).await;
+                if message_err == Some(UseListenChannelError::Closed) {
+                    break;
                 }
             }
         }
