@@ -33,6 +33,7 @@
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
 - [x] Utility Hooks 
+  - use_channel - (any)
   - use_rw - (any) 
   - use_prefererred_color_scheme - (wasm)
 
@@ -76,7 +77,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { version = "0.1.0", features = [] }
+dioxus-std =  { version = "0.2.0", features = [] }
 ```
 
 ## License
