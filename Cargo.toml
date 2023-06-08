@@ -19,7 +19,7 @@ categories = ["multimedia","os", "wasm"]
 # Features
 clipboard = ["dep:clipboard"]
 notifications = ["dep:notify-rust"]
-geolocation = ["dep:dioxus", "dep:windows", "dep:futures-util", "dep:futures"]
+geolocation = ["dep:dioxus", "dep:windows", "dep:futures-util", "dep:futures", "dep:web-sys", "dep:wasm-bindgen"]
 
 use_channel = ["dep:async-broadcast", "dep:uuid", "dep:dioxus"]
 use_preferred_color_scheme = ["dep:dioxus", "dep:web-sys", "dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
