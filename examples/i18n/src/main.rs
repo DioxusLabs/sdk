@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use dioxus_std::*;
+use dioxus_std::i18n::*;
+use dioxus_std::translate;
 use std::{collections::HashMap, str::FromStr};
 
 fn main() {
@@ -39,11 +40,16 @@ fn Body(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_i18n(cx, "en-US".parse().unwrap(), "en-US".parse().unwrap(), || {
-        let en_us = Language::from_str(EN_US).unwrap();
-        let es_es = Language::from_str(ES_ES).unwrap();
-        vec![en_us, es_es]
-    });
+    use_init_i18n(
+        cx,
+        "en-US".parse().unwrap(),
+        "en-US".parse().unwrap(),
+        || {
+            let en_us = Language::from_str(EN_US).unwrap();
+            let es_es = Language::from_str(ES_ES).unwrap();
+            vec![en_us, es_es]
+        },
+    );
 
     render!(Body {})
 }

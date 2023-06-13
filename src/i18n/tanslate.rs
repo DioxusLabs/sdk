@@ -2,7 +2,7 @@
 macro_rules! translate {
     ( $i18:expr, $id:expr, $( $name:ident : $value:expr ),* ) => {
         {
-            let mut params_map = HashMap::new();
+            let mut params_map = std::collections::HashMap::new();
             $(
                 params_map.insert(stringify!($name), $value.to_string());
             )*
@@ -12,7 +12,7 @@ macro_rules! translate {
 
     ( $i18:expr, $id:expr ) => {
         {
-            $i18.translate($id, HashMap::new())
+            $i18.translate($id)
         }
     };
 }

@@ -4,27 +4,23 @@
 cfg_if::cfg_if! {
     if #[cfg(feature = "color_scheme")] {
         pub mod color_scheme;
-        pub use use_preferred_color_scheme::*;
     }
 }
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "geolocation")] {
         pub mod geolocation;
-        pub use geolocation::*;
     }
 }
 
 cfg_if::cfg_if! {
     if #[cfg(any(feature = "utils"))] {
         pub mod utils;
-        pub use utils::*;
     }
 }
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "i18n")] {
         pub mod i18n;
-        pub use i18n::*;
     }
 }

@@ -99,7 +99,7 @@ impl<'a> UseI18<'a> {
         id.to_string()
     }
 
-    pub fn t(&self, id: &str) -> String {
+    pub fn translate(&self, id: &str) -> String {
         self.translate_with_params(id, HashMap::default())
     }
 
