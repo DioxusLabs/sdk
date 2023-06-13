@@ -1,6 +1,5 @@
 //#![warn(missing_debug_implementations, missing_docs)]
 
-//! Useful hooks that integrate into your Dioxus app seamlessly. Included with these hooks are Dioxus-friendly methods of accessing the abstractions in the [crate::library] module.
 cfg_if::cfg_if! {
     if #[cfg(feature = "color_scheme")] {
         pub mod color_scheme;

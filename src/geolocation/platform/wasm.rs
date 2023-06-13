@@ -4,7 +4,7 @@ use std::sync::Arc;
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 use web_sys::PositionOptions;
 
-use crate::library::geolocation::{Error, Event, Geocoordinates, PowerMode};
+use super::core::{Error, Event, Geocoordinates, PowerMode};
 
 /// Represents the HAL's geolocator.
 pub struct Geolocator {

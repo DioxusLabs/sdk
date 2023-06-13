@@ -5,7 +5,7 @@ use dioxus::prelude::{use_coroutine, ScopeState, UnboundedReceiver};
 use futures_util::stream::StreamExt;
 use std::{rc::Rc, sync::Once};
 
-use crate::utils::use_rw::{use_rw, UseRw};
+use crate::utils::rw::{use_rw, UseRw};
 
 static INIT: Once = Once::new();
 

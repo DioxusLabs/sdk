@@ -1,1 +1,4 @@
-pub mod use_rw;
+
+mod use_rw;
+
+pub use use_rw::*;

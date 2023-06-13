@@ -8,7 +8,7 @@ use windows::{
     Foundation::TypedEventHandler,
 };
 
-use crate::library::geolocation::{Error, Event, Geocoordinates, PowerMode, Status};
+use super::core::{Error, Event, Geocoordinates, PowerMode, Status};
 
 /// Represents the HAL's geolocator.
 pub struct Geolocator {
