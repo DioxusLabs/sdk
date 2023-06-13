@@ -1,4 +1,4 @@
-use async_broadcast::{broadcast, InactiveReceiver, Receiver, RecvError, SendError, Sender};
+use async_broadcast::{broadcast, InactiveReceiver, Receiver, SendError, Sender};
 use dioxus::prelude::ScopeState;
 use uuid::Uuid;
 
