@@ -1,10 +1,10 @@
 [package]
-name = "channel"
+name = "i18n"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { path="../../", features = ["channel"] }
+dioxus-std = { path="../../", features = ["i18n"] }
 dioxus = "0.3"
 dioxus-web = "0.3"
 
