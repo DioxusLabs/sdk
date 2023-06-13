@@ -1,10 +1,9 @@
 //! Provides access to the target device's geolocation system.
 
+use super::platform;
 use core::fmt;
 use dioxus::prelude::Coroutine;
 use std::sync::Arc;
-
-use crate::sys;
 
 /// Describes a position in the world.
 #[derive(Debug, Clone)]
@@ -57,26 +56,26 @@ pub enum Status {
 
 /// Represents the geolocation abstraction.
 pub struct Geolocator {
-    device_geolocator: sys::geolocation::Geolocator,
+    device_geolocator: platform::Geolocator,
 }
 
 impl Geolocator {
     /// Create a new geolocator.
     pub fn new(power_mode: PowerMode) -> Result<Self, Error> {
-        let mut device_geolocator = sys::geolocation::Geolocator::new()?;
-        sys::geolocation::set_power_mode(&mut device_geolocator, power_mode)?;
+        let mut device_geolocator = platform::Geolocator::new()?;
+        platform::set_power_mode(&mut device_geolocator, power_mode)?;
 
         Ok(Self { device_geolocator })
     }
 
     /// Get the latest coordinates from the device.
     pub async fn get_coordinates(&self) -> Result<Geocoordinates, Error> {
-        sys::geolocation::get_coordinates(&self.device_geolocator).await
+        platform::get_coordinates(&self.device_geolocator).await
     }
 
     /// Subscribe a mpsc channel to the events.
     pub fn listen(&self, listener: Coroutine<Event>) -> Result<(), Error> {
-        sys::geolocation::listen(
+        platform::listen(
             &self.device_geolocator,
             Arc::new(move |event: Event| {
                 listener.send(event);

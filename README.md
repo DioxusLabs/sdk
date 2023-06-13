@@ -32,15 +32,15 @@
 - [x] Geolocation - (wasm, Windows)
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
-- [x] Channels - (any)
 - [x] Color Scheme - (any)
-- [x] Utility Hooks 
-- [x] use_rw - (any)
-- [ ] i18n - (any)
+- Utility Hooks 
+  - [x] use_rw - (any)
+  - [x] use_channel - (any)
+  - [ ] Intervals (any)
+- [x] i18n - (any)
 - [ ] Camera (Desktop)
 - [ ] WiFi (Desktop)
 - [ ] Bluetooth (Desktop)
-- [ ] Intervals (any)
 
 Geolocation example:
 

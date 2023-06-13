@@ -23,17 +23,8 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "channel")] {
-        pub mod channel;
-        pub use channel::*;
-    }
-}
-
-cfg_if::cfg_if! {
     if #[cfg(feature = "i18n")] {
         pub mod i18n;
         pub use i18n::*;
     }
 }
-
-mod sys;
