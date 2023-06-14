@@ -28,19 +28,21 @@
 
 `dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
 
-**Current Features**
+**Features**
 - [x] Geolocation - (wasm, Windows)
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
+- [x] Color Scheme - (any)
 - [x] Utility Hooks 
-  - use_channel - (any)
-  - use_rw - (any) 
-  - use_prefererred_color_scheme - (wasm)
+  - [x] use_rw - (any)
+  - [x] use_channel - (any)
+  - [ ] use_interval (any)
+- [x] i18n - (any)
+- [ ] Camera (Desktop)
+- [ ] WiFi (Desktop)
+- [ ] Bluetooth (Desktop)
 
-**Planned Features**
-- [ ] Camera
-- [ ] WiFi
-- [ ] Bluetooth
+Geolocation example:
 
 ```rust
 fn app(cx: Scope) -> Element {
@@ -62,18 +64,14 @@ fn app(cx: Scope) -> Element {
 ```
 
 ## Platform Support
-Currently `dioxus-std` primarily supports desktop targets. It is planned to support all of Dioxus' targets in the future.
-
-- [x] Desktop (Windows, MacOS, Linux)
-- [ ] Mobile  (Android, iOS)
-- [ ] Web     (WASM)
+### Clipboard
 
 On linux you need the x11 library to use the clipboard abstraction:
 ```
 sudo apt-get install xorg-dev
 ```
 
-## Installation
+## Usage
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
@@ -85,5 +83,4 @@ This project is licensed under the [MIT license].
 
 [mit license]: ./LICENSE
 
-Every contribution intentionally submitted for inclusion in `dioxus-std` by you, shall be licensed as MIT, without any additional
-terms or conditions.
+Every contribution intentionally submitted for inclusion in `dioxus-std` by you, shall be licensed as MIT, without any additional terms or conditions.

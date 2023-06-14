@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
-use dioxus_std::{
-    hooks::{self, use_geolocation},
-    library::geolocation::PowerMode,
+use dioxus_std::geolocation::{
+    init_geolocator, use_geolocation, PowerMode
 };
 
 fn main() {
@@ -10,7 +9,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let geolocator = hooks::init_geolocator(cx, PowerMode::High).unwrap();
+    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
     let initial_coords = use_future(cx, (), |_| async move {
         geolocator.get_coordinates().await.unwrap()
     });

@@ -1,10 +1,6 @@
-use std::future::Future;
-
-use async_broadcast::{broadcast, InactiveReceiver, Receiver, RecvError, SendError, Sender};
-use dioxus::prelude::{to_owned, use_effect, ScopeState};
+use async_broadcast::{broadcast, InactiveReceiver, Receiver, SendError, Sender};
+use dioxus::prelude::ScopeState;
 use uuid::Uuid;
-
-pub type UseListenChannelError = RecvError;
 
 /// Send and listen for messages between multiple components.
 #[derive(Debug, Clone)]
@@ -50,30 +46,4 @@ pub fn use_channel<MessageType: Clone + 'static>(
         sender: sender.clone(),
         inactive_receiver: inactive_receiver.clone(),
     }
-}
-
-/// Create a messages listener for the given channel.
-pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
-    cx: &ScopeState,
-    channel: &UseChannel<MessageType>,
-    action: impl Fn(Result<MessageType, UseListenChannelError>) -> Handler + 'static,
-) where
-    Handler: Future<Output = ()> + 'static,
-{
-    use_effect(cx, (channel,), move |(channel,)| {
-        to_owned![channel];
-        async move {
-            let action = Box::new(action);
-            let mut receiver = channel.receiver();
-
-            loop {
-                let message = receiver.recv().await;
-                let message_err = message.clone().err();
-                action(message).await;
-                if message_err == Some(UseListenChannelError::Closed) {
-                    break;
-                }
-            }
-        }
-    });
 }

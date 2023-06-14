@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_std::hooks::use_preferred_color_scheme;
+use dioxus_std::color_scheme::use_preferred_color_scheme;
 
 fn main() {
     // init debug tool for WebAssembly

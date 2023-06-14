@@ -4,6 +4,6 @@ cfg_if::cfg_if! {
         pub use self::windows::*;
     } else if #[cfg(target_family = "wasm")] {
         mod wasm;
-        pub use wasm::*;
+        pub use self::wasm::*;
     }
 }

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_std::hooks::{use_channel, use_listen_channel};
+use dioxus_std::utils::channel::{use_channel, use_listen_channel};
 
 fn main() {
     // init debug tool for WebAssembly

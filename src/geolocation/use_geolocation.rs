@@ -1,11 +1,11 @@
 //! Provides an initialization and use_geolocation hook.
 
-use crate::library::geolocation::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
+use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::prelude::{use_coroutine, ScopeState, UnboundedReceiver};
 use futures_util::stream::StreamExt;
 use std::{rc::Rc, sync::Once};
 
-use super::{use_rw, UseRw};
+use crate::utils::rw::{use_rw, UseRw};
 
 static INIT: Once = Once::new();
 
