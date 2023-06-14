@@ -45,8 +45,12 @@
 Geolocation example:
 
 ```rust
+use dioxus_std::geolocation::{
+    init_geolocator, use_geolocation, PowerMode
+};
+
 fn app(cx: Scope) -> Element {
-    let geolocator = hooks::init_geolocator(cx, PowerMode::High).unwrap();
+    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
     let coords = use_geolocation(cx);
 
     match coords {
