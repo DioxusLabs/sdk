@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: WASM
-    - run: cargo build --verbose --no-default-features --features wasm-testing
+    - name: WASM Build
+      run: cargo build --verbose --no-default-features --features wasm-testing
     # need to run tests here
     
   desktop:
@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Desktop
-    - run: cargo build --verbose --no-default-features --features desktop-testing
-    - run: cargo test --verbose --no-default-features --features desktop-testing
+    - name: Desktop Build
+      run: cargo build --verbose --no-default-features --features desktop-testing
+    - name: Desktop Test
+      run: cargo test --verbose --no-default-features --features desktop-testing
