@@ -17,12 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: WASM Build
-      run: cargo build --verbose --no-default-features --features wasm-testing
+      run: cargo build --verbose --target wasm32-unknown-unknown --no-default-features --features wasm-testing
     # need to run tests here
     
   desktop:
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Desktop Build
