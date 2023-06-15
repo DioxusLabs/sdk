@@ -24,6 +24,10 @@ utils = ["dep:async-broadcast", "dep:uuid"]
 i18n = ["dep:serde", "dep:serde_json", "dep:unic-langid"]
 all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i18n"]
 
+# CI testing
+wasm-testing = ["geolocation", "color_scheme", "utils", "i18n"]
+desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
+
 [dependencies]
 dioxus = { version = "0.3" }
 cfg-if = "1.0.0"
