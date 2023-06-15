@@ -1,0 +1,30 @@
+# Tests to make sure features are setup for running on different platforms & that features run correctly
+name: Testing
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  wasm:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: WASM
+    - run: cargo build --verbose --no-default-features --features wasm-testing
+    # need to run tests here
+    
+  desktop:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Desktop
+    - run: cargo build --verbose --no-default-features --features desktop-testing
+    - run: cargo test --verbose --no-default-features --features desktop-testing
