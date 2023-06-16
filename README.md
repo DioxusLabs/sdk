@@ -61,7 +61,7 @@ fn app(cx: Scope) -> Element {
         render! { p { "Initializing..." }}
       }
       Err(e) => {
-        render! { p { "An error occured {e}" }}
+        render! { p { "An error occurred {e}" }}
       }
     }
 }
