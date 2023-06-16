@@ -34,12 +34,12 @@ impl Text {
 
                 let current_path = steps.join(".");
 
-                // Try quering the next step in this list
+                // Try querying the next step in this list
                 let this_step = steps.remove(0);
                 let deep = texts.get(this_step)?;
                 let res = deep.query(steps);
 
-                // If not found try quering by the whole remaining path as if it was the ID
+                // If not found try querying by the whole remaining path as if it was the ID
                 if res.is_none() {
                     let res_text = texts.get(&current_path);
                     if let Some(res_text) = res_text {

@@ -102,7 +102,7 @@ impl fmt::Display for Error {
                 write!(f, "access denied (access may have been revoked during use)")
             }
             Error::Poisoned => write!(f, "the internal read/write lock has been poisioned"),
-            Error::DeviceError(e) => write!(f, "a device error has occured: {}", e),
+            Error::DeviceError(e) => write!(f, "a device error has occurred: {}", e),
         }
     }
 }
