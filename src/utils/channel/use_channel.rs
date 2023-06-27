@@ -1,4 +1,4 @@
-use async_broadcast::{broadcast, InactiveReceiver, Receiver, SendError, Sender};
+use async_broadcast::{broadcast, InactiveReceiver, Receiver, SendError, Sender, TrySendError};
 use dioxus::prelude::ScopeState;
 use uuid::Uuid;
 
@@ -17,6 +17,11 @@ impl<T: Clone> PartialEq for UseChannel<T> {
 }
 
 impl<MessageType: Clone> UseChannel<MessageType> {
+    /// Tries to send a message to all listeners of the channel.
+    pub fn try_send(&self, msg: impl Into<MessageType>) -> Result<(), TrySendError<MessageType>> {
+        self.sender.try_broadcast(msg.into()).map(|_| ())
+    }
+
     /// Sends a message to all listeners of the channel.
     pub async fn send(&self, msg: impl Into<MessageType>) -> Result<(), SendError<MessageType>> {
         self.sender.broadcast(msg.into()).await.map(|_| ())
