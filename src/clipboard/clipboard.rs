@@ -1,6 +1,6 @@
 //! Provides a clipboard abstraction to access the target system's clipboard.
 
-use clipboard::{ClipboardContext, ClipboardProvider};
+use copypasta::{ClipboardContext, ClipboardProvider};
 use std::fmt;
 
 /// Contains the context for interacting with the clipboard.
@@ -28,7 +28,7 @@ pub struct Clipboard {
 impl Clipboard {
     /// Creates a new struct to utilize the clipboard abstraction.
     pub fn new() -> Result<Self, ClipboardError> {
-        let ctx: ClipboardContext = match ClipboardProvider::new() {
+        let ctx = match ClipboardContext::new() {
             Ok(ctx) => ctx,
             Err(e) => return Err(ClipboardError::FailedToInit(e.to_string())),
         };

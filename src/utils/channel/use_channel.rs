@@ -28,7 +28,7 @@ impl<MessageType: Clone> UseChannel<MessageType> {
     }
 
     /// Create a receiver for the channel.
-    /// You probably want to use [`use_listen_channel`].
+    /// You probably want to use [`super::use_listen_channel()`].
     pub fn receiver(&mut self) -> Receiver<MessageType> {
         self.inactive_receiver.clone().activate()
     }
