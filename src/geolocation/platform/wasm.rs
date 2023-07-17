@@ -118,7 +118,7 @@ pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, 
         )
         .map_err(|e| Error::DeviceError(format!("{:?}", e)))?;
 
-    while let Some(msg) = receiver.next().await {
+    if let Some(msg) = receiver.next().await {
         receiver.close();
         return msg;
     }

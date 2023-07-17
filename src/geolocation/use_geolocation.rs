@@ -44,8 +44,7 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
     });
 
     // Get the result and return a clone
-    let result = coords.read().map_err(|_| Error::Poisoned)?.clone();
-    result
+    coords.read().map_err(|_| Error::Poisoned)?.clone()
 }
 
 /// Must be called before any use of the geolocation abstraction.

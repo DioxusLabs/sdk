@@ -32,7 +32,7 @@ impl<T> Clone for UseRw<T> {
 
 impl<T> UseRw<T> {
     pub fn read(&self) -> Result<RwLockReadGuard<'_, T>, UseRwError> {
-        Ok(self.value.read().map_err(|_| UseRwError::Poisoned)?)
+        self.value.read().map_err(|_| UseRwError::Poisoned)
     }
 
     pub fn write(&self, new_value: T) -> Result<(), UseRwError> {

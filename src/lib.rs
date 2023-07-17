@@ -23,3 +23,9 @@ cfg_if::cfg_if! {
         pub mod i18n;
     }
 }
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "clipboard")] {
+        pub mod clipboard;
+    }
+}
