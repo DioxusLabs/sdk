@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 dioxus-std = { path="../../", features = ["color_scheme"] }
-dioxus = "0.3"
-dioxus-web = "0.3"
+dioxus = "0.4"
+dioxus-web = "0.4"
 
 log = "0.4.6"
 
