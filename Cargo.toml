@@ -22,7 +22,7 @@ geolocation = ["dep:windows", "dep:futures-util", "dep:futures", "dep:web-sys", 
 color_scheme = ["dep:web-sys", "dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
 utils = ["dep:async-broadcast", "dep:uuid"]
 i18n = ["dep:serde", "dep:serde_json", "dep:unic-langid"]
-storage = ["dep:tokio", "dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:directories", "dep:yazi"]
+storage = ["dep:async-broadcast", "dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:directories", "dep:yazi"]
 all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i18n", "storage"]
 default = ["storage"]
 
@@ -56,7 +56,6 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6
     "serialize",
 ], optional = true }
 yazi = { version = "0.1.4", optional = true }
-tokio = { version = "1.32.0", features = ["sync"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 directories = { version = "4.0.1", optional = true }

@@ -1,4 +1,4 @@
-use tokio::sync::broadcast::{channel, Receiver, Sender};
+use async_broadcast::{broadcast, Receiver, Sender};
 use dioxus::prelude::{use_ref, ScopeState, UseRef};
 use dioxus_signals::Signal;
 use once_cell::sync::Lazy;
@@ -62,25 +62,25 @@ pub trait StorageBacking {
     // fn subscribe<T: Serialize>(key: &Self::Key)
     // fn get_subscriptions() -> &'static HashMap<String, Box<dyn StorageChannel>>;
     fn get_subscriptions() -> &'static Mutex<HashMap<Self::Key, Box<dyn Any + Send>>>;
-    fn subscribe<T: DeserializeOwned + Clone + Send>(key: &Self::Key) -> Option<Receiver<T>> {
+    fn subscribe<T: DeserializeOwned + Clone + Send + Sync>(key: &Self::Key) -> Option<Receiver<T>> {
         do_storage_backing_subscribe::<Self, T>(key)
     }
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
 }
 
-pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + ?Sized, T: DeserializeOwned + Clone + Send>(key: &S::Key) -> Option<Receiver<T>> {
+pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + ?Sized, T: DeserializeOwned + Clone + Send + Sync>(key: &S::Key) -> Option<Receiver<T>> {
     #[cfg(not(feature = "ssr"))]
     {
         let mut subscriptions = S::get_subscriptions().lock().unwrap();
         if let Some(channel) = subscriptions.get(key) {
             if let Some(channel) = channel.downcast_ref::<StorageSender<T>>() {
-                Some(channel.channel.subscribe())
+                Some(channel.channel.new_receiver())
             } else {
                 None
             }
         } else {
-            let (tx, rx) = channel::<T>(2);
+            let (tx, rx) = broadcast::<T>(2);
             subscriptions.insert(
                 *key,
                 Box::new(StorageSender::<T> { channel: tx }),
