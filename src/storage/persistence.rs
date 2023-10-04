@@ -1,129 +1,18 @@
-#![allow(unused)]
 use dioxus::prelude::*;
-use once_cell::sync::OnceCell;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::cell::{Ref, RefMut};
-use std::fmt::Debug;
-use std::io::Write;
-use std::thread::LocalKey;
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
 };
-use web_sys::{window, Storage};
 
-use crate::storage::storage::{
-    serde_from_string, serde_to_string, storage_entry, try_serde_from_string,
-    use_synced_storage_entry, StorageBacking, StorageEntry, StorageEntryMut,
+use crate::storage::{
+    ClientStorage,
+    storage::{
+        storage_entry, StorageEntry,
+    },
 };
-
-#[allow(clippy::needless_doctest_main)]
-/// Set the directory where the storage files are located on non-wasm targets.
-///
-/// ```rust
-/// fn main(){
-///     // set the directory to the default location
-///     set_dir!();
-///     // set the directory to a custom location
-///     set_dir!(PathBuf::from("path/to/dir"));
-/// }
-/// ```
-#[cfg(not(target_arch = "wasm32"))]
-#[macro_export]
-macro_rules! set_dir {
-    () => {
-        $crate::set_dir_name(env!("CARGO_PKG_NAME"));
-    };
-    ($path: literal) => {
-        $crate::set_dir(std::path::PathBuf::from($path));
-    };
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[doc(hidden)]
-/// Sets the directory where the storage files are located.
-pub fn set_directory(path: std::path::PathBuf) {
-    LOCATION.set(path).unwrap();
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[doc(hidden)]
-pub fn set_dir_name(name: &str) {
-    {
-        set_directory(
-            directories::BaseDirs::new()
-                .unwrap()
-                .data_local_dir()
-                .join(name),
-        )
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-static LOCATION: OnceCell<std::path::PathBuf> = OnceCell::new();
-
-#[cfg(target_arch = "wasm32")]
-fn local_storage() -> Option<Storage> {
-    window()?.local_storage().ok()?
-}
-
-fn set<T: Serialize>(key: String, value: &T) {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let as_str = serde_to_string(value);
-        #[cfg(target_arch = "wasm32")]
-        {
-            local_storage().unwrap().set_item(&key, &as_str).unwrap();
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let path = LOCATION
-                .get()
-                .expect("Call the set_dir macro before accessing persistant data");
-            std::fs::create_dir_all(path).unwrap();
-            let file_path = path.join(key);
-            let mut file = std::fs::File::create(file_path).unwrap();
-            file.write_all(as_str.as_bytes()).unwrap();
-        }
-    }
-}
-
-fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
-    #[cfg(not(feature = "ssr"))]
-    {
-        #[cfg(target_arch = "wasm32")]
-        {
-            let s: String = local_storage()?.get_item(key).ok()??;
-            try_serde_from_string(&s)
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let path = LOCATION
-                .get()
-                .expect("Call the set_dir macro before accessing persistant data")
-                .join(key);
-            let s = std::fs::read_to_string(path).ok()?;
-            try_serde_from_string(&s)
-        }
-    }
-    #[cfg(feature = "ssr")]
-    None
-}
-
-pub struct ClientStorage;
-
-impl StorageBacking for ClientStorage {
-    type Key = String;
-
-    fn set<T: Serialize>(key: String, value: &T) {
-        set(key, value);
-    }
-
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key)
-    }
-}
 
 /// A persistent storage hook that can be used to store data across application reloads.
 ///

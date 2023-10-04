@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 dioxus-std = { path="../../", features = ["storage"] }
-dioxus = "0.4"
-dioxus-web = "0.4"
+dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b" }
+dioxus-web = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b" }
 
 log = "0.4.6"
 

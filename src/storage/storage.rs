@@ -1,9 +1,17 @@
+use tokio::sync::broadcast::{channel, Receiver, Sender};
 use dioxus::prelude::{use_ref, ScopeState, UseRef};
+use dioxus_signals::Signal;
+use once_cell::sync::Lazy;
 use postcard::to_allocvec;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
+use std::sync::Mutex;
+use std::hash::Hash;
 
 pub fn serde_to_string<T: Serialize>(value: &T) -> String {
     let serialized = to_allocvec(value).unwrap();
@@ -50,10 +58,42 @@ pub struct PersistentStorage {
 }
 
 pub trait StorageBacking {
-    type Key;
-
+    type Key: Eq + PartialEq + Hash;
+    // fn subscribe<T: Serialize>(key: &Self::Key)
+    // fn get_subscriptions() -> &'static HashMap<String, Box<dyn StorageChannel>>;
+    fn get_subscriptions() -> &'static Mutex<HashMap<Self::Key, Box<dyn Any + Send>>>;
+    fn subscribe<T: DeserializeOwned + Clone + Send>(key: &Self::Key) -> Option<Receiver<T>> {
+        do_storage_backing_subscribe::<Self, T>(key)
+    }
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
+}
+
+pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + ?Sized, T: DeserializeOwned + Clone + Send>(key: &S::Key) -> Option<Receiver<T>> {
+    #[cfg(not(feature = "ssr"))]
+    {
+        let mut subscriptions = S::get_subscriptions().lock().unwrap();
+        if let Some(channel) = subscriptions.get(key) {
+            if let Some(channel) = channel.downcast_ref::<StorageSender<T>>() {
+                Some(channel.channel.subscribe())
+            } else {
+                None
+            }
+        } else {
+            let (tx, rx) = channel::<T>(2);
+            subscriptions.insert(
+                *key,
+                Box::new(StorageSender::<T> { channel: tx }),
+            );
+            return Some(rx)
+        }
+    }
+    #[cfg(feature = "ssr")]
+    None
+}
+
+struct StorageSender<T: DeserializeOwned> {
+    channel: Sender<T>,
 }
 
 #[derive(Clone, Default)]
