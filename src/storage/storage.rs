@@ -59,8 +59,6 @@ pub struct PersistentStorage {
 
 pub trait StorageBacking {
     type Key: Eq + PartialEq + Hash;
-    // fn subscribe<T: Serialize>(key: &Self::Key)
-    // fn get_subscriptions() -> &'static HashMap<String, Box<dyn StorageChannel>>;
     fn get_subscriptions() -> &'static Mutex<HashMap<Self::Key, Box<dyn Any + Send>>>;
     fn subscribe<T: DeserializeOwned + Clone + Send + Sync>(key: &Self::Key) -> Option<Receiver<T>> {
         do_storage_backing_subscribe::<Self, T>(key)
