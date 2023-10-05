@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
+use dioxus_signals::{use_signal, Signal, Write};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::cell::{Ref, RefMut};
+use std::cell::Ref;
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
@@ -18,44 +19,55 @@ use crate::storage::{
 ///
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
-pub fn use_persistent<T: Serialize + DeserializeOwned + Default + 'static>(
+pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'static>(
     cx: &ScopeState,
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> &UsePersistent<T> {
     let mut init = Some(init);
-    #[cfg(feature = "ssr")]
-    let state = use_ref(cx, || {
-        StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()())
-    });
-    // if hydration is not enabled we can just set the storage
-    #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
-    let state = use_ref(cx, || {
-        StorageEntry::new(
-            key.to_string(),
-            storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
-        )
-    });
-    // otherwise render the initial value and then hydrate after the first render
-    #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
     let state = {
-        let state = use_ref(cx, || {
-            StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()())
-        });
-        if cx.generation() == 0 {
-            cx.needs_update();
+        #[cfg(feature = "ssr")] 
+        {
+            use_ref(cx, || {
+                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), false)
+            })
         }
-        if cx.generation() == 1 {
-            state.set(StorageEntry::new(
-                key.to_string(),
-                storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
-            ));
+        #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
+        {
+            let state = use_signal(cx, || {
+                StorageEntry::<ClientStorage, T>::new(
+                    key.to_string(),
+                    storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
+                    true
+                )
+            });
+            use_future!(cx, || async move {
+                let mut channel = state.read().channel.clone();
+                channel.start_receiver_loop(|_| state.with_mut(|storage_entry| storage_entry.update())).await;
+            });
+            state
+        }
+        #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
+        {
+            let state = use_ref(cx, || {
+                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), true)
+            });
+            if cx.generation() == 0 {
+                cx.needs_update();
+            }
+            if cx.generation() == 1 {
+                state.set(StorageEntry::new(
+                    key.to_string(),
+                    storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
+                ));
+            }
+    
+            state
         }
 
-        state
     };
     cx.use_hook(|| UsePersistent {
-        inner: state.clone(),
+        inner: state,
     })
 }
 
@@ -65,7 +77,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + 'static>(
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 #[track_caller]
-pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + 'static>(
+pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'static>(
     cx: &ScopeState,
     init: impl FnOnce() -> T,
 ) -> &UsePersistent<T> {
@@ -73,14 +85,15 @@ pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + 'sta
         let caller = std::panic::Location::caller();
         format!("{}:{}", caller.file(), caller.line())
     });
+    log::info!("key: \"{}\"", key);
     use_persistent(cx, key, init)
 }
 
-pub struct StorageRef<'a, T: Serialize + DeserializeOwned + Default + 'static> {
+pub struct StorageRef<'a, T: Serialize + DeserializeOwned + Default + Clone + 'static> {
     inner: Ref<'a, StorageEntry<ClientStorage, T>>,
 }
 
-impl<'a, T: Serialize + DeserializeOwned + Default + 'static> Deref for StorageRef<'a, T> {
+impl<'a, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for StorageRef<'a, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -88,11 +101,11 @@ impl<'a, T: Serialize + DeserializeOwned + Default + 'static> Deref for StorageR
     }
 }
 
-pub struct StorageRefMut<'a, T: Serialize + DeserializeOwned + 'static> {
-    inner: RefMut<'a, StorageEntry<ClientStorage, T>>,
+pub struct StorageRefMut<'a, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Write<'a, StorageEntry<ClientStorage, T>>,
 }
 
-impl<'a, T: Serialize + DeserializeOwned + 'static> Deref for StorageRefMut<'a, T> {
+impl<'a, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -100,24 +113,24 @@ impl<'a, T: Serialize + DeserializeOwned + 'static> Deref for StorageRefMut<'a, 
     }
 }
 
-impl<'a, T: Serialize + DeserializeOwned + 'static> DerefMut for StorageRefMut<'a, T> {
+impl<'a, T: Serialize + DeserializeOwned + Clone + 'static> DerefMut for StorageRefMut<'a, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner.data
     }
 }
 
-impl<'a, T: Serialize + DeserializeOwned + 'static> Drop for StorageRefMut<'a, T> {
+impl<'a, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefMut<'a, T> {
     fn drop(&mut self) {
         self.inner.deref_mut().save();
     }
 }
 
 /// Storage that persists across application reloads
-pub struct UsePersistent<T: Serialize + DeserializeOwned + Default + 'static> {
-    inner: UseRef<StorageEntry<ClientStorage, T>>,
+pub struct UsePersistent<T: Serialize + DeserializeOwned + Default + Clone + 'static> {
+    inner: Signal<StorageEntry<ClientStorage, T>>,
 }
 
-impl<T: Serialize + DeserializeOwned + Default + 'static> UsePersistent<T> {
+impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> UsePersistent<T> {
     /// Returns a reference to the value
     pub fn read(&self) -> StorageRef<T> {
         StorageRef {
@@ -135,6 +148,7 @@ impl<T: Serialize + DeserializeOwned + Default + 'static> UsePersistent<T> {
     /// Sets the value
     pub fn set(&self, value: T) {
         *self.write() = value;
+        self.inner.write().save();
     }
 
     /// Modifies the value
@@ -150,21 +164,21 @@ impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> UsePersistent<
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Default + Display + 'static> Display for UsePersistent<T> {
+impl<T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Display for UsePersistent<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         (*self.read()).fmt(f)
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Default + 'static> Deref for UsePersistent<T> {
-    type Target = UseRef<StorageEntry<ClientStorage, T>>;
+impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for UsePersistent<T> {
+    type Target = Signal<StorageEntry<ClientStorage, T>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Default + 'static> DerefMut for UsePersistent<T> {
+impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> DerefMut for UsePersistent<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
