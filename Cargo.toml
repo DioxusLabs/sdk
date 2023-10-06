@@ -69,7 +69,7 @@ directories = { version = "4.0.1", optional = true }
 windows = { version = "0.48.0", features = ["Foundation", "Devices_Geolocation"], optional = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-web-sys = { version = "0.3.60", features = ["Window", "MediaQueryList", "Navigator", "Geolocation", "PositionOptions", "EventTarget", "StorageEvent"], optional = true }
+web-sys = { version = "0.3.60", features = ["Window", "MediaQueryList", "Navigator", "Geolocation", "PositionOptions", "EventTarget", "EventListener", "StorageEvent"], optional = true }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.35", optional = true}
 js-sys = "0.3.62"

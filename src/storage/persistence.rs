@@ -7,7 +7,8 @@ use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
 };
-
+use crate::storage::storage::StorageEntryChannel;
+use crate::utils::channel::use_listen_channel;
 use crate::storage::{
     ClientStorage,
     storage::{
@@ -38,13 +39,12 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
                 StorageEntry::<ClientStorage, T>::new(
                     key.to_string(),
                     storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
-                    true
+                    Some(cx),
                 )
             });
-            use_future!(cx, || async move {
-                let mut channel = state.read().channel.clone();
-                channel.start_receiver_loop(|_| state.with_mut(|storage_entry| storage_entry.update())).await;
-            });
+            if let StorageEntryChannel::Active(channel) = &state.read().channel {
+                use_listen_channel(cx, channel, move |_| async move { state.write().update() });
+            }
             state
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]

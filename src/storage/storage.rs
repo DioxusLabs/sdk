@@ -1,5 +1,5 @@
 use async_broadcast::{broadcast, Receiver, Sender, InactiveReceiver};
-use dioxus::prelude::{ScopeState, use_future};
+use dioxus::prelude::{ScopeState, use_future, use_context};
 use dioxus_signals::{Signal, use_signal};
 use postcard::to_allocvec;
 use serde::de::DeserializeOwned;
@@ -8,8 +8,11 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
-use std::sync::Mutex;
+use std::sync::{Mutex, RwLock, Arc};
 use std::hash::Hash;
+use uuid::Uuid;
+
+use crate::utils::channel::{UseChannel, use_channel, use_listen_channel};
 
 pub fn serde_to_string<T: Serialize>(value: &T) -> String {
     let serialized = to_allocvec(value).unwrap();
@@ -55,38 +58,40 @@ pub struct PersistentStorage {
     pub idx: usize,
 }
 
-pub trait StorageBacking {
+pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Hash + Clone + Debug;
-    fn get_subscriptions() -> &'static Mutex<HashMap<Self::Key, StorageSender>>;
-    fn subscribe<T: DeserializeOwned + 'static>(key: &Self::Key) -> Option<Receiver<StorageChannelPayload>>;
+    fn subscribe<T: DeserializeOwned + 'static>(cx: &ScopeState, key: &Self::Key) -> Option<UseChannel<StorageChannelPayload>>;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
+    fn get_subscriptions(cx: &ScopeState) -> StorageBackingSubscriptions<Self> {
+        cx.consume_context::<StorageBackingSubscriptions<Self>>().unwrap_or_else(|| cx.provide_root_context(StorageBackingSubscriptions::<Self>::new()))
+    }
 }
 
-pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + ?Sized + 'static, T: 'static>(key: &S::Key) -> Option<Receiver<StorageChannelPayload>> {
+pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + Sized + 'static, T: 'static>(cx: &ScopeState, key: &S::Key) -> Option<UseChannel<StorageChannelPayload>> {
     log::info!("Subscribing to storage entry: {:?}", key);
     #[cfg(not(feature = "ssr"))]
     {
-        let mut subscriptions = S::get_subscriptions().lock().unwrap();
-        if let Some(channel) = subscriptions.get(key) {
-            if channel.data_type_id == TypeId::of::<T>() {
+        let subscriptions = S::get_subscriptions(cx);
+        if let Some(storage_sender) = subscriptions.get(key) {
+            if storage_sender.data_type_id == TypeId::of::<T>() {
                 log::info!("Already subscribed to storage entry: {:?}", key);
-                Some(channel.channel.new_receiver())
+                Some(storage_sender.channel.clone())
             } else {
                 log::info!("Already subscribed to storage entry: {:?} but with a different type", key);
                 None
             }
         } else {
-            let (tx, rx) = broadcast::<StorageChannelPayload>(2);
+            let (tx, rx) = broadcast::<StorageChannelPayload>(5);
             subscriptions.insert(
                 key.clone(),
                 StorageSender {
-                    channel: tx,
+                    channel: UseChannel::new(Uuid::new_v4(), tx, rx.deactivate()),
                     data_type_id: TypeId::of::<T>(),
                 },
             );
             log::info!("Subscribed to storage entry: {:?}", key);
-            Some(rx)
+            subscriptions.get(key).map(|storage_sender| storage_sender.channel.clone())
         }
     }
     #[cfg(feature = "ssr")]
@@ -96,9 +101,34 @@ pub(crate) fn do_storage_backing_subscribe<S: StorageBacking + ?Sized + 'static,
     }
 }
 
+#[derive(Clone)]
+pub(crate) struct StorageBackingSubscriptions<S: StorageBacking + 'static> {
+    pub(crate) subscriptions: Arc<RwLock<HashMap<S::Key, StorageSender>>>,
+}
 
+impl<S: StorageBacking + 'static> StorageBackingSubscriptions<S> {
+    pub(crate) fn new() -> Self {
+        Self {
+            subscriptions: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+    pub(crate) fn get(&self, key: &S::Key) -> Option<StorageSender> {
+        self.subscriptions.read().unwrap().get(key).map_or( None, |storage_sender| Some((*storage_sender).clone()))
+    }
+    pub(crate) fn insert(&self, key: S::Key, storage_sender: StorageSender) {
+        if let Some(existing_sender) = self.get(&key) {
+            if existing_sender.data_type_id != storage_sender.data_type_id {
+                panic!("Storage sender type mismatch");
+            }
+        } else {
+            self.subscriptions.write().unwrap().insert(key, storage_sender);
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct StorageSender {
-    pub(crate) channel: Sender<StorageChannelPayload>,
+    pub(crate) channel: UseChannel<StorageChannelPayload>,
     pub(crate) data_type_id: TypeId,
 }
 
@@ -132,7 +162,7 @@ where
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
-    pub fn new(key: S::Key, data: T, subscribe: bool) -> Self {
+    pub fn new(key: S::Key, data: T, cx: Option<&ScopeState>) -> Self {
         let channel = {
             #[cfg(feature = "ssr")]
             {
@@ -140,11 +170,10 @@ where
             }
             #[cfg(not(feature = "ssr"))]
             {
-                let mut channel = StorageEntryChannel::new(S::subscribe::<T>(&key));
-                if !subscribe {
-                    channel.deactivate();
+                match cx {
+                    Some(cx) => StorageEntryChannel::new(S::subscribe::<T>(cx, &key)),
+                    None => StorageEntryChannel::default(),
                 }
-                channel
             }
         };
         Self { key, data, channel }
@@ -232,46 +261,14 @@ where
 pub(crate) enum StorageEntryChannel {
     #[default]
     None,
-    Active(Receiver<StorageChannelPayload>),
-    Inactive(InactiveReceiver<StorageChannelPayload>),
+    Active(UseChannel<StorageChannelPayload>),
 }
 
 impl StorageEntryChannel {
-    fn new(receiver: Option<Receiver<StorageChannelPayload>>) -> Self {
+    fn new(receiver: Option<UseChannel<StorageChannelPayload>>) -> Self {
         match receiver {
             Some(receiver) => Self::Active(receiver),
             None => Self::None,
-        }
-    }
-    fn activate(&mut self) {
-        if let Self::Inactive(channel) = self {
-            *self = Self::Active(channel.activate_cloned())
-        }
-    }
-    fn deactivate(&mut self) {
-        if let Self::Active(channel) = self {
-            *self = Self::Inactive(channel.clone().deactivate())
-        }
-    }
-    pub async fn start_receiver_loop(&mut self, action:impl Fn(StorageChannelPayload)) {
-        async fn receiver_loop(receiver: &mut Receiver<StorageChannelPayload>, action:impl Fn(StorageChannelPayload)) {
-            loop {
-                if let Ok(data) = receiver.recv().await {
-                    action(data);
-                }
-            }
-        }
-        match self {
-            Self::Active(receiver) => {
-                receiver_loop(receiver, action).await;
-            }
-            Self::Inactive(_) => {
-                self.activate();
-                if let Self::Active(receiver) = self {
-                    receiver_loop(receiver, action).await;
-                }
-            }
-            _ => {}
         }
     }
 }
@@ -287,7 +284,7 @@ pub fn storage_entry<S: StorageBacking, T: Serialize + DeserializeOwned>(
     })
 }
 
-pub fn synced_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T, subscribe: bool) -> StorageEntry<S, T>
+pub fn synced_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T, cx: Option<&ScopeState>) -> StorageEntry<S, T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + 'static,
@@ -295,7 +292,7 @@ where
 {
     let data = storage_entry::<S, T>(key.clone(), init);
 
-    StorageEntry::new(key, data, subscribe)
+    StorageEntry::new(key, data, cx)
 }
 
 pub fn use_synced_storage_entry<S, T>(
@@ -309,11 +306,11 @@ where
     S::Key: Clone,
 {
     let state = use_signal(cx, || {
-        synced_storage_entry::<S, T>(key, init, true)
+        synced_storage_entry::<S, T>(key, init, Some(cx))
     });
-    use_future!(cx, || async move {
-        let mut channel = state.read().channel.clone();
-        channel.start_receiver_loop(|_| state.with_mut(|storage_entry| storage_entry.update())).await;
-    });
+
+    if let StorageEntryChannel::Active(channel) = &state.read().channel {
+        use_listen_channel(cx, channel, move |_| async move { state.write().update() });
+    }
     state
 }

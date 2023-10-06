@@ -11,6 +11,7 @@ use std::cell::{Ref, RefMut};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::Write;
+use std::rc::Rc;
 use std::sync::Mutex;
 use std::thread::LocalKey;
 use std::{
@@ -21,8 +22,9 @@ use web_sys::{window, Storage};
 
 use crate::storage::storage::{
     serde_from_string, serde_to_string, storage_entry, try_serde_from_string,
-    use_synced_storage_entry, StorageBacking, StorageEntry, StorageEntryMut, StorageSender, do_storage_backing_subscribe, StorageChannelPayload,
+    use_synced_storage_entry, StorageBacking, StorageEntry, StorageEntryMut, StorageSender, do_storage_backing_subscribe, StorageChannelPayload, StorageBackingSubscriptions,
 };
+use crate::utils::channel::UseChannel;
 
 fn local_storage() -> Option<Storage> {
     window()?.local_storage().ok()?
@@ -46,17 +48,23 @@ fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     None
 }
 
+#[derive(Clone)]
 pub struct ClientStorage;
 
 impl StorageBacking for ClientStorage {
     type Key = String;
 
-    fn get_subscriptions() -> &'static Mutex<HashMap<String, StorageSender>> {
-        &STORAGE_SUBSCRIPTIONS
-    }
-
-    fn subscribe<T: DeserializeOwned + 'static>(key: &Self::Key) -> Option<Receiver<StorageChannelPayload>> {
-        do_storage_backing_subscribe::<Self, T>(key)
+    fn subscribe<T: DeserializeOwned + 'static>(cx: &ScopeState, key: &Self::Key) -> Option<UseChannel<StorageChannelPayload>> {
+        let channel = do_storage_backing_subscribe::<Self, T>(cx, key);
+        let subscriptions = cx.consume_context::<StorageBackingSubscriptions<ClientStorage>>().unwrap();
+        let closure = cx.provide_root_context::<Rc<Closure::<dyn FnMut(web_sys::StorageEvent)>>>(Rc::new(Closure::<dyn FnMut(web_sys::StorageEvent)>::new(|e: web_sys::StorageEvent| {
+            process_storage_event(subscriptions, e);
+        })));
+        window()
+            .unwrap()
+            .add_event_listener_with_callback("storage", closure.deref().as_ref().unchecked_ref())
+            .unwrap();
+        channel
     }
 
     fn set<T: Serialize>(key: String, value: &T) {
@@ -68,36 +76,10 @@ impl StorageBacking for ClientStorage {
     }
 }
 
-static STORAGE_SUBSCRIPTIONS: Lazy<Mutex<HashMap<String, StorageSender>>> = Lazy::new(|| {
-
-    log::info!("Initializing storage subscriptions");
-    let closure = Closure::<dyn FnMut(web_sys::StorageEvent)>::wrap(Box::new(|e: web_sys::StorageEvent| {
-        process_storage_event(e);
-    }));
-    window()
-        .unwrap()
-        .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
-        .unwrap();
-    Mutex::new(HashMap::new())
-});
-
-fn process_storage_event(e: web_sys::StorageEvent) {
+fn process_storage_event(subscriptions: StorageBackingSubscriptions<ClientStorage>, e: web_sys::StorageEvent) {
     log::info!("Incoming storage event");
     let key = e.key().unwrap();
-    if let Some(storage) = local_storage() {
-        let value = storage.get_item(&key).unwrap();
-        for subscription in STORAGE_SUBSCRIPTIONS.lock().unwrap().values() {
-            if subscription.data_type_id == TypeId::of::<String>() {
-                log::info!("broadcasting");
-                subscription.channel.broadcast(StorageChannelPayload::Updated);
-            }
-        }
+    if let Some(storage_sender) = subscriptions.get(&key) {
+        storage_sender.channel.send(StorageChannelPayload::Updated);
     }
-    // let s: String = local_storage().map(f)?.get_item(&key).ok()??;
-    // let value = try_serde_from_string(&s)?;
-    // for subscription in STORAGE_SUBSCRIPTIONS.iter() {
-    //     if subscription.key == key {
-    //         subscription.callback(value);
-    //     }
-    // }
 }
