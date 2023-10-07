@@ -1,32 +1,17 @@
-#![allow(unused)]
-use async_broadcast::{broadcast, InactiveReceiver, Receiver, Sender};
+use async_broadcast::broadcast;
 use dioxus::prelude::*;
-use once_cell::sync::{Lazy, OnceCell};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::any::TypeId;
-use std::cell::{Ref, RefMut};
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::future::IntoFuture;
-use std::io::Write;
-use std::rc::Rc;
-use std::sync::{Mutex, OnceLock};
-use std::thread::LocalKey;
-use std::{
-    fmt::Display,
-    ops::{Deref, DerefMut},
-};
+use serde::{de::DeserializeOwned, Serialize};
+use std::sync::OnceLock;
 use uuid::Uuid;
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
 use crate::storage::storage::{
-    serde_from_string, serde_to_string, storage_entry, try_serde_from_string,
-    use_synced_storage_entry, StorageBacking, StorageChannelPayload, StorageEntry, StorageEntryMut,
+    serde_to_string, try_serde_from_string,
+    StorageBacking, StorageChannelPayload,
 };
-use crate::utils::channel::{self, UseChannel};
+use crate::utils::channel::UseChannel;
 
 fn local_storage() -> Option<Storage> {
     window()?.local_storage().ok()?

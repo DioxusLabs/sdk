@@ -4,7 +4,6 @@ use postcard::to_allocvec;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
-use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
 
 use crate::utils::channel::{use_listen_channel, UseChannel};
@@ -30,6 +29,7 @@ pub fn serde_to_string<T: Serialize>(value: &T) -> String {
     as_str
 }
 
+#[allow(unused)]
 pub fn serde_from_string<T: DeserializeOwned>(value: &str) -> T {
     try_serde_from_string(value).unwrap()
 }
@@ -54,7 +54,7 @@ pub struct PersistentStorage {
 }
 
 pub trait StorageBacking: Sized + Clone + 'static {
-    type Key: Eq + PartialEq + Hash + Clone + Debug;
+    type Key: Eq + PartialEq + Clone + Debug;
     fn subscribe<T: DeserializeOwned + 'static>(
         cx: &ScopeState,
         key: &Self::Key,
@@ -206,6 +206,7 @@ pub fn storage_entry<S: StorageBacking, T: Serialize + DeserializeOwned>(
     })
 }
 
+#[allow(unused)]
 pub fn synced_storage_entry<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
@@ -221,6 +222,7 @@ where
     StorageEntry::new(key, data, cx)
 }
 
+#[allow(unused)]
 pub fn use_synced_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,

@@ -151,12 +151,15 @@ impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> UsePersistent<
     /// Sets the value
     pub fn set(&self, value: T) {
         *self.write() = value;
-        self.inner.write().save();
     }
 
     /// Modifies the value
     pub fn modify<F: FnOnce(&mut T)>(&self, f: F) {
         f(&mut self.write());
+    }
+
+    pub fn save(&self) {
+        self.inner.write().save();
     }
 }
 
