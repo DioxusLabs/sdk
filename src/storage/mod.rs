@@ -7,7 +7,7 @@
 //! fn main() {
 //!     dioxus_web::launch(app)
 //! }
-//! 
+//!
 //! fn app(cx: Scope) -> Element {
 //!     let num = use_persistent(cx, "count", || 0);
 //!     cx.render(rsx! {
@@ -27,11 +27,11 @@
 //! ```
 
 mod client_storage;
-mod storage;
 mod persistence;
+mod storage;
 
-pub use persistence::{use_persistent, use_singleton_persistent};
 pub use client_storage::ClientStorage;
+pub use persistence::{use_persistent, use_singleton_persistent};
 
 #[cfg(not(target_family = "wasm"))]
 pub use client_storage::set_dir;

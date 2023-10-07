@@ -11,11 +11,7 @@ pub struct UseChannel<MessageType: Clone> {
 }
 
 impl<T: Clone> UseChannel<T> {
-    pub(crate) fn new(
-        id: Uuid,
-        sender: Sender<T>,
-        inactive_receiver: InactiveReceiver<T>,
-    ) -> Self {
+    pub(crate) fn new(id: Uuid, sender: Sender<T>, inactive_receiver: InactiveReceiver<T>) -> Self {
         Self {
             id,
             sender,
@@ -44,7 +40,7 @@ impl<MessageType: Clone> UseChannel<MessageType> {
     /// Create a receiver for the channel.
     /// You probably want to use [`super::use_listen_channel()`].
     pub fn receiver(&mut self) -> Receiver<MessageType> {
-        self.inactive_receiver.clone().activate()
+        self.inactive_receiver.activate_cloned()
     }
 }
 

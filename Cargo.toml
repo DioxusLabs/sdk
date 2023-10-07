@@ -22,7 +22,7 @@ geolocation = ["dep:windows", "dep:futures-util", "dep:futures", "dep:web-sys", 
 color_scheme = ["dep:web-sys", "dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
 utils = ["dep:async-broadcast", "dep:uuid"]
 i18n = ["dep:serde", "dep:serde_json", "dep:unic-langid"]
-storage = ["dep:async-broadcast", "dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:directories", "dep:yazi"]
+storage = ["utils", "dep:async-broadcast", "dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:directories", "dep:yazi"]
 all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i18n", "storage"]
 default = ["storage"]
 
@@ -56,6 +56,7 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6
     "serialize",
 ], optional = true }
 yazi = { version = "0.1.4", optional = true }
+tokio = { version = "1.32.0", optional = true, features = ["sync", "time"] }
 log = "0.4.6"
 
 # WebAssembly Debug

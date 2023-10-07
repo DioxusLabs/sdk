@@ -1,30 +1,32 @@
 #![allow(unused)]
-use async_broadcast::Receiver;
+use async_broadcast::{broadcast, InactiveReceiver, Receiver, Sender};
 use dioxus::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::JsCast;
-use wasm_bindgen::prelude::Closure;
 use std::any::TypeId;
 use std::cell::{Ref, RefMut};
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::future::IntoFuture;
 use std::io::Write;
 use std::rc::Rc;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use std::thread::LocalKey;
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
 };
+use uuid::Uuid;
+use wasm_bindgen::prelude::Closure;
+use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
 use crate::storage::storage::{
     serde_from_string, serde_to_string, storage_entry, try_serde_from_string,
-    use_synced_storage_entry, StorageBacking, StorageEntry, StorageEntryMut, StorageSender, do_storage_backing_subscribe, StorageChannelPayload, StorageBackingSubscriptions,
+    use_synced_storage_entry, StorageBacking, StorageChannelPayload, StorageEntry, StorageEntryMut,
 };
-use crate::utils::channel::UseChannel;
+use crate::utils::channel::{self, UseChannel};
 
 fn local_storage() -> Option<Storage> {
     window()?.local_storage().ok()?
@@ -54,17 +56,37 @@ pub struct ClientStorage;
 impl StorageBacking for ClientStorage {
     type Key = String;
 
-    fn subscribe<T: DeserializeOwned + 'static>(cx: &ScopeState, key: &Self::Key) -> Option<UseChannel<StorageChannelPayload>> {
-        let channel = do_storage_backing_subscribe::<Self, T>(cx, key);
-        let subscriptions = cx.consume_context::<StorageBackingSubscriptions<ClientStorage>>().unwrap();
-        let closure = cx.provide_root_context::<Rc<Closure::<dyn FnMut(web_sys::StorageEvent)>>>(Rc::new(Closure::<dyn FnMut(web_sys::StorageEvent)>::new(|e: web_sys::StorageEvent| {
-            process_storage_event(subscriptions, e);
-        })));
-        window()
-            .unwrap()
-            .add_event_listener_with_callback("storage", closure.deref().as_ref().unchecked_ref())
-            .unwrap();
-        channel
+    fn subscribe<T: DeserializeOwned + 'static>(
+        cx: &ScopeState,
+        key: &Self::Key,
+    ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
+        let channel = CHANNEL.get_or_init(|| {
+            let (tx, rx) = broadcast::<StorageChannelPayload<ClientStorage>>(5);
+            let channel = UseChannel::new(Uuid::new_v4(), tx, rx.deactivate());
+            let channel_clone = channel.clone();
+
+            let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
+                log::info!("Storage event: {:?}", e);
+                let key: String = e.key().unwrap();
+                let channel_clone_clone = channel_clone.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    let result = channel_clone_clone
+                        .send(StorageChannelPayload::<ClientStorage> { key })
+                        .await;
+                    match result {
+                        Ok(_) => log::info!("Sent storage event"),
+                        Err(err) => log::info!("Error sending storage event: {:?}", err),
+                    }
+                });
+            }) as Box<dyn FnMut(web_sys::StorageEvent)>);
+            window()
+                .unwrap()
+                .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
+                .unwrap();
+            closure.forget();
+            channel
+        });
+        Some(channel.clone())
     }
 
     fn set<T: Serialize>(key: String, value: &T) {
@@ -76,10 +98,4 @@ impl StorageBacking for ClientStorage {
     }
 }
 
-fn process_storage_event(subscriptions: StorageBackingSubscriptions<ClientStorage>, e: web_sys::StorageEvent) {
-    log::info!("Incoming storage event");
-    let key = e.key().unwrap();
-    if let Some(storage_sender) = subscriptions.get(&key) {
-        storage_sender.channel.send(StorageChannelPayload::Updated);
-    }
-}
+static CHANNEL: OnceLock<UseChannel<StorageChannelPayload<ClientStorage>>> = OnceLock::new();

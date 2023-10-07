@@ -11,15 +11,27 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let count = use_singleton_persistent(cx, || 0);
+    let count1 = use_singleton_persistent(cx, || 0);
+    let count2 = use_singleton_persistent(cx, || 0);
 
     render!(
-        button {
-            onclick: move |_| {
-                count.set(count.get() + 1);
+        div {
+            button {
+                onclick: move |_| {
+                    count1.set(count1.get() + 1);
+                },
+                "Click me!"
             },
-            "Click me!"
-        },
-        "Clicked {count} times"
+            "Clicked {count1} times"
+        }
+        div {
+            button {
+                onclick: move |_| {
+                    count2.set(count2.get() + 1);
+                },
+                "Click me!"
+            },
+            "Clicked {count2} times"
+        }
     )
 }

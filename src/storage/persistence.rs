@@ -1,3 +1,8 @@
+use crate::storage::{
+    storage::{storage_entry, StorageEntry},
+    ClientStorage,
+};
+use crate::utils::channel::use_listen_channel;
 use dioxus::prelude::*;
 use dioxus_signals::{use_signal, Signal, Write};
 use serde::de::DeserializeOwned;
@@ -6,14 +11,6 @@ use std::cell::Ref;
 use std::{
     fmt::Display,
     ops::{Deref, DerefMut},
-};
-use crate::storage::storage::StorageEntryChannel;
-use crate::utils::channel::use_listen_channel;
-use crate::storage::{
-    ClientStorage,
-    storage::{
-        storage_entry, StorageEntry,
-    },
 };
 
 /// A persistent storage hook that can be used to store data across application reloads.
@@ -27,10 +24,10 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
 ) -> &UsePersistent<T> {
     let mut init = Some(init);
     let state = {
-        #[cfg(feature = "ssr")] 
+        #[cfg(feature = "ssr")]
         {
             use_ref(cx, || {
-                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), false)
+                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), None)
             })
         }
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
@@ -42,15 +39,26 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
                     Some(cx),
                 )
             });
-            if let StorageEntryChannel::Active(channel) = &state.read().channel {
-                use_listen_channel(cx, channel, move |_| async move { state.write().update() });
+            if let Some(channel) = &state.read().channel {
+                log::info!("Subscribing to storage entry");
+                use_listen_channel(cx, channel, move |message| async move {
+                    match message {
+                        Ok(value) => {
+                            log::info!("Incoming message: {:?}", value);
+                            if value.key == state.read().key {
+                                state.write().update();
+                            }
+                        }
+                        Err(err) => log::info!("Error: {err:?}"),
+                    }
+                });
             }
             state
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
         {
             let state = use_ref(cx, || {
-                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), true)
+                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), None)
             });
             if cx.generation() == 0 {
                 cx.needs_update();
@@ -61,14 +69,11 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
                     storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
                 ));
             }
-    
+
             state
         }
-
     };
-    cx.use_hook(|| UsePersistent {
-        inner: state,
-    })
+    cx.use_hook(|| UsePersistent { inner: state })
 }
 
 /// A persistent storage hook that can be used to store data across application reloads.
@@ -81,10 +86,8 @@ pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clon
     cx: &ScopeState,
     init: impl FnOnce() -> T,
 ) -> &UsePersistent<T> {
-    let key = cx.use_hook(|| {
-        let caller = std::panic::Location::caller();
-        format!("{}:{}", caller.file(), caller.line())
-    });
+    let caller = std::panic::Location::caller();
+    let key = cx.use_hook(move || format!("{}:{}", caller.file(), caller.line()));
     log::info!("key: \"{}\"", key);
     use_persistent(cx, key, init)
 }
@@ -164,7 +167,9 @@ impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> UsePersistent<
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Display for UsePersistent<T> {
+impl<T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Display
+    for UsePersistent<T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         (*self.read()).fmt(f)
     }
