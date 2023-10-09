@@ -42,8 +42,8 @@ impl StorageBacking for ClientStorage {
     type Key = String;
 
     fn subscribe<T: DeserializeOwned + 'static>(
-        cx: &ScopeState,
-        key: &Self::Key,
+        _cx: &ScopeState,
+        _key: &Self::Key,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
         let channel = CHANNEL.get_or_init(|| {
             let (tx, rx) = broadcast::<StorageChannelPayload<ClientStorage>>(5);
@@ -72,6 +72,10 @@ impl StorageBacking for ClientStorage {
             channel
         });
         Some(channel.clone())
+    }
+
+    fn unsubscribe(_key: &Self::Key) {
+        // Do nothing for web case, since we don't actually subscribe to specific keys.
     }
 
     fn set<T: Serialize>(key: String, value: &T) {
