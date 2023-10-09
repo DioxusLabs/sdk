@@ -29,7 +29,7 @@ impl StorageBacking for LocalStorage {
         get(key, StorageType::Local)
     }
 
-    fn as_local_storage() -> bool {
+    fn is_local_storage() -> bool {
         true
     }
 }
@@ -83,6 +83,7 @@ pub struct SessionStorage;
 
 impl StorageBacking for SessionStorage {
     type Key = String;
+    // Ideally the following should be the experimental !(never) type, but that's not stable yet.
     type Local = LocalStorage;
 
     fn set<T: Serialize>(key: String, value: &T) {
@@ -93,7 +94,7 @@ impl StorageBacking for SessionStorage {
         get(key, StorageType::Session)
     }
 
-    fn as_local_storage() -> bool {
+    fn is_local_storage() -> bool {
         false
     }
 }

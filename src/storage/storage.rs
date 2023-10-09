@@ -58,7 +58,7 @@ pub trait StorageBacking: Sized + Clone + 'static {
     type Local: LocalStorageBacking<Key = Self::Key>;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
-    fn as_local_storage() -> bool;
+    fn is_local_storage() -> bool;
 }
 
 pub trait LocalStorageBacking: StorageBacking {
@@ -168,7 +168,7 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for Stora
 
 impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Drop for StorageEntry<S, T> {
     fn drop(&mut self) {
-        if self.channel.is_some() && (S::as_local_storage()) {
+        if self.channel.is_some() && (S::is_local_storage()) {
             S::Local::unsubscribe(&self.key);
         }
     }
