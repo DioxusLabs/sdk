@@ -1,6 +1,6 @@
 use crate::storage::{
     storage::{storage_entry, StorageEntry},
-    ClientStorage,
+    SessionStorage,
 };
 use crate::utils::channel::use_listen_channel;
 use dioxus::prelude::*;
@@ -33,10 +33,9 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
         {
             let state = use_signal(cx, || {
-                StorageEntry::<ClientStorage, T>::new(
+                StorageEntry::<SessionStorage, T>::new(
                     key.to_string(),
-                    storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
-                    Some(cx),
+                    storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
                 )
             });
             if let Some(channel) = &state.read().channel {
@@ -93,7 +92,7 @@ pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clon
 }
 
 pub struct StorageRef<'a, T: Serialize + DeserializeOwned + Default + Clone + 'static> {
-    inner: Ref<'a, StorageEntry<ClientStorage, T>>,
+    inner: Ref<'a, StorageEntry<SessionStorage, T>>,
 }
 
 impl<'a, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for StorageRef<'a, T> {
@@ -105,7 +104,7 @@ impl<'a, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for 
 }
 
 pub struct StorageRefMut<'a, T: Serialize + DeserializeOwned + Clone + 'static> {
-    inner: Write<'a, StorageEntry<ClientStorage, T>>,
+    inner: Write<'a, StorageEntry<SessionStorage, T>>,
 }
 
 impl<'a, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, T> {
@@ -130,7 +129,7 @@ impl<'a, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefM
 
 /// Storage that persists across application reloads
 pub struct UsePersistent<T: Serialize + DeserializeOwned + Default + Clone + 'static> {
-    inner: Signal<StorageEntry<ClientStorage, T>>,
+    inner: Signal<StorageEntry<SessionStorage, T>>,
 }
 
 impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> UsePersistent<T> {
@@ -179,7 +178,7 @@ impl<T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Disp
 }
 
 impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for UsePersistent<T> {
-    type Target = Signal<StorageEntry<ClientStorage, T>>;
+    type Target = Signal<StorageEntry<SessionStorage, T>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

@@ -30,7 +30,7 @@ mod client_storage;
 mod persistence;
 mod storage;
 
-pub use client_storage::ClientStorage;
+pub use client_storage::{LocalStorage, SessionStorage};
 pub use persistence::{use_persistent, use_singleton_persistent};
 
 #[cfg(not(target_family = "wasm"))]

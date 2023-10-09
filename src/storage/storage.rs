@@ -55,32 +55,10 @@ pub struct PersistentStorage {
 
 pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
+    type Local: LocalStorageBacking<Key = Self::Key>;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
-}
-
-pub trait SessionStorageBacking: StorageBacking {
-    fn new_session();
-    fn drop_session(&self);
-}
-
-pub struct StorageSession<T: SessionStorageBacking> {
-    _marker: std::marker::PhantomData<T>,
-    session_id: uuid::Uuid,
-}
-
-impl<T: SessionStorageBacking> StorageSession<T> {
-    pub fn new() -> Self {
-        T::new_session();
-        Self {
-            _marker: std::marker::PhantomData,
-            session_id: uuid::Uuid::new_v4(),
-        }
-    }
-
-    pub fn drop(&self) {
-        T::drop_session(self);
-    }
+    fn as_local_storage() -> bool;
 }
 
 pub trait LocalStorageBacking: StorageBacking {
@@ -89,7 +67,11 @@ pub trait LocalStorageBacking: StorageBacking {
         key: &Self::Key,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>>;
     fn unsubscribe(key: &Self::Key);
+}
 
+pub enum StorageType {
+    Local,
+    Session,
 }
 
 #[derive(Clone)]
@@ -134,20 +116,8 @@ where
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
-    pub fn new(key: S::Key, data: T, cx: Option<&ScopeState>) -> Self {
-        let channel: Option<UseChannel<StorageChannelPayload<S>>> = {
-            cfg_if::cfg_if! {
-                if #[cfg(feature = "ssr")]
-                {
-                    None
-                }
-                else if #[cfg(not(feature = "ssr"))]
-                {
-                    cx.map_or_else(|| None, |cx| S::subscribe::<T>(cx, &key))
-                }
-            }
-        };
-        Self { key, data, channel }
+    pub fn new(key: S::Key, data: T) -> Self {
+        Self { key, data, channel: None }
     }
 
     pub(crate) fn save(&self) {
@@ -170,6 +140,24 @@ where
     }
 }
 
+impl<S, T> StorageEntry<S,T> where S: LocalStorageBacking, T: Serialize + DeserializeOwned + Clone + 'static, S::Key: Clone {
+    pub fn new_local(key: S::Key, data: T, cx: Option<&ScopeState>) -> Self {
+        let channel: Option<UseChannel<StorageChannelPayload<S>>> = {
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "ssr")]
+                {
+                    None
+                }
+                else if #[cfg(not(feature = "ssr"))]
+                {
+                    cx.map_or_else(|| None, |cx| S::subscribe::<T>(cx, &key))
+                }
+            }
+        };
+        Self { key, data, channel }
+    }
+}
+
 impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for StorageEntry<S, T> {
     type Target = T;
 
@@ -180,8 +168,8 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for Stora
 
 impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Drop for StorageEntry<S, T> {
     fn drop(&mut self) {
-        if self.channel.is_some() {
-            S::unsubscribe(&self.key);
+        if self.channel.is_some() && (S::as_local_storage()) {
+            S::Local::unsubscribe(&self.key);
         }
     }
 }
@@ -248,13 +236,13 @@ pub fn synced_storage_entry<S, T>(
     cx: Option<&ScopeState>,
 ) -> StorageEntry<S, T>
 where
-    S: StorageBacking,
+    S: LocalStorageBacking,
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
     let data = storage_entry::<S, T>(key.clone(), init);
 
-    StorageEntry::new(key, data, cx)
+    StorageEntry::new_local(key, data, cx)
 }
 
 #[allow(unused)]
@@ -264,7 +252,7 @@ pub fn use_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<StorageEntry<S, T>>
 where
-    S: StorageBacking + 'static,
+    S: LocalStorageBacking,
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {

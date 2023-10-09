@@ -9,44 +9,39 @@ use web_sys::{window, Storage};
 
 use crate::storage::storage::{
     serde_to_string, try_serde_from_string,
-    StorageBacking, StorageChannelPayload,
+    StorageBacking, StorageChannelPayload, LocalStorageBacking, StorageType,
 };
 use crate::utils::channel::UseChannel;
 
-fn local_storage() -> Option<Storage> {
-    window()?.local_storage().ok()?
-}
-
-fn set<T: Serialize>(key: String, value: &T) {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let as_str = serde_to_string(value);
-        local_storage().unwrap().set_item(&key, &as_str).unwrap();
-    }
-}
-
-fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let s: String = local_storage()?.get_item(key).ok()??;
-        try_serde_from_string(&s)
-    }
-    #[cfg(feature = "ssr")]
-    None
-}
-
+// Start LocalStorage
 #[derive(Clone)]
-pub struct ClientStorage;
+pub struct LocalStorage;
 
-impl StorageBacking for ClientStorage {
+impl StorageBacking for LocalStorage {
     type Key = String;
+    type Local = Self;
+
+    fn set<T: Serialize>(key: String, value: &T) {
+        set(key, value, StorageType::Local);
+    }
+
+    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
+        get(key, StorageType::Local)
+    }
+
+    fn as_local_storage() -> bool {
+        true
+    }
+}
+
+impl LocalStorageBacking for LocalStorage {
 
     fn subscribe<T: DeserializeOwned + 'static>(
         _cx: &ScopeState,
         _key: &Self::Key,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
         let channel = CHANNEL.get_or_init(|| {
-            let (tx, rx) = broadcast::<StorageChannelPayload<ClientStorage>>(5);
+            let (tx, rx) = broadcast::<StorageChannelPayload<Self>>(5);
             let channel = UseChannel::new(Uuid::new_v4(), tx, rx.deactivate());
             let channel_clone = channel.clone();
 
@@ -56,7 +51,7 @@ impl StorageBacking for ClientStorage {
                 let channel_clone_clone = channel_clone.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     let result = channel_clone_clone
-                        .send(StorageChannelPayload::<ClientStorage> { key })
+                        .send(StorageChannelPayload::<Self> { key })
                         .await;
                     match result {
                         Ok(_) => log::info!("Sent storage event"),
@@ -77,14 +72,58 @@ impl StorageBacking for ClientStorage {
     fn unsubscribe(_key: &Self::Key) {
         // Do nothing for web case, since we don't actually subscribe to specific keys.
     }
+}
+
+static CHANNEL: OnceLock<UseChannel<StorageChannelPayload<LocalStorage>>> = OnceLock::new();
+// End LocalStorage
+
+// Start SessionStorage
+#[derive(Clone)]
+pub struct SessionStorage;
+
+impl StorageBacking for SessionStorage {
+    type Key = String;
+    type Local = LocalStorage;
 
     fn set<T: Serialize>(key: String, value: &T) {
-        set(key, value);
+        set(key, value, StorageType::Session);
     }
 
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key)
+        get(key, StorageType::Session)
+    }
+
+    fn as_local_storage() -> bool {
+        false
+    }
+}
+// End SessionStorage
+
+// Start common
+fn set<T: Serialize>(key: String, value: &T, storage_type: StorageType) {
+    #[cfg(not(feature = "ssr"))]
+    {
+        let as_str = serde_to_string(value);
+        get_storage_by_type(storage_type).unwrap().set_item(&key, &as_str).unwrap();
     }
 }
 
-static CHANNEL: OnceLock<UseChannel<StorageChannelPayload<ClientStorage>>> = OnceLock::new();
+fn get<T: DeserializeOwned>(key: &str, storage_type: StorageType) -> Option<T> {
+    #[cfg(not(feature = "ssr"))]
+    {
+        let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
+        try_serde_from_string(&s)
+    }
+    #[cfg(feature = "ssr")]
+    None
+}
+
+fn get_storage_by_type(storage_type: StorageType) -> Option<Storage> {
+    window().map_or_else(|| None, |window| {
+        match storage_type {
+            StorageType::Local => window.local_storage().ok()?,
+            StorageType::Session => window.session_storage().ok()?,
+        }
+    })
+}
+// End common
