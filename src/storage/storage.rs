@@ -55,12 +55,39 @@ pub struct PersistentStorage {
 
 pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
+    fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
+    fn set<T: Serialize>(key: Self::Key, value: &T);
+}
+
+pub trait SessionStorageBacking: StorageBacking {
+    fn new_session();
+    fn drop_session(&self);
+}
+
+pub struct StorageSession<T: SessionStorageBacking> {
+    _marker: std::marker::PhantomData<T>,
+    session_id: uuid::Uuid,
+}
+
+impl<T: SessionStorageBacking> StorageSession<T> {
+    pub fn new() -> Self {
+        T::new_session();
+        Self {
+            _marker: std::marker::PhantomData,
+            session_id: uuid::Uuid::new_v4(),
+        }
+    }
+
+    pub fn drop(&self) {
+        T::drop_session(self);
+    }
+}
+
+pub trait LocalStorageBacking: StorageBacking {
     fn subscribe<T: DeserializeOwned + 'static>(
         cx: &ScopeState,
         key: &Self::Key,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>>;
-    fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
-    fn set<T: Serialize>(key: Self::Key, value: &T);
 }
 
 #[derive(Clone)]
@@ -77,7 +104,7 @@ impl<S: StorageBacking> Debug for StorageChannelPayload<S> {
 }
 
 #[derive(Clone, Default)]
-pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> {
+pub struct  StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> {
     pub(crate) key: S::Key,
     pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
     pub(crate) data: T,
