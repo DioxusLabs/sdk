@@ -59,6 +59,7 @@ pub trait StorageBacking: Sized + Clone + 'static {
         cx: &ScopeState,
         key: &Self::Key,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>>;
+    fn unsubscribe(key: &Self::Key);
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
 }
@@ -106,14 +107,16 @@ where
     S::Key: Clone,
 {
     pub fn new(key: S::Key, data: T, cx: Option<&ScopeState>) -> Self {
-        let channel = {
-            #[cfg(feature = "ssr")]
-            {
-                None
-            }
-            #[cfg(not(feature = "ssr"))]
-            {
-                cx.map_or_else(|| None, |cx| S::subscribe::<T>(cx, &key))
+        let channel: Option<UseChannel<StorageChannelPayload<S>>> = {
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "ssr")]
+                {
+                    None
+                }
+                else if #[cfg(not(feature = "ssr"))]
+                {
+                    cx.map_or_else(|| None, |cx| S::subscribe::<T>(cx, &key))
+                }
             }
         };
         Self { key, data, channel }
@@ -148,7 +151,11 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for Stora
 }
 
 impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Drop for StorageEntry<S, T> {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        if self.channel.is_some() {
+            S::unsubscribe(&self.key);
+        }
+    }
 }
 
 pub struct StorageEntryMut<'a, S, T>
