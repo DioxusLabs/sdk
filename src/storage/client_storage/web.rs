@@ -9,7 +9,7 @@ use web_sys::{window, Storage};
 
 use crate::storage::storage::{
     serde_to_string, try_serde_from_string,
-    StorageBacking, StorageChannelPayload, LocalStorageBacking, StorageType,
+    StorageBacking, StorageChannelPayload, StorageSubscriber, StorageType,
 };
 use crate::utils::channel::UseChannel;
 
@@ -19,7 +19,6 @@ pub struct LocalStorage;
 
 impl StorageBacking for LocalStorage {
     type Key = String;
-    type Local = Self;
 
     fn set<T: Serialize>(key: String, value: &T) {
         set(key, value, StorageType::Local);
@@ -28,17 +27,13 @@ impl StorageBacking for LocalStorage {
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, StorageType::Local)
     }
-
-    fn is_local_storage() -> bool {
-        true
-    }
 }
 
-impl LocalStorageBacking for LocalStorage {
+impl StorageSubscriber<LocalStorage> for LocalStorage {
 
     fn subscribe<T: DeserializeOwned + 'static>(
         _cx: &ScopeState,
-        _key: &Self::Key,
+        _key: &String,
     ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
         let channel = CHANNEL.get_or_init(|| {
             let (tx, rx) = broadcast::<StorageChannelPayload<Self>>(5);
@@ -69,7 +64,7 @@ impl LocalStorageBacking for LocalStorage {
         Some(channel.clone())
     }
 
-    fn unsubscribe(_key: &Self::Key) {
+    fn unsubscribe(_key: &String) {
         // Do nothing for web case, since we don't actually subscribe to specific keys.
     }
 }
@@ -83,8 +78,6 @@ pub struct SessionStorage;
 
 impl StorageBacking for SessionStorage {
     type Key = String;
-    // Ideally the following should be the experimental !(never) type, but that's not stable yet.
-    type Local = LocalStorage;
 
     fn set<T: Serialize>(key: String, value: &T) {
         set(key, value, StorageType::Session);
@@ -92,10 +85,6 @@ impl StorageBacking for SessionStorage {
 
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, StorageType::Session)
-    }
-
-    fn is_local_storage() -> bool {
-        false
     }
 }
 // End SessionStorage

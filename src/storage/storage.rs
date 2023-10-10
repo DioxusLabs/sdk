@@ -1,8 +1,7 @@
 use dioxus::prelude::ScopeState;
 use dioxus_signals::{use_signal, Signal};
 use postcard::to_allocvec;
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
 
@@ -47,28 +46,21 @@ pub fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<T> {
     postcard::from_bytes(&decompressed).ok()
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct PersistentStorage {
-    pub data: Vec<Vec<u8>>,
-    pub idx: usize,
-}
-
 pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
-    type Local: LocalStorageBacking<Key = Self::Key>;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
-    fn is_local_storage() -> bool;
 }
 
-pub trait LocalStorageBacking: StorageBacking {
+pub trait StorageSubscriber<S: StorageBacking> {
     fn subscribe<T: DeserializeOwned + 'static>(
         cx: &ScopeState,
-        key: &Self::Key,
-    ) -> Option<UseChannel<StorageChannelPayload<Self>>>;
-    fn unsubscribe(key: &Self::Key);
+        key: &S::Key,
+    ) -> Option<UseChannel<StorageChannelPayload<S>>>;
+    fn unsubscribe(key: &S::Key);
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum StorageType {
     Local,
     Session,
@@ -88,10 +80,10 @@ impl<S: StorageBacking> Debug for StorageChannelPayload<S> {
 }
 
 #[derive(Clone, Default)]
-pub struct  StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> {
+pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> {
     pub(crate) key: S::Key,
-    pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
     pub(crate) data: T,
+    pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
 }
 
 impl<S: StorageBacking, T: Display + Serialize + DeserializeOwned + Clone> Display
@@ -112,12 +104,28 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 
 impl<S, T> StorageEntry<S, T>
 where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + 'static,
+    S::Key: Clone,
+{
+    fn new_synced(key: S::Key, data: T, cx: &ScopeState) -> Self {
+        let channel = S::subscribe::<T>(cx, &key);
+        Self { key, data, channel }
+    }
+}
+
+impl<S, T> StorageEntry<S, T>
+where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
     pub fn new(key: S::Key, data: T) -> Self {
-        Self { key, data, channel: None }
+        Self {
+            key,
+            data,
+            channel: None,
+        }
     }
 
     pub(crate) fn save(&self) {
@@ -140,37 +148,11 @@ where
     }
 }
 
-impl<S, T> StorageEntry<S,T> where S: LocalStorageBacking, T: Serialize + DeserializeOwned + Clone + 'static, S::Key: Clone {
-    pub fn new_local(key: S::Key, data: T, cx: Option<&ScopeState>) -> Self {
-        let channel: Option<UseChannel<StorageChannelPayload<S>>> = {
-            cfg_if::cfg_if! {
-                if #[cfg(feature = "ssr")]
-                {
-                    None
-                }
-                else if #[cfg(not(feature = "ssr"))]
-                {
-                    cx.map_or_else(|| None, |cx| S::subscribe::<T>(cx, &key))
-                }
-            }
-        };
-        Self { key, data, channel }
-    }
-}
-
 impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for StorageEntry<S, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
         &self.data
-    }
-}
-
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Drop for StorageEntry<S, T> {
-    fn drop(&mut self) {
-        if self.channel.is_some() && (S::is_local_storage()) {
-            S::Local::unsubscribe(&self.key);
-        }
     }
 }
 
@@ -233,16 +215,16 @@ pub fn storage_entry<S: StorageBacking, T: Serialize + DeserializeOwned>(
 pub fn synced_storage_entry<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
-    cx: Option<&ScopeState>,
+    cx: &ScopeState,
 ) -> StorageEntry<S, T>
 where
-    S: LocalStorageBacking,
+    S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
     let data = storage_entry::<S, T>(key.clone(), init);
 
-    StorageEntry::new_local(key, data, cx)
+    StorageEntry::new_synced(key, data, cx)
 }
 
 #[allow(unused)]
@@ -252,11 +234,11 @@ pub fn use_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<StorageEntry<S, T>>
 where
-    S: LocalStorageBacking,
+    S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
-    let state = use_signal(cx, || synced_storage_entry::<S, T>(key, init, Some(cx)));
+    let state = use_signal(cx, || synced_storage_entry::<S, T>(key, init, cx));
 
     if let Some(channel) = &state.read().channel {
         use_listen_channel(cx, channel, move |_| async move { state.write().update() });
