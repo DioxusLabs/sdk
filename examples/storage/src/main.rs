@@ -27,7 +27,7 @@ fn app(cx: Scope) -> Element {
         div {
             button {
                 onclick: move |_| {
-                    count_local.with_mut(|count| *count.write() += 1)
+                    count_local.set(count_local.get() + 1);
                 },
                 "Click me!"
             },

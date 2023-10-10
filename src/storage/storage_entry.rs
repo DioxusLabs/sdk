@@ -1,7 +1,8 @@
 use dioxus::prelude::ScopeState;
-use dioxus_signals::{use_signal, Signal};
+use dioxus_signals::{use_signal, Signal, Write};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
+use std::cell::Ref;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
 
@@ -226,7 +227,7 @@ pub fn use_synced_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
-) -> Signal<StorageEntry<S, T>>
+) -> UseStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + 'static,
@@ -243,8 +244,116 @@ where
             }
         });
     }
-    state
+    UseStorageEntry::new(state)
 }
+
+//  Start UseStorageEntry
+pub struct StorageRef<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Ref<'a, StorageEntry<S, T>>,
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRef<'a, S, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+pub struct StorageRefMut<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Write<'a, StorageEntry<S, T>>,
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, S, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> DerefMut for StorageRefMut<'a, S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner.data
+    }
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefMut<'a, S, T> {
+    fn drop(&mut self) {
+        self.inner.deref_mut().save();
+    }
+}
+
+/// Storage that persists across application reloads
+pub struct UseStorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Signal<StorageEntry<S, T>>,
+}
+
+#[allow(unused)]
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> UseStorageEntry<S, T> {
+    pub fn new(signal: Signal<StorageEntry<S, T>>) -> Self {
+        Self { inner: signal }
+    }
+
+    /// Returns a reference to the value
+    pub fn read(&self) -> StorageRef<S, T> {
+        StorageRef {
+            inner: self.inner.read(),
+        }
+    }
+
+    /// Returns a mutable reference to the value
+    pub fn write(&self) -> StorageRefMut<S, T> {
+        StorageRefMut {
+            inner: self.inner.write(),
+        }
+    }
+
+    /// Sets the value
+    pub fn set(&self, value: T) {
+        *self.write() = value;
+    }
+
+    /// Modifies the value
+    pub fn modify<F: FnOnce(&mut T)>(&self, f: F) {
+        f(&mut self.write());
+    }
+
+    pub fn save(&self) {
+        self.inner.write().save();
+    }
+}
+
+#[allow(unused)]
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> UseStorageEntry<S, T> {
+    /// Returns a clone of the value
+    pub fn get(&self) -> T {
+        self.read().clone()
+    }
+}
+
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Display
+    for UseStorageEntry<S, T>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (*self.read()).fmt(f)
+    }
+}
+
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for UseStorageEntry<S, T> {
+    type Target = Signal<StorageEntry<S, T>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> DerefMut for UseStorageEntry<S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+// End UseStorageEntry
 
 // state.with(move |state| {
 //     if let Some(channel) = &state.channel {
