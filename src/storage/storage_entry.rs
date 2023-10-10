@@ -248,42 +248,6 @@ where
 }
 
 //  Start UseStorageEntry
-pub struct StorageRef<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
-    inner: Ref<'a, StorageEntry<S, T>>,
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRef<'a, S, T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-pub struct StorageRefMut<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
-    inner: Write<'a, StorageEntry<S, T>>,
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, S, T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> DerefMut for StorageRefMut<'a, S, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner.data
-    }
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefMut<'a, S, T> {
-    fn drop(&mut self) {
-        self.inner.deref_mut().save();
-    }
-}
-
 /// Storage that persists across application reloads
 pub struct UseStorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
     inner: Signal<StorageEntry<S, T>>,
@@ -353,6 +317,43 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'sta
         &mut self.inner
     }
 }
+
+pub struct StorageRef<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Ref<'a, StorageEntry<S, T>>,
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRef<'a, S, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+pub struct StorageRefMut<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    inner: Write<'a, StorageEntry<S, T>>,
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, S, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> DerefMut for StorageRefMut<'a, S, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner.data
+    }
+}
+
+impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefMut<'a, S, T> {
+    fn drop(&mut self) {
+        self.inner.deref_mut().save();
+    }
+}
+
 // End UseStorageEntry
 
 // state.with(move |state| {
