@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
                 },
                 "Click me!"
             },
-            "I persist across all sessions. {count_local} times"
+            "I persist across all sessions. Clicked {count_local} times"
         }
     )
 }
