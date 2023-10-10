@@ -7,9 +7,9 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
-use crate::storage::storage::{
+use crate::storage::storage_entry::{
     serde_to_string, try_serde_from_string,
-    StorageBacking, StorageChannelPayload, StorageSubscriber, StorageType,
+    StorageBacking, StorageChannelPayload, StorageSubscriber,
 };
 use crate::utils::channel::UseChannel;
 
@@ -21,11 +21,11 @@ impl StorageBacking for LocalStorage {
     type Key = String;
 
     fn set<T: Serialize>(key: String, value: &T) {
-        set(key, value, StorageType::Local);
+        set(key, value, WebStorageType::Local);
     }
 
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, StorageType::Local)
+        get(key, WebStorageType::Local)
     }
 }
 
@@ -80,17 +80,17 @@ impl StorageBacking for SessionStorage {
     type Key = String;
 
     fn set<T: Serialize>(key: String, value: &T) {
-        set(key, value, StorageType::Session);
+        set(key, value, WebStorageType::Session);
     }
 
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, StorageType::Session)
+        get(key, WebStorageType::Session)
     }
 }
 // End SessionStorage
 
 // Start common
-fn set<T: Serialize>(key: String, value: &T, storage_type: StorageType) {
+fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
     #[cfg(not(feature = "ssr"))]
     {
         let as_str = serde_to_string(value);
@@ -98,7 +98,7 @@ fn set<T: Serialize>(key: String, value: &T, storage_type: StorageType) {
     }
 }
 
-fn get<T: DeserializeOwned>(key: &str, storage_type: StorageType) -> Option<T> {
+fn get<T: DeserializeOwned>(key: &str, storage_type: WebStorageType) -> Option<T> {
     #[cfg(not(feature = "ssr"))]
     {
         let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
@@ -108,12 +108,17 @@ fn get<T: DeserializeOwned>(key: &str, storage_type: StorageType) -> Option<T> {
     None
 }
 
-fn get_storage_by_type(storage_type: StorageType) -> Option<Storage> {
+fn get_storage_by_type(storage_type: WebStorageType) -> Option<Storage> {
     window().map_or_else(|| None, |window| {
         match storage_type {
-            StorageType::Local => window.local_storage().ok()?,
-            StorageType::Session => window.session_storage().ok()?,
+            WebStorageType::Local => window.local_storage().ok()?,
+            WebStorageType::Session => window.session_storage().ok()?,
         }
     })
+}
+
+enum WebStorageType {
+    Local,
+    Session,
 }
 // End common

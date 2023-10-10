@@ -60,12 +60,6 @@ pub trait StorageSubscriber<S: StorageBacking> {
     fn unsubscribe(key: &S::Key);
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum StorageType {
-    Local,
-    Session,
-}
-
 #[derive(Clone)]
 pub struct StorageChannelPayload<S: StorageBacking> {
     pub key: S::Key,

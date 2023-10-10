@@ -1,5 +1,5 @@
 use crate::storage::{
-    storage::{storage_entry, StorageEntry},
+    storage_entry::{storage_entry, StorageEntry},
     SessionStorage,
 };
 use dioxus::prelude::*;

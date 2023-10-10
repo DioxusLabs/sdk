@@ -28,9 +28,9 @@
 
 mod client_storage;
 mod persistence;
-mod storage;
+mod storage_entry;
 
-pub use storage::use_synced_storage_entry;
+pub use storage_entry::use_synced_storage_entry;
 pub use client_storage::{LocalStorage, SessionStorage};
 pub use persistence::{use_persistent, use_singleton_persistent};
 
