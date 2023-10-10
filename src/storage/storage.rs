@@ -244,10 +244,24 @@ where
         use_listen_channel(cx, channel, move |message| async move { 
             if let Ok(payload) = message {
                 if payload.key == state.read().key {
-                    state.write().update();
+                    state.write().update()
                 }
             }
         });
     }
     state
 }
+
+// state.with(move |state| {
+//     if let Some(channel) = &state.channel {
+        
+//         use_listen_channel(cx, channel, move |message: Result<StorageChannelPayload<S>, async_broadcast::RecvError>| async move {
+//             if let Ok(payload) = message {
+//                 if state.key == payload.key {
+//                     state.update();
+//                 }
+//             }
+//         });
+//     }
+// });
+// state

@@ -11,27 +11,27 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let count1 = use_singleton_persistent(cx, || 0);
-    let count2 = use_singleton_persistent(cx, || 0);
+    let count_session = use_singleton_persistent(cx, || 0);
+    let count_local = use_synced_storage_entry::<LocalStorage, i32>(cx, "synced".to_string(), || 0);
 
     render!(
         div {
             button {
                 onclick: move |_| {
-                    count1.set(count1.get() + 1);
+                    count_session.set(count_session.get() + 1);
                 },
                 "Click me!"
             },
-            "Clicked {count1} times"
+            "I persist for the current session. Clicked {count_session} times"
         }
         div {
             button {
                 onclick: move |_| {
-                    count2.set(count2.get() + 1);
+                    count_local.with_mut(|count| *count.write() += 1)
                 },
                 "Click me!"
             },
-            "Clicked {count2} times"
+            "I persist across all sessions. {count_local} times"
         }
     )
 }
