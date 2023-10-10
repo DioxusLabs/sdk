@@ -241,7 +241,13 @@ where
     let state = use_signal(cx, || synced_storage_entry::<S, T>(key, init, cx));
 
     if let Some(channel) = &state.read().channel {
-        use_listen_channel(cx, channel, move |_| async move { state.write().update() });
+        use_listen_channel(cx, channel, move |message| async move { 
+            if let Ok(payload) = message {
+                if payload.key == state.read().key {
+                    state.write().update();
+                }
+            }
+        });
     }
     state
 }

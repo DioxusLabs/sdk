@@ -2,7 +2,6 @@ use crate::storage::{
     storage::{storage_entry, StorageEntry},
     SessionStorage,
 };
-use crate::utils::channel::use_listen_channel;
 use dioxus::prelude::*;
 use dioxus_signals::{use_signal, Signal, Write};
 use serde::de::DeserializeOwned;
@@ -32,27 +31,12 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
         }
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
         {
-            let state = use_signal(cx, || {
+            use_signal(cx, || {
                 StorageEntry::<SessionStorage, T>::new(
                     key.to_string(),
                     storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
                 )
-            });
-            if let Some(channel) = &state.read().channel {
-                log::info!("Subscribing to storage entry");
-                use_listen_channel(cx, channel, move |message| async move {
-                    match message {
-                        Ok(value) => {
-                            log::info!("Incoming message: {:?}", value);
-                            if value.key == state.read().key {
-                                state.write().update();
-                            }
-                        }
-                        Err(err) => log::info!("Error: {err:?}"),
-                    }
-                });
-            }
-            state
+            })
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
         {
