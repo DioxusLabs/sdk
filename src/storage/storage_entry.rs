@@ -199,6 +199,7 @@ where
 
 //  Start UseStorageEntry
 /// Storage that persists across application reloads
+#[derive(Clone, Copy)]
 pub struct UseStorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
     inner: Signal<StorageEntry<S, T>>,
 }
