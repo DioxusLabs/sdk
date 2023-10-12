@@ -27,10 +27,6 @@ impl StorageBacking for LocalStorage {
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, WebStorageType::Local)
     }
-
-    fn save_on_write() -> bool {
-        true
-    }
 }
 
 impl StorageSubscriber<LocalStorage> for LocalStorage {
@@ -88,12 +84,6 @@ impl StorageBacking for SessionStorage {
 
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, WebStorageType::Session)
-    }
-
-    fn save_on_write() -> bool {
-        // Session storage for web targets is not persisted across sessions, but it can be cloned if a tab is duplicated.
-        // This means we can't rely on the drop handler to save the data, so we need to save on write.
-        true
     }
 }
 // End SessionStorage

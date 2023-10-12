@@ -51,10 +51,6 @@ pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
-    /// Whether the storage should be saved on every write
-    fn save_on_write() -> bool {
-        false
-    }
 }
 
 pub trait StorageSubscriber<S: StorageBacking> {
@@ -115,14 +111,9 @@ where
         S::set(self.key.clone(), &self.data);
     }
 
-    pub fn write(&mut self) -> StorageEntryMut<'_, S, T> {
-        StorageEntryMut {
-            storage_entry: self,
-        }
-    }
-
     pub fn with_mut(&mut self, f: impl FnOnce(&mut T)) {
         f(&mut self.data);
+        self.save()
     }
 
     pub fn update(&mut self) {
@@ -151,50 +142,6 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.data.fmt(f)
-    }
-}
-
-pub struct StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    storage_entry: &'a mut StorageEntry<S, T>,
-}
-
-impl<'a, S, T> Deref for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone,
-    S::Key: Clone,
-{
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.storage_entry.data
-    }
-}
-
-impl<'a, S, T> DerefMut for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone,
-    S::Key: Clone,
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.storage_entry.data
-    }
-}
-
-impl<'a, S, T> Drop for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    fn drop(&mut self) {
-        self.storage_entry.save();
     }
 }
 
@@ -269,26 +216,13 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> UseSt
 
     /// Sets the value
     pub fn set(&self, value: T) {
-        self.inner.write().data = value;
-        self.try_save_on_write();
+        self.inner.write().with_mut(|data| *data = value)
     }
 
     /// Modifies the value
     pub fn modify<F: FnOnce(&mut T)>(&self, f: F) {
         let writer = &mut *self.inner.write();
         writer.with_mut(f);
-        self.try_save_on_write();
-    }
-
-    fn try_save_on_write(&self) {
-        if S::save_on_write() {
-            self.save();
-        }
-    }
-
-    /// Saves the value to the backing storage
-    pub fn save(&self) {
-        self.inner.write().save();
     }
 }
 
