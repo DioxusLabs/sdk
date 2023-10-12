@@ -1,5 +1,5 @@
 use dioxus::prelude::ScopeState;
-use dioxus_signals::{use_signal, Signal, Write};
+use dioxus_signals::{use_signal, Signal};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::cell::Ref;
@@ -51,6 +51,10 @@ pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
+    /// Whether the storage should be saved on every write
+    fn save_on_write() -> bool {
+        false
+    }
 }
 
 pub trait StorageSubscriber<S: StorageBacking> {
@@ -79,22 +83,6 @@ pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clo
     pub(crate) key: S::Key,
     pub(crate) data: T,
     pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
-}
-
-impl<S: StorageBacking, T: Display + Serialize + DeserializeOwned + Clone> Display
-    for StorageEntry<S, T>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.data.fmt(f)
-    }
-}
-
-impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
-    for StorageEntry<S, T>
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.data.fmt(f)
-    }
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -135,7 +123,6 @@ where
 
     pub fn with_mut(&mut self, f: impl FnOnce(&mut T)) {
         f(&mut self.data);
-        self.save();
     }
 
     pub fn update(&mut self) {
@@ -148,6 +135,22 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone> Deref for Stora
 
     fn deref(&self) -> &Self::Target {
         &self.data
+    }
+}
+
+impl<S: StorageBacking, T: Display + Serialize + DeserializeOwned + Clone> Display
+    for StorageEntry<S, T>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.data.fmt(f)
+    }
+}
+
+impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
+    for StorageEntry<S, T>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.data.fmt(f)
     }
 }
 
@@ -236,7 +239,7 @@ where
     let state = use_signal(cx, || synced_storage_entry::<S, T>(key, init, cx));
 
     if let Some(channel) = &state.read().channel {
-        use_listen_channel(cx, channel, move |message| async move { 
+        use_listen_channel(cx, channel, move |message| async move {
             if let Ok(payload) = message {
                 if payload.key == state.read().key {
                     state.write().update()
@@ -260,51 +263,56 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> UseSt
     }
 
     /// Returns a reference to the value
-    pub fn read(&self) -> StorageRef<S, T> {
-        StorageRef {
-            inner: self.inner.read(),
-        }
-    }
-
-    /// Returns a mutable reference to the value
-    pub fn write(&self) -> StorageRefMut<S, T> {
-        StorageRefMut {
-            inner: self.inner.write(),
-        }
+    pub fn read(&self) -> Ref<T> {
+        Ref::map(self.inner.read(), |entry| &entry.data)
     }
 
     /// Sets the value
     pub fn set(&self, value: T) {
-        *self.write() = value;
+        self.inner.write().data = value;
+        self.try_save_on_write();
     }
 
     /// Modifies the value
     pub fn modify<F: FnOnce(&mut T)>(&self, f: F) {
-        f(&mut self.write());
+        let writer = &mut *self.inner.write();
+        writer.with_mut(f);
+        self.try_save_on_write();
     }
 
+    fn try_save_on_write(&self) {
+        if S::save_on_write() {
+            self.save();
+        }
+    }
+
+    /// Saves the value to the backing storage
     pub fn save(&self) {
         self.inner.write().save();
     }
 }
 
 #[allow(unused)]
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> UseStorageEntry<S, T> {
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static>
+    UseStorageEntry<S, T>
+{
     /// Returns a clone of the value
     pub fn get(&self) -> T {
         self.read().clone()
     }
 }
 
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Display + Clone + 'static> Display
-    for UseStorageEntry<S, T>
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Display + Clone + 'static>
+    Display for UseStorageEntry<S, T>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         (*self.read()).fmt(f)
     }
 }
 
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref for UseStorageEntry<S, T> {
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> Deref
+    for UseStorageEntry<S, T>
+{
     type Target = Signal<StorageEntry<S, T>>;
 
     fn deref(&self) -> &Self::Target {
@@ -312,45 +320,11 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'sta
     }
 }
 
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> DerefMut for UseStorageEntry<S, T> {
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Default + Clone + 'static> DerefMut
+    for UseStorageEntry<S, T>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
-    }
-}
-
-pub struct StorageRef<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
-    inner: Ref<'a, StorageEntry<S, T>>,
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRef<'a, S, T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-pub struct StorageRefMut<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
-    inner: Write<'a, StorageEntry<S, T>>,
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Deref for StorageRefMut<'a, S, T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> DerefMut for StorageRefMut<'a, S, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner.data
-    }
-}
-
-impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> Drop for StorageRefMut<'a, S, T> {
-    fn drop(&mut self) {
-        self.inner.deref_mut().save();
     }
 }
 
@@ -358,7 +332,7 @@ impl<'a, S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> D
 
 // state.with(move |state| {
 //     if let Some(channel) = &state.channel {
-        
+
 //         use_listen_channel(cx, channel, move |message: Result<StorageChannelPayload<S>, async_broadcast::RecvError>| async move {
 //             if let Ok(payload) = message {
 //                 if state.key == payload.key {

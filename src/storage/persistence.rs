@@ -23,7 +23,11 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
         #[cfg(feature = "ssr")]
         {
             use_ref(cx, || {
-                StorageEntry::<SessionStorage, T>::new(key.to_string(), init.take().unwrap()(), None)
+                StorageEntry::<SessionStorage, T>::new(
+                    key.to_string(),
+                    init.take().unwrap()(),
+                    None,
+                )
             })
         }
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]

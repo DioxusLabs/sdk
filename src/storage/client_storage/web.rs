@@ -8,8 +8,8 @@ use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
 use crate::storage::storage_entry::{
-    serde_to_string, try_serde_from_string,
-    StorageBacking, StorageChannelPayload, StorageSubscriber,
+    serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
+    StorageSubscriber,
 };
 use crate::utils::channel::UseChannel;
 
@@ -27,10 +27,13 @@ impl StorageBacking for LocalStorage {
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, WebStorageType::Local)
     }
+
+    fn save_on_write() -> bool {
+        true
+    }
 }
 
 impl StorageSubscriber<LocalStorage> for LocalStorage {
-
     fn subscribe<T: DeserializeOwned + 'static>(
         _cx: &ScopeState,
         _key: &String,
@@ -86,6 +89,12 @@ impl StorageBacking for SessionStorage {
     fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
         get(key, WebStorageType::Session)
     }
+
+    fn save_on_write() -> bool {
+        // Session storage for web targets is not persisted across sessions, but it can be cloned if a tab is duplicated.
+        // This means we can't rely on the drop handler to save the data, so we need to save on write.
+        true
+    }
 }
 // End SessionStorage
 
@@ -94,7 +103,10 @@ fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
     #[cfg(not(feature = "ssr"))]
     {
         let as_str = serde_to_string(value);
-        get_storage_by_type(storage_type).unwrap().set_item(&key, &as_str).unwrap();
+        get_storage_by_type(storage_type)
+            .unwrap()
+            .set_item(&key, &as_str)
+            .unwrap();
     }
 }
 
@@ -109,12 +121,13 @@ fn get<T: DeserializeOwned>(key: &str, storage_type: WebStorageType) -> Option<T
 }
 
 fn get_storage_by_type(storage_type: WebStorageType) -> Option<Storage> {
-    window().map_or_else(|| None, |window| {
-        match storage_type {
+    window().map_or_else(
+        || None,
+        |window| match storage_type {
             WebStorageType::Local => window.local_storage().ok()?,
             WebStorageType::Session => window.session_storage().ok()?,
-        }
-    })
+        },
+    )
 }
 
 enum WebStorageType {
