@@ -1,4 +1,4 @@
-use async_broadcast::{broadcast, Receiver, InactiveReceiver, Sender};
+use async_broadcast::broadcast;
 use dioxus::prelude::*;
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::OnceLock;
@@ -33,17 +33,18 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn subscribe<T: DeserializeOwned + 'static>(
         _cx: &ScopeState,
         _key: &String,
-    ) -> Option<Receiver<StorageChannelPayload<Self>>> {
-        let (_, rx) = CHANNEL.get_or_init(|| {
+    ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
+        let channel = CHANNEL.get_or_init(|| {
             let (tx, rx) = broadcast::<StorageChannelPayload<Self>>(5);
-            let tx_clone = tx.clone();
+            let channel = UseChannel::new(Uuid::new_v4(), tx, rx.deactivate());
+            let channel_clone = channel.clone();
             let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
                 log::info!("Storage event: {:?}", e);
                 let key: String = e.key().unwrap();
-                let tx_clone_clone  = tx_clone.clone();
+                let channel_clone_clone  = channel_clone.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let result = tx_clone_clone
-                        .broadcast(StorageChannelPayload::<Self> { key })
+                    let result = channel_clone_clone
+                        .send(StorageChannelPayload::<Self> { key })
                         .await;
                     match result {
                         Ok(_) => log::info!("Sent storage event"),
@@ -56,9 +57,9 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
                 .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
                 .unwrap();
             closure.forget();
-            (tx, rx.deactivate())
+            channel
         });
-        Some(rx.activate_cloned())
+        Some(channel.clone())
     }
 
     fn unsubscribe(_key: &String) {
@@ -66,7 +67,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 }
 
-static CHANNEL: OnceLock<(Sender<StorageChannelPayload<LocalStorage>>, InactiveReceiver<StorageChannelPayload<LocalStorage>>)> = OnceLock::new();
+static CHANNEL: OnceLock<UseChannel<StorageChannelPayload<LocalStorage>>> = OnceLock::new();
 // End LocalStorage
 
 // Start SessionStorage
