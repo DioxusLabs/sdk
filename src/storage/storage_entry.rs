@@ -6,6 +6,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::cell::Ref;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
+use std::sync::{Mutex, Arc};
 
 use crate::utils::channel::{use_listen_channel, UseChannel};
 
@@ -80,6 +81,7 @@ pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clo
     pub(crate) key: S::Key,
     pub(crate) data: Signal<T>,
     pub(crate) channel: Option<Receiver<StorageChannelPayload<S>>>,
+    pub(crate) lock: Arc<Mutex<()>>,
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -92,7 +94,7 @@ where
         let key_clone = key.clone();
         let channel = S::subscribe::<T>(cx, &key);
 
-        let retval = Self { key, data: Signal::new_in_scope(data, cx.scope_id()), channel };
+        let retval = Self { key, data: Signal::new_in_scope(data, cx.scope_id()), channel, lock: Arc::new(Mutex::new(())) };
         // let retval_clone = retval.clone();
 
         if let Some(mut channel) = retval.channel.clone() {
@@ -126,11 +128,14 @@ where
             key,
             data: Signal::new_in_scope(data, cx.scope_id()),
             channel: None,
+            lock: Arc::new(Mutex::new(())),
         }
     }
 
     pub(crate) fn save(&self) {
-        S::set(self.key.clone(), &self.data);
+        let _ = self.lock.try_lock().map(|_| {
+            S::set(self.key.clone(), &self.data);
+        });
     }
 
     // pub fn with_mut(&mut self, f: impl FnOnce(&mut T)) {
