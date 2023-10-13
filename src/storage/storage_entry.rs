@@ -1,6 +1,6 @@
 use async_broadcast::Receiver;
-use dioxus::prelude::{ScopeState, to_owned};
-use dioxus_signals::{use_signal, Signal, Write};
+use dioxus::prelude::{ScopeState, to_owned, use_effect};
+use dioxus_signals::{use_signal, use_selector, Signal, Write};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::cell::Ref;
@@ -89,8 +89,29 @@ where
     S::Key: Clone,
 {
     fn new_synced(key: S::Key, data: T, cx: &ScopeState) -> Self {
+        let key_clone = key.clone();
         let channel = S::subscribe::<T>(cx, &key);
-        Self { key, data: Signal::new_in_scope(data, cx.scope_id()), channel }
+
+        let retval = Self { key, data: Signal::new_in_scope(data, cx.scope_id()), channel };
+        // let retval_clone = retval.clone();
+
+        if let Some(mut channel) = retval.channel.clone() {
+            cx.spawn(async move {
+                loop {
+                    let message = channel.recv().await;
+                    log::info!("message: {:?}", message);
+                    if let Ok(payload) = message {
+                        if key_clone == payload.key {
+                            *retval.data.write() = S::get(&key_clone).unwrap_or_else(|| {
+                                log::info!("get failed");
+                                retval.data.read().clone()
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        retval
     }
 }
 
@@ -112,19 +133,19 @@ where
         S::set(self.key.clone(), &self.data);
     }
 
-    pub fn with_mut(&mut self, f: impl FnOnce(&mut T)) {
-        f(&mut self.data.write());
-        self.save()
-    }
+    // pub fn with_mut(&mut self, f: impl FnOnce(&mut T)) {
+    //     f(&mut self.data.write());
+    //     self.save()
+    // }
 
-    pub fn write(&mut self) -> StorageEntryMut<'_, S, T> {
-        StorageEntryMut {
-            storage_entry: self,
-        }
-    }
+    // pub fn write(&mut self) -> StorageEntryMut<'_, S, T> {
+    //     StorageEntryMut {
+    //         storage_entry: self,
+    //     }
+    // }
 
     pub fn update(&mut self) {
-        self.data = S::get(&self.key).unwrap_or(self.data.clone());
+        self.data = S::get(&self.key).unwrap_or(self.data);
     }
 }
 
@@ -152,49 +173,49 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
     }
 }
 
-pub struct StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    storage_entry: &'a StorageEntry<S, T>,
-}
+// pub struct StorageEntryMut<'a, S, T>
+// where
+//     S: StorageBacking,
+//     T: Serialize + DeserializeOwned + Clone + 'static,
+//     S::Key: Clone,
+// {
+//     storage_entry: &'a StorageEntry<S, T>,
+// }
 
-impl<'a, S, T> Deref for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    type Target = T;
+// impl<'a, S, T> Deref for StorageEntryMut<'a, S, T>
+// where
+//     S: StorageBacking,
+//     T: Serialize + DeserializeOwned + Clone + 'static,
+//     S::Key: Clone,
+// {
+//     type Target = T;
 
-    fn deref(&self) -> &Self::Target {
-        &self.storage_entry.data.read()
-    }
-}
+//     fn deref(&self) -> &Self::Target {
+//         &self.storage_entry.data.read()
+//     }
+// }
 
-impl<'a, S, T> DerefMut for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.storage_entry.data.write()
-    }
-}
+// impl<'a, S, T> DerefMut for StorageEntryMut<'a, S, T>
+// where
+//     S: StorageBacking,
+//     T: Serialize + DeserializeOwned + Clone + 'static,
+//     S::Key: Clone,
+// {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         &mut self.storage_entry.data.write()
+//     }
+// }
 
-impl<'a, S, T> Drop for StorageEntryMut<'a, S, T>
-where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    fn drop(&mut self) {
-        self.storage_entry.save();
-    }
-}
+// impl<'a, S, T> Drop for StorageEntryMut<'a, S, T>
+// where
+//     S: StorageBacking,
+//     T: Serialize + DeserializeOwned + Clone + 'static,
+//     S::Key: Clone,
+// {
+//     fn drop(&mut self) {
+//         self.storage_entry.save();
+//     }
+// }
 
 pub fn storage_entry<S: StorageBacking, T: Serialize + DeserializeOwned>(
     key: S::Key,
@@ -236,23 +257,14 @@ where
 {
     let cx_clone = cx.clone();
     let state = cx.use_hook(|| synced_storage_entry::<S, T>(key, init, cx_clone));
-
     let state_clone = state.clone();
-
-    if let Some(channel) = &state.channel {
-        cx.spawn(async move {
-            let channel_clone = channel.clone();
-            loop {
-                let message = channel_clone.recv().await;
-                if let Ok(payload) = message {
-                    if state.key == payload.key {
-                        state.update();
-                    }
-                }
-            }
-        })
-    }
-    &mut state_clone.data
+    let state_signal = state.data;
+    use_selector(cx_clone, move || {
+        log::info!("use_synced_storage_entry selector");
+        let x = state_signal;
+        state_clone.save();
+    });
+    &mut state.data
 }
 
 // //  Start UseStorageEntry
