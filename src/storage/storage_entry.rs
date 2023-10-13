@@ -204,7 +204,7 @@ where
     let state_clone = state.clone();
     use_selector(cx, move || {
         log::info!("use_synced_storage_entry selector");
-        let x = state_signal;
+        let _x = state_signal;
         state_clone.save();
     });
     &mut state.data

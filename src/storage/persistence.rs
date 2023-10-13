@@ -3,7 +3,7 @@ use crate::storage::{
     SessionStorage,
 };
 use dioxus::prelude::*;
-use dioxus_signals::use_signal;
+use dioxus_signals::use_selector;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -56,6 +56,13 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
             state
         }
     };
+    let state_clone = state.clone();
+    let state_signal = state.data;
+    use_selector(cx, move || {
+        log::info!("use_synced_storage_entry selector");
+        let _x = state_signal;
+        state_clone.save();
+    });
     state
 }
 
