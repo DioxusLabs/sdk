@@ -1,4 +1,4 @@
-use dioxus::prelude::ScopeState;
+use dioxus::prelude::{ScopeState, use_effect};
 use dioxus_signals::{use_selector, use_signal, Signal};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
@@ -202,9 +202,8 @@ where
         });
     }
     let state_clone = state.clone();
-    use_selector(cx, move || {
+    use_effect(cx, (&state_signal,), move |_| async move {
         log::info!("use_synced_storage_entry selector");
-        let _x = state_signal;
         state_clone.save();
     });
     &mut state.data
