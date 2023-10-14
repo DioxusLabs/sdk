@@ -38,11 +38,10 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
             let (tx, rx) = broadcast::<StorageChannelPayload<Self>>(5);
             let channel = UseChannel::new(Uuid::new_v4(), tx, rx.deactivate());
             let channel_clone = channel.clone();
-
             let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
                 log::info!("Storage event: {:?}", e);
                 let key: String = e.key().unwrap();
-                let channel_clone_clone = channel_clone.clone();
+                let channel_clone_clone  = channel_clone.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     let result = channel_clone_clone
                         .send(StorageChannelPayload::<Self> { key })

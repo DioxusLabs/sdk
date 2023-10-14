@@ -18,7 +18,7 @@ fn app(cx: Scope) -> Element {
         div {
             button {
                 onclick: move |_| {
-                    count_session.set(count_session.get() + 1);
+                    *count_session.write() += 1;
                 },
                 "Click me!"
             },
@@ -27,7 +27,7 @@ fn app(cx: Scope) -> Element {
         div {
             button {
                 onclick: move |_| {
-                    count_local.set(count_local.get() + 1);
+                    *count_local.write() += 1;
                 },
                 "Click me!"
             },
