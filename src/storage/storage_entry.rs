@@ -1,5 +1,5 @@
-use dioxus::prelude::{ScopeState, use_effect};
-use dioxus_signals::{use_selector, use_signal, Signal};
+use dioxus::prelude::{to_owned, use_effect, use_ref, ScopeState};
+use dioxus_signals::{use_signal, Signal};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::{Debug, Display};
@@ -188,16 +188,21 @@ where
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
 {
-    let key_signal = use_signal(cx, || key.clone());
+    let key_clone = key.clone();
     let state = cx.use_hook(|| synced_storage_entry::<S, T>(key, init, cx));
     let state_signal = state.data;
     if let Some(channel) = state.channel.clone() {
-        use_listen_channel(cx, &channel, move |message| async move {
-            if let Ok(payload) = message {
-                *state_signal.write() = S::get(&key_signal.read()).unwrap_or_else(|| {
-                    log::info!("get failed");
-                    state_signal.read().clone()
-                });
+        use_listen_channel(cx, &channel, move |message| {
+            to_owned![key_clone];
+            async move {
+                if let Ok(payload) = message {
+                    if payload.key == key_clone {
+                        *state_signal.write() = S::get(&key_clone).unwrap_or_else(|| {
+                            log::info!("get failed for {:?}", key_clone);
+                            state_signal.read().clone()
+                        });                    
+                    }
+                }
             }
         });
     }

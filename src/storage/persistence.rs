@@ -39,8 +39,12 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
         {
-            let state = use_ref(cx, || {
-                StorageEntry::<ClientStorage, T>::new(key.to_string(), init.take().unwrap()(), None)
+            let state = cx.use_hook(|| {
+                StorageEntry::<SessionStorage, T>::new(
+                    key.to_string(),
+                    storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
+                    cx
+                )
             });
             if cx.generation() == 0 {
                 cx.needs_update();
@@ -70,7 +74,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 #[track_caller]
-pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'static>(
+pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clone + PartialEq + 'static>(
     cx: &ScopeState,
     init: impl FnOnce() -> T,
 ) -> &mut StorageEntry<SessionStorage, T> {
