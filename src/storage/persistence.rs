@@ -2,8 +2,7 @@ use crate::storage::{
     storage_entry::{storage_entry, StorageEntry},
     SessionStorage,
 };
-use dioxus::prelude::*;
-use dioxus_signals::use_selector;
+use dioxus::prelude::{use_effect, ScopeState};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -11,7 +10,7 @@ use serde::Serialize;
 ///
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
-pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'static>(
+pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + PartialEq + 'static>(
     cx: &ScopeState,
     key: impl ToString,
     init: impl FnOnce() -> T,
@@ -58,9 +57,8 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + 'stati
     };
     let state_clone = state.clone();
     let state_signal = state.data;
-    use_selector(cx, move || {
-        log::info!("use_synced_storage_entry selector");
-        let _x = state_signal;
+    use_effect(cx, (&state_signal.value(),), move |_| async move {
+        log::info!("state value changed, trying to save");
         state_clone.save();
     });
     state

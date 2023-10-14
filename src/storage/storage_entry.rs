@@ -185,7 +185,7 @@ pub fn use_synced_storage_entry<S, T>(
 ) -> &mut Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + 'static,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
 {
     let key_signal = use_signal(cx, || key.clone());
@@ -202,8 +202,8 @@ where
         });
     }
     let state_clone = state.clone();
-    use_effect(cx, (&state_signal,), move |_| async move {
-        log::info!("use_synced_storage_entry selector");
+    use_effect(cx, (&state_signal.value(),), move |_| async move {
+        log::info!("state value changed, trying to save");
         state_clone.save();
     });
     &mut state.data
