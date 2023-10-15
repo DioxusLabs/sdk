@@ -59,6 +59,10 @@ pub use client_storage::set_dir;
 //     }
 // }
 
+/// A storage hook that can be used to store data across application reloads.
+/// 
+/// It returns a Signal that can be used to read and modify the state.
+/// The changes to the state will be persisted across reloads.
 pub fn use_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
@@ -82,7 +86,10 @@ where
     storage_entry
 }
 
-#[allow(unused)]
+/// A storage hook that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
+/// 
+/// This hook returns a Signal that can be used to read and modify the state.
+/// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
 pub fn use_storage_entry_with_subscription<S, T>(
     cx: &ScopeState,
     key: S::Key,
@@ -94,7 +101,7 @@ where
     S::Key: Clone,
 {
     let key_clone = key.clone();
-    let storage_entry = cx.use_hook(|| synced_storage_entry::<S, T>(key, init, cx));
+    let storage_entry = cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init, cx));
     let storage_entry_signal = storage_entry.data;
     if let Some(channel) = storage_entry.channel.clone() {
         use_listen_channel(cx, &channel, move |message| {
@@ -118,6 +125,7 @@ where
     storage_entry
 }
 
+/// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
 pub fn storage_entry<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
@@ -132,7 +140,10 @@ where
     StorageEntry::new(key, data, cx)
 }
 
-pub fn synced_storage_entry<S, T>(
+/// Returns a synced StorageEntry with the latest value from storage or the init value if it doesn't exist.
+/// 
+/// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage. 
+pub fn storage_entry_with_channel<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
     cx: &ScopeState,
@@ -143,9 +154,10 @@ where
     S::Key: Clone,
 {
     let data = get_from_storage::<S, T>(key.clone(), init);
-    StorageEntry::new_synced(key, data, cx)
+    StorageEntry::new_with_channel(key, data, cx)
 }
 
+/// Returns a value from storage or the init value if it doesn't exist.
 pub fn get_from_storage<S: StorageBacking, T: Serialize + DeserializeOwned>(
     key: S::Key,
     init: impl FnOnce() -> T,
@@ -159,12 +171,18 @@ pub fn get_from_storage<S: StorageBacking, T: Serialize + DeserializeOwned>(
 // End use_storage hooks
 
 // Start StorageEntry
+
+/// A storage entry that can be used to store data across application reloads. It optionally provides a channel to subscribe to updates to the underlying storage.
 #[derive(Clone, Default)]
 pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
+    /// The key used to store the data in storage
     pub(crate) key: S::Key,
+    /// A signal that can be used to read and modify the state
     pub(crate) data: Signal<T>,
+    /// An optional channel to subscribe to updates to the underlying storage
     pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
-    pub(crate) lock: Arc<Mutex<()>>,
+    /// A lock to prevent multiple saves from happening at the same time
+    pub(crate) storage_save_lock: Arc<Mutex<()>>,
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -173,14 +191,15 @@ where
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
-    fn new_synced(key: S::Key, data: T, cx: &ScopeState) -> Self {
+    /// Creates a new StorageEntry with a channel to subscribe to updates to the underlying storage
+    fn new_with_channel(key: S::Key, data: T, cx: &ScopeState) -> Self {
         let channel = S::subscribe::<T>(cx, &key);
 
         Self {
             key,
             data: Signal::new_in_scope(data, cx.scope_id()),
             channel,
-            lock: Arc::new(Mutex::new(())),
+            storage_save_lock: Arc::new(Mutex::new(())),
         }
     }
 }
@@ -191,21 +210,24 @@ where
     T: Serialize + DeserializeOwned + Clone + 'static,
     S::Key: Clone,
 {
+    /// Creates a new StorageEntry
     pub fn new(key: S::Key, data: T, cx: &ScopeState) -> Self {
         Self {
             key,
             data: Signal::new_in_scope(data, cx.scope_id()),
             channel: None,
-            lock: Arc::new(Mutex::new(())),
+            storage_save_lock: Arc::new(Mutex::new(())),
         }
     }
 
+    /// Saves the current state to storage. Only one save can happen at a time.
     pub(crate) fn save(&self) {
-        let _ = self.lock.try_lock().map(|_| {
+        let _ = self.storage_save_lock.try_lock().map(|_| {
             S::set(self.key.clone(), &self.data);
         });
     }
 
+    /// Updates the state from storage
     pub fn update(&mut self) {
         self.data = S::get(&self.key).unwrap_or(self.data);
     }
@@ -237,12 +259,15 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 // End StorageEntry
 
 // Start Storage Backing traits
+
+/// A trait for a storage backing
 pub trait StorageBacking: Sized + Clone + 'static {
     type Key: Eq + PartialEq + Clone + Debug;
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     fn set<T: Serialize>(key: Self::Key, value: &T);
 }
 
+/// A trait for a subscriber to events from a storage backing
 pub trait StorageSubscriber<S: StorageBacking> {
     fn subscribe<T: DeserializeOwned + 'static>(
         cx: &ScopeState,
@@ -253,8 +278,11 @@ pub trait StorageSubscriber<S: StorageBacking> {
 // End Storage Backing traits
 
 // Start StorageChannelPayload
+
+/// A payload for a storage channel that contains the key that was updated
 #[derive(Clone)]
 pub struct StorageChannelPayload<S: StorageBacking> {
+    /// The key that was updated in storage
     pub key: S::Key,
 }
 
