@@ -75,15 +75,7 @@ where
 {
     let storage_entry = cx.use_hook(|| storage_entry::<S, T>(key, init, cx));
 
-    let storage_entry_clone: StorageEntry<S, T> = storage_entry.clone();
-    use_effect(
-        cx,
-        (&storage_entry_clone.data.value(),),
-        move |_| async move {
-            log::info!("state value changed, trying to save");
-            storage_entry_clone.save();
-        },
-    );
+    use_save_to_storage_on_change(storage_entry, cx);
 
     storage_entry
 }
@@ -92,7 +84,7 @@ where
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
-pub fn use_storage_entry_with_subscription<S, T>(
+pub fn use_synced_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
@@ -119,7 +111,21 @@ where
         });
     }
 
-    let storage_entry_clone: StorageEntry<S, T> = storage_entry.clone();
+    use_save_to_storage_on_change(storage_entry, cx);
+    
+    storage_entry
+}
+
+/// A hook that will update the state in storage when the StorageEntry state changes.
+pub(crate) fn use_save_to_storage_on_change<S,T>(
+    storage_entry: &StorageEntry<S, T>,
+    cx: &ScopeState,
+) 
+where
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+{
+    let storage_entry_clone = storage_entry.clone();
     use_effect(
         cx,
         (&storage_entry_clone.data.value(),),
@@ -128,7 +134,6 @@ where
             storage_entry_clone.save();
         },
     );
-    storage_entry
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
