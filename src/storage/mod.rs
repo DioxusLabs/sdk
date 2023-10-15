@@ -267,9 +267,9 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 // Start Storage Backing traits
 
 /// A trait for a storage backing
-pub trait StorageBacking: Sized + Clone + 'static {
+pub trait StorageBacking: Clone + 'static {
     /// The key type used to store data in storage
-    type Key: Eq + PartialEq + Clone + Debug;
+    type Key: PartialEq + Clone + Debug;
     /// Gets a value from storage for the given key
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     /// Sets a value in storage for the given key
