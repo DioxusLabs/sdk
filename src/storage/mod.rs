@@ -262,17 +262,22 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 
 /// A trait for a storage backing
 pub trait StorageBacking: Sized + Clone + 'static {
+    /// The key type used to store data in storage
     type Key: Eq + PartialEq + Clone + Debug;
+    /// Gets a value from storage for the given key
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
+    /// Sets a value in storage for the given key
     fn set<T: Serialize>(key: Self::Key, value: &T);
 }
 
 /// A trait for a subscriber to events from a storage backing
 pub trait StorageSubscriber<S: StorageBacking> {
+    /// Subscribes to events from a storage backing for the given key
     fn subscribe<T: DeserializeOwned + 'static>(
         cx: &ScopeState,
         key: &S::Key,
     ) -> Option<UseChannel<StorageChannelPayload<S>>>;
+    /// Unsubscribes from events from a storage backing for the given key
     fn unsubscribe(key: &S::Key);
 }
 // End Storage Backing traits
