@@ -1,4 +1,4 @@
-use crate::storage::{SessionStorage, use_storage_entry};
+use crate::storage::{use_storage_entry, SessionStorage};
 use dioxus::prelude::ScopeState;
 use dioxus_signals::Signal;
 use serde::de::DeserializeOwned;
@@ -27,7 +27,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
         }
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
         {
-            use_storage_entry::<SessionStorage,T>(cx, key.to_string(), init.take().unwrap())
+            use_storage_entry::<SessionStorage, T>(cx, key.to_string(), init.take().unwrap())
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
         {

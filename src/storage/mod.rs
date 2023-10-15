@@ -60,41 +60,43 @@ pub use client_storage::set_dir;
 // }
 
 /// A storage hook that can be used to store data across application reloads.
-/// 
+///
 /// It returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted across reloads.
 pub fn use_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
-) -> &mut StorageEntry<S,T>
+) -> &mut StorageEntry<S, T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
 {
-    let storage_entry = cx.use_hook(|| {
-        storage_entry::<S,T>(key, init, cx)
-    });
+    let storage_entry = cx.use_hook(|| storage_entry::<S, T>(key, init, cx));
 
     let storage_entry_clone: StorageEntry<S, T> = storage_entry.clone();
-    use_effect(cx, (&storage_entry_clone.data.value(),), move |_| async move {
-        log::info!("state value changed, trying to save");
-        storage_entry_clone.save();
-    });
+    use_effect(
+        cx,
+        (&storage_entry_clone.data.value(),),
+        move |_| async move {
+            log::info!("state value changed, trying to save");
+            storage_entry_clone.save();
+        },
+    );
 
     storage_entry
 }
 
 /// A storage hook that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
-/// 
+///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
 pub fn use_storage_entry_with_subscription<S, T>(
     cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
-) -> &mut StorageEntry<S,T>
+) -> &mut StorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
@@ -118,10 +120,14 @@ where
     }
 
     let storage_entry_clone: StorageEntry<S, T> = storage_entry.clone();
-    use_effect(cx, (&storage_entry_clone.data.value(),), move |_| async move {
-        log::info!("state value changed, trying to save");
-        storage_entry_clone.save();
-    });
+    use_effect(
+        cx,
+        (&storage_entry_clone.data.value(),),
+        move |_| async move {
+            log::info!("state value changed, trying to save");
+            storage_entry_clone.save();
+        },
+    );
     storage_entry
 }
 
@@ -141,8 +147,8 @@ where
 }
 
 /// Returns a synced StorageEntry with the latest value from storage or the init value if it doesn't exist.
-/// 
-/// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage. 
+///
+/// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage.
 pub fn storage_entry_with_channel<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
