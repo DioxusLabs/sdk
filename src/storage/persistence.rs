@@ -1,8 +1,6 @@
-use crate::storage::{
-    storage_entry::{storage_entry, StorageEntry},
-    SessionStorage,
-};
-use dioxus::prelude::{use_effect, ScopeState};
+use crate::storage::{SessionStorage, use_storage_entry};
+use dioxus::prelude::ScopeState;
+use dioxus_signals::Signal;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -14,9 +12,9 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
     cx: &ScopeState,
     key: impl ToString,
     init: impl FnOnce() -> T,
-) -> &mut StorageEntry<SessionStorage, T> {
+) -> &mut Signal<T> {
     let mut init = Some(init);
-    let state = {
+    let storage_entry = {
         #[cfg(feature = "ssr")]
         {
             use_ref(cx, || {
@@ -29,13 +27,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
         }
         #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
         {
-            cx.use_hook(|| {
-                StorageEntry::<SessionStorage, T>::new(
-                    key.to_string(),
-                    storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
-                    cx
-                )
-            })
+            use_storage_entry::<SessionStorage,T>(cx, key.to_string(), init.take().unwrap())
         }
         #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
         {
@@ -43,7 +35,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
                 StorageEntry::<SessionStorage, T>::new(
                     key.to_string(),
                     storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
-                    cx
+                    cx,
                 )
             });
             if cx.generation() == 0 {
@@ -59,13 +51,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
             state
         }
     };
-    let state_clone = state.clone();
-    let state_signal = state.data;
-    use_effect(cx, (&state_signal.value(),), move |_| async move {
-        log::info!("state value changed, trying to save");
-        state_clone.save();
-    });
-    state
+    &mut storage_entry.data
 }
 
 /// A persistent storage hook that can be used to store data across application reloads.
@@ -74,12 +60,14 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 #[track_caller]
-pub fn use_singleton_persistent<T: Serialize + DeserializeOwned + Default + Clone + PartialEq + 'static>(
+pub fn use_singleton_persistent<
+    T: Serialize + DeserializeOwned + Default + Clone + PartialEq + 'static,
+>(
     cx: &ScopeState,
     init: impl FnOnce() -> T,
-) -> &mut StorageEntry<SessionStorage, T> {
+) -> &mut Signal<T> {
     let caller = std::panic::Location::caller();
     let key = cx.use_hook(move || format!("{}:{}", caller.file(), caller.line()));
-    log::info!("key: \"{}\"", key);
+    log::info!("use_singleton_persistent key: \"{}\"", key);
     use_persistent(cx, key, init)
 }

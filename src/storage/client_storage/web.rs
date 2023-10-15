@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
-use crate::storage::storage_entry::{
+use crate::storage::{
     serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
     StorageSubscriber,
 };
