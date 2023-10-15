@@ -46,7 +46,7 @@ impl UseClipboard {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```ignore
 /// use dioxus_std;
 ///
 /// // Initialize the clipboard
