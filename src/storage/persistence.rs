@@ -13,7 +13,7 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    let storage_entry = use_storage_entry::<SessionStorage,T>(cx, key.to_string(), init);
+    let storage_entry = use_storage_entry::<SessionStorage, T>(cx, key.to_string(), init);
     storage_entry.data
 }
 

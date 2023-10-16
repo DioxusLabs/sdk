@@ -60,32 +60,27 @@ pub use client_storage::set_dir;
 // }
 
 /// A storage hook that can be used to store data that will persist across application reloads.
-/// 
+///
 /// This hook returns a Signal that can be used to read and modify the state.
-pub fn use_storage<S, T>(
-    cx: &ScopeState,
-    key: S::Key,
-    init: impl FnOnce() -> T,
-) -> Signal<T>
+pub fn use_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
-{   
+{
     let mut init = Some(init);
     let signal = {
         if cfg!(feature = "ssr") {
             use_signal(cx, init.take().unwrap())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
-            let storage_entry = cx.use_hook(|| {
-                storage_entry::<S, T>(key, init.take().unwrap(), cx)
-            });
+            let storage_entry =
+                cx.use_hook(|| storage_entry::<S, T>(key, init.take().unwrap(), cx));
             if cx.generation() == 0 {
                 cx.needs_update();
             }
             if cx.generation() == 1 {
-                storage_entry.set(get_from_storage::<S,T>(key_clone, init.take().unwrap()));
+                storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
                 use_save_to_storage_on_change(cx, storage_entry);
             }
             storage_entry.data
@@ -102,30 +97,25 @@ where
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
-pub fn use_synced_storage<S, T>(
-    cx: &ScopeState,
-    key: S::Key,
-    init: impl FnOnce() -> T,
-) -> Signal<T>
+pub fn use_synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
-{   
+{
     let mut init = Some(init);
     let signal = {
         if cfg!(feature = "ssr") {
             use_signal(cx, init.take().unwrap())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
-            let storage_entry = cx.use_hook(|| {
-                storage_entry_with_channel::<S, T>(key, init.take().unwrap(), cx)
-            });
+            let storage_entry =
+                cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init.take().unwrap(), cx));
             if cx.generation() == 0 {
                 cx.needs_update();
             }
             if cx.generation() == 1 {
-                storage_entry.set(get_from_storage::<S,T>(key_clone, init.take().unwrap()));
+                storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
                 use_save_to_storage_on_change(cx, storage_entry);
                 use_subscribe_to_storage(cx, storage_entry);
             }
@@ -139,7 +129,6 @@ where
     };
     signal
 }
-
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
 pub fn use_storage_entry<S, T>(
@@ -170,11 +159,10 @@ where
 }
 
 /// A hook that will update the state in storage when the StorageEntry state changes.
-pub(crate) fn use_save_to_storage_on_change<S,T>(
+pub(crate) fn use_save_to_storage_on_change<S, T>(
     cx: &ScopeState,
     storage_entry: &StorageEntry<S, T>,
-) 
-where
+) where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
 {
@@ -190,10 +178,7 @@ where
 }
 
 /// A hook that will update the state from storage when the StorageEntry channel receives an update.
-pub(crate) fn use_subscribe_to_storage<S,T>(
-    cx: &ScopeState,
-    storage_entry: &StorageEntry<S, T>,
-)
+pub(crate) fn use_subscribe_to_storage<S, T>(cx: &ScopeState, storage_entry: &StorageEntry<S, T>)
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + 'static,
