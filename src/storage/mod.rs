@@ -273,7 +273,7 @@ pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clo
     /// An optional channel to subscribe to updates to the underlying storage
     pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
     /// A lock to prevent multiple saves from happening at the same time
-    pub(crate) storage_save_lock: Arc<Mutex<()>>,
+    storage_save_lock: Arc<Mutex<()>>,
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -321,6 +321,16 @@ where
     /// Updates the state from storage
     pub fn update(&mut self) {
         self.data = S::get(&self.key).unwrap_or(self.data);
+    }
+
+    /// Gets the channel to subscribe to updates to the underlying storage
+    pub fn channel(&self) -> Option<UseChannel<StorageChannelPayload<S>>> {
+        self.channel.clone()
+    }
+
+    /// Gets the key used to store the data in storage
+    pub fn key(&self) -> &S::Key {
+        &self.key
     }
 }
 
