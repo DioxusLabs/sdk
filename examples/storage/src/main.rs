@@ -12,7 +12,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let count_session = use_singleton_persistent(cx, || 0);
-    let count_local = use_synced_storage_entry::<LocalStorage, i32>(cx, "synced".to_string(), || 0);
+    let count_local = use_synced_storage::<LocalStorage, i32>(cx, "synced".to_string(), || 0);
 
     render!(
         div {

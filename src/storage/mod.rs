@@ -33,7 +33,7 @@ pub use client_storage::{LocalStorage, SessionStorage};
 pub use persistence::{use_persistent, use_singleton_persistent};
 
 use dioxus::prelude::{to_owned, use_effect, ScopeState};
-use dioxus_signals::Signal;
+use dioxus_signals::{use_signal, Signal};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::{Debug, Display};
@@ -59,10 +59,89 @@ pub use client_storage::set_dir;
 //     }
 // }
 
-/// A storage hook that can be used to store data across application reloads.
+/// A storage hook that can be used to store data that will persist across application reloads.
+/// 
+/// This hook returns a Signal that can be used to read and modify the state.
+pub fn use_storage<S, T>(
+    cx: &ScopeState,
+    key: S::Key,
+    init: impl FnOnce() -> T,
+) -> Signal<T>
+where
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    S::Key: Clone,
+{   
+    let mut init = Some(init);
+    let signal = {
+        if cfg!(feature = "ssr") {
+            use_signal(cx, init.take().unwrap())
+        } else if cfg!(feature = "hydrate") {
+            let key_clone = key.clone();
+            let storage_entry = cx.use_hook(|| {
+                storage_entry::<S, T>(key, init.take().unwrap(), cx)
+            });
+            if cx.generation() == 0 {
+                cx.needs_update();
+            }
+            if cx.generation() == 1 {
+                storage_entry.set(get_from_storage::<S,T>(key_clone, init.take().unwrap()));
+                use_save_to_storage_on_change(cx, storage_entry);
+            }
+            storage_entry.data
+        } else {
+            let storage_entry = use_storage_entry::<S, T>(cx, key, init.take().unwrap());
+            use_save_to_storage_on_change(cx, storage_entry);
+            storage_entry.data
+        }
+    };
+    signal
+}
+
+/// A storage hook that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
 ///
-/// It returns a Signal that can be used to read and modify the state.
-/// The changes to the state will be persisted across reloads.
+/// This hook returns a Signal that can be used to read and modify the state.
+/// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
+pub fn use_synced_storage<S, T>(
+    cx: &ScopeState,
+    key: S::Key,
+    init: impl FnOnce() -> T,
+) -> Signal<T>
+where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    S::Key: Clone,
+{   
+    let mut init = Some(init);
+    let signal = {
+        if cfg!(feature = "ssr") {
+            use_signal(cx, init.take().unwrap())
+        } else if cfg!(feature = "hydrate") {
+            let key_clone = key.clone();
+            let storage_entry = cx.use_hook(|| {
+                storage_entry_with_channel::<S, T>(key, init.take().unwrap(), cx)
+            });
+            if cx.generation() == 0 {
+                cx.needs_update();
+            }
+            if cx.generation() == 1 {
+                storage_entry.set(get_from_storage::<S,T>(key_clone, init.take().unwrap()));
+                use_save_to_storage_on_change(cx, storage_entry);
+                use_subscribe_to_storage(cx, storage_entry);
+            }
+            storage_entry.data
+        } else {
+            let storage_entry = use_synced_storage_entry::<S, T>(cx, key, init.take().unwrap());
+            use_save_to_storage_on_change(cx, storage_entry);
+            use_subscribe_to_storage(cx, storage_entry);
+            storage_entry.data
+        }
+    };
+    signal
+}
+
+
+/// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
 pub fn use_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
@@ -73,17 +152,10 @@ where
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
 {
-    let storage_entry = cx.use_hook(|| storage_entry::<S, T>(key, init, cx));
-
-    use_save_to_storage_on_change(storage_entry, cx);
-
-    storage_entry
+    cx.use_hook(|| storage_entry::<S, T>(key, init, cx))
 }
 
-/// A storage hook that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
-///
-/// This hook returns a Signal that can be used to read and modify the state.
-/// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
+/// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist, and provides a channel to subscribe to updates to the underlying storage.
 pub fn use_synced_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
@@ -94,32 +166,13 @@ where
     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     S::Key: Clone,
 {
-    let key_clone = key.clone();
-    let storage_entry = cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init, cx));
-    let storage_entry_signal = storage_entry.data;
-    if let Some(channel) = storage_entry.channel.clone() {
-        use_listen_channel(cx, &channel, move |message| {
-            to_owned![key_clone];
-            async move {
-                if let Ok(payload) = message {
-                    if payload.key == key_clone {
-                        *storage_entry_signal.write() =
-                            get_from_storage::<S, T>(key_clone, || storage_entry_signal.value())
-                    }
-                }
-            }
-        });
-    }
-
-    use_save_to_storage_on_change(storage_entry, cx);
-    
-    storage_entry
+    cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init, cx))
 }
 
 /// A hook that will update the state in storage when the StorageEntry state changes.
 pub(crate) fn use_save_to_storage_on_change<S,T>(
-    storage_entry: &StorageEntry<S, T>,
     cx: &ScopeState,
+    storage_entry: &StorageEntry<S, T>,
 ) 
 where
     S: StorageBacking,
@@ -134,6 +187,33 @@ where
             storage_entry_clone.save();
         },
     );
+}
+
+/// A hook that will update the state from storage when the StorageEntry channel receives an update.
+pub(crate) fn use_subscribe_to_storage<S,T>(
+    cx: &ScopeState,
+    storage_entry: &StorageEntry<S, T>,
+)
+where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + 'static,
+    S::Key: Clone,
+{
+    let key = storage_entry.key.clone();
+    let storage_entry_signal = storage_entry.data;
+    if let Some(channel) = storage_entry.channel.clone() {
+        use_listen_channel(cx, &channel, move |message| {
+            to_owned![key];
+            async move {
+                if let Ok(payload) = message {
+                    if payload.key == key {
+                        *storage_entry_signal.write() =
+                            get_from_storage::<S, T>(key, || storage_entry_signal.value())
+                    }
+                }
+            }
+        });
+    }
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.

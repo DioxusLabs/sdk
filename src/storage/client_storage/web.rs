@@ -89,24 +89,16 @@ impl StorageBacking for SessionStorage {
 
 // Start common
 fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let as_str = serde_to_string(value);
-        get_storage_by_type(storage_type)
-            .unwrap()
-            .set_item(&key, &as_str)
-            .unwrap();
-    }
+    let as_str = serde_to_string(value);
+    get_storage_by_type(storage_type)
+        .unwrap()
+        .set_item(&key, &as_str)
+        .unwrap();
 }
 
 fn get<T: DeserializeOwned>(key: &str, storage_type: WebStorageType) -> Option<T> {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
-        try_serde_from_string(&s)
-    }
-    #[cfg(feature = "ssr")]
-    None
+    let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
+    try_serde_from_string(&s)
 }
 
 fn get_storage_by_type(storage_type: WebStorageType) -> Option<Storage> {

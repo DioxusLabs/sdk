@@ -12,46 +12,9 @@ pub fn use_persistent<T: Serialize + DeserializeOwned + Default + Clone + Partia
     cx: &ScopeState,
     key: impl ToString,
     init: impl FnOnce() -> T,
-) -> &mut Signal<T> {
-    let mut init = Some(init);
-    let storage_entry = {
-        #[cfg(feature = "ssr")]
-        {
-            use_ref(cx, || {
-                StorageEntry::<SessionStorage, T>::new(
-                    key.to_string(),
-                    init.take().unwrap()(),
-                    None,
-                )
-            })
-        }
-        #[cfg(all(not(feature = "ssr"), not(feature = "hydrate")))]
-        {
-            use_storage_entry::<SessionStorage, T>(cx, key.to_string(), init.take().unwrap())
-        }
-        #[cfg(all(not(feature = "ssr"), feature = "hydrate"))]
-        {
-            let state = cx.use_hook(|| {
-                StorageEntry::<SessionStorage, T>::new(
-                    key.to_string(),
-                    storage_entry::<SessionStorage, T>(key.to_string(), init.take().unwrap()),
-                    cx,
-                )
-            });
-            if cx.generation() == 0 {
-                cx.needs_update();
-            }
-            if cx.generation() == 1 {
-                state.set(StorageEntry::new(
-                    key.to_string(),
-                    storage_entry::<ClientStorage, T>(key.to_string(), init.take().unwrap()),
-                ));
-            }
-
-            state
-        }
-    };
-    &mut storage_entry.data
+) -> Signal<T> {
+    let storage_entry = use_storage_entry::<SessionStorage,T>(cx, key.to_string(), init);
+    storage_entry.data
 }
 
 /// A persistent storage hook that can be used to store data across application reloads.
@@ -65,7 +28,7 @@ pub fn use_singleton_persistent<
 >(
     cx: &ScopeState,
     init: impl FnOnce() -> T,
-) -> &mut Signal<T> {
+) -> Signal<T> {
     let caller = std::panic::Location::caller();
     let key = cx.use_hook(move || format!("{}:{}", caller.file(), caller.line()));
     log::info!("use_singleton_persistent key: \"{}\"", key);
