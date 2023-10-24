@@ -492,6 +492,8 @@ impl Default for StorageChannelPayload {
 // End StorageChannelPayload
 
 // Start helper functions
+
+/// Serializes a value to a string and compresses it.
 pub(crate) fn serde_to_string<T: Serialize>(value: &T) -> String {
     let serialized = to_allocvec(value).unwrap();
     let compressed = yazi::compress(
@@ -514,10 +516,12 @@ pub(crate) fn serde_to_string<T: Serialize>(value: &T) -> String {
 }
 
 #[allow(unused)]
+/// Deserializes a value from a string and unwraps errors.
 pub(crate) fn serde_from_string<T: DeserializeOwned>(value: &str) -> T {
     try_serde_from_string(value).unwrap()
 }
 
+/// Deserializes and decompresses a value from a string and returns None if there is an error.
 pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<T> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut chars = value.chars();
