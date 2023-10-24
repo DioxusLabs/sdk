@@ -234,7 +234,7 @@ pub fn get_from_storage<S: StorageBacking, T: Serialize + DeserializeOwned>(
 pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
     Clone + 'static
 {
-    /// Saves the current state to storage. Only one save can happen at a time.
+    /// Saves the current state to storage
     fn save(&self);
 
     /// Updates the state from storage
@@ -313,21 +313,17 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 {
     fn save(&self) {
-        let mut should_save = true;
+        //  We want to save in the following conditions
+        //      - The value from the channel is different from the current value
+        //      - The value from the channel could not be determined, likely because it hasn't been set yet
         if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
             if *self.entry.data.read() == *payload {
                 log::info!("value is the same, not saving");
-                should_save = false;
+                return
             }
         }
-        if should_save {
-            // This should be true in the following conditions:
-            //     - The channel is None
-            //     - The value from the channel is different from the current value
-            //     - The value from the channel could not be determined, likely because it hasn't been set yet
-            log::info!("saving");
-            self.entry.save();
-        }
+        log::info!("saving");
+        self.entry.save();
     }
 
     fn update(&mut self) {
