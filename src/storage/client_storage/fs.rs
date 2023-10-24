@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::io::Write;
 
-use crate::storage::storage::{
+use crate::storage::{
     serde_to_string, try_serde_from_string, StorageBacking,
 };
 
@@ -37,44 +37,34 @@ pub fn set_directory(path: std::path::PathBuf) {
 
 #[doc(hidden)]
 pub fn set_dir_name(name: &str) {
-    {
-        set_directory(
-            directories::BaseDirs::new()
-                .unwrap()
-                .data_local_dir()
-                .join(name),
-        )
-    }
+    set_directory(
+        directories::BaseDirs::new()
+            .unwrap()
+            .data_local_dir()
+            .join(name),
+    )
 }
 
 static LOCATION: OnceCell<std::path::PathBuf> = OnceCell::new();
 
 fn set<T: Serialize>(key: String, value: &T) {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let as_str = serde_to_string(value);
-        let path = LOCATION
-            .get()
-            .expect("Call the set_dir macro before accessing persistant data");
-        std::fs::create_dir_all(path).unwrap();
-        let file_path = path.join(key);
-        let mut file = std::fs::File::create(file_path).unwrap();
-        file.write_all(as_str.as_bytes()).unwrap();
-    }
+    let as_str = serde_to_string(value);
+    let path = LOCATION
+        .get()
+        .expect("Call the set_dir macro before accessing persistant data");
+    std::fs::create_dir_all(path).unwrap();
+    let file_path = path.join(key);
+    let mut file = std::fs::File::create(file_path).unwrap();
+    file.write_all(as_str.as_bytes()).unwrap();
 }
 
 fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
-    #[cfg(not(feature = "ssr"))]
-    {
-        let path = LOCATION
-            .get()
-            .expect("Call the set_dir macro before accessing persistant data")
-            .join(key);
-        let s = std::fs::read_to_string(path).ok()?;
-        try_serde_from_string(&s)
-    }
-    #[cfg(feature = "ssr")]
-    None
+    let path = LOCATION
+        .get()
+        .expect("Call the set_dir macro before accessing persistant data")
+        .join(key);
+    let s = std::fs::read_to_string(path).ok()?;
+    try_serde_from_string(&s)
 }
 
 pub struct ClientStorage;

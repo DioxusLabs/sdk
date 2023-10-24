@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 dioxus-std = { path="../../", features = ["storage"] }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b" }
-dioxus-web = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b" }
-
+dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
+dioxus-web = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
+# dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
 log = "0.4.6"
 
 # WebAssembly Debug

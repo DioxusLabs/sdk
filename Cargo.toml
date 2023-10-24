@@ -22,7 +22,7 @@ geolocation = ["dep:windows", "dep:futures-util", "dep:futures", "dep:web-sys", 
 color_scheme = ["dep:web-sys", "dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
 utils = ["dep:async-broadcast", "dep:uuid"]
 i18n = ["dep:serde", "dep:serde_json", "dep:unic-langid"]
-storage = ["utils", "dep:async-broadcast", "dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:directories", "dep:yazi"]
+storage = ["dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:directories", "dep:yazi", "dep:tokio"]
 all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i18n", "storage"]
 default = ["storage"]
 
@@ -31,7 +31,7 @@ wasm-testing = ["geolocation", "color_scheme", "utils", "i18n"]
 desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
 cfg-if = "1.0.0"
 
 # utils
@@ -52,15 +52,17 @@ unic-langid = { version = "0.9.1", features = ["serde"], optional = true }
 rustc-hash = "1.1.0"
 postcard = { version = "1.0.2", features = ["use-std"], optional = true }
 once_cell = { version = "1.17.0", optional = true }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "1ba6ca39e3f4d4fcd3b4e75e3a739d8c35514e5b", features = [
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39", features = [
     "serialize",
 ], optional = true }
+tokio = { version = "1.33.0", features = ["sync"], optional = true }
 yazi = { version = "0.1.4", optional = true }
 log = "0.4.6"
 
 # WebAssembly Debug
 wasm-logger = "0.2.0"
 console_error_panic_hook = "0.1.7"
+dashmap = "5.5.3"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 directories = { version = "4.0.1", optional = true }
