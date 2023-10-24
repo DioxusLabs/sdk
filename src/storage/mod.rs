@@ -298,7 +298,7 @@ where
         if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
             if *self.entry.data.read() == *payload {
                 log::info!("value is the same, not saving");
-                return;
+                return
             }
         }
         log::info!("saving");
