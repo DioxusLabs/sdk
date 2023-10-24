@@ -264,7 +264,7 @@ where
         self.channel.clone()
     }
 
-    /// Creates a hool that will update the state when the underlying storage changes
+    /// Creates a hook that will update the state when the underlying storage changes
     pub fn use_subscribe_to_storage(&self, cx: &ScopeState) {
         let storage_entry_signal = *self.data();
         let channel = self.channel.clone();
