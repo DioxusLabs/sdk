@@ -36,28 +36,15 @@ use dioxus::prelude::{to_owned, use_effect, ScopeState};
 use dioxus_signals::{use_signal, Signal};
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
+use std::any::Any;
 use std::fmt::{Debug, Display};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
-
-use crate::utils::channel::{use_listen_channel, UseChannel};
+use tokio::sync::watch::error::SendError;
+use tokio::sync::watch::{Receiver, Sender};
 
 #[cfg(not(target_family = "wasm"))]
 pub use client_storage::set_dir;
-
-// // Start use_storage hooks
-// pub fn use_synced_storage<T>(
-//     cx: &ScopeState,
-//     key: impl ToString,
-//     init: impl FnOnce() -> T,
-// ) -> &mut Signal<T>
-// where
-//     T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
-// {
-//     cfg_if::cfg_if! {
-
-//     }
-// }
 
 /// A storage hook that can be used to store data that will persist across application reloads.
 ///
@@ -65,28 +52,33 @@ pub use client_storage::set_dir;
 pub fn use_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
     let mut init = Some(init);
     let signal = {
         if cfg!(feature = "ssr") {
+            // SSR does not support storage on the backend. We will just use a normal Signal to represent the initial state.
+            // The client will hydrate this with a correct StorageEntry and maintain state.
             use_signal(cx, init.take().unwrap())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
             let storage_entry =
                 cx.use_hook(|| storage_entry::<S, T>(key, init.take().unwrap(), cx));
             if cx.generation() == 0 {
+                // The first generation is rendered on the server side and so must be hydrated.
                 cx.needs_update();
             }
             if cx.generation() == 1 {
+                // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
                 storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
-                use_save_to_storage_on_change(cx, storage_entry);
+                storage_entry.use_save_to_storage_on_change(cx);
             }
             storage_entry.data
         } else {
+            // The client is rendered normally, so we can just use the storage entry.
             let storage_entry = use_storage_entry::<S, T>(cx, key, init.take().unwrap());
-            use_save_to_storage_on_change(cx, storage_entry);
+            storage_entry.use_save_to_storage_on_change(cx);
             storage_entry.data
         }
     };
@@ -100,31 +92,38 @@ where
 pub fn use_synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
     let mut init = Some(init);
     let signal = {
         if cfg!(feature = "ssr") {
+            // SSR does not support synced storage on the backend. We will just use a normal Signal to represent the initial state.
+            // The client will hydrate this with a correct SyncedStorageEntry and maintain state.
             use_signal(cx, init.take().unwrap())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
             let storage_entry =
-                cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init.take().unwrap(), cx));
+                cx.use_hook(|| synced_storage_entry::<S, T>(key, init.take().unwrap(), cx));
             if cx.generation() == 0 {
+                // The first generation is rendered on the server side and so must be hydrated.
                 cx.needs_update();
             }
             if cx.generation() == 1 {
-                storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
-                use_save_to_storage_on_change(cx, storage_entry);
-                use_subscribe_to_storage(cx, storage_entry);
+                // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
+                storage_entry
+                    .entry
+                    .set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
+                storage_entry.use_save_to_storage_on_change(cx);
+                storage_entry.use_subscribe_to_storage(cx);
             }
-            storage_entry.data
+            *storage_entry.data()
         } else {
+            // The client is rendered normally, so we can just use the synced storage entry.
             let storage_entry = use_synced_storage_entry::<S, T>(cx, key, init.take().unwrap());
-            use_save_to_storage_on_change(cx, storage_entry);
-            use_subscribe_to_storage(cx, storage_entry);
-            storage_entry.data
+            storage_entry.use_save_to_storage_on_change(cx);
+            storage_entry.use_subscribe_to_storage(cx);
+            *storage_entry.data()
         }
     };
     signal
@@ -138,7 +137,7 @@ pub fn use_storage_entry<S, T>(
 ) -> &mut StorageEntry<S, T>
 where
     S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
     cx.use_hook(|| storage_entry::<S, T>(key, init, cx))
@@ -149,56 +148,13 @@ pub fn use_synced_storage_entry<S, T>(
     cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
-) -> &mut StorageEntry<S, T>
+) -> &mut SyncedStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    cx.use_hook(|| storage_entry_with_channel::<S, T>(key, init, cx))
-}
-
-/// A hook that will update the state in storage when the StorageEntry state changes.
-pub(crate) fn use_save_to_storage_on_change<S, T>(
-    cx: &ScopeState,
-    storage_entry: &StorageEntry<S, T>,
-) where
-    S: StorageBacking,
-    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
-{
-    let storage_entry_clone = storage_entry.clone();
-    use_effect(
-        cx,
-        (&storage_entry_clone.data.value(),),
-        move |_| async move {
-            log::info!("state value changed, trying to save");
-            storage_entry_clone.save();
-        },
-    );
-}
-
-/// A hook that will update the state from storage when the StorageEntry channel receives an update.
-pub(crate) fn use_subscribe_to_storage<S, T>(cx: &ScopeState, storage_entry: &StorageEntry<S, T>)
-where
-    S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    let key = storage_entry.key.clone();
-    let storage_entry_signal = storage_entry.data;
-    if let Some(channel) = storage_entry.channel.clone() {
-        use_listen_channel(cx, &channel, move |message| {
-            to_owned![key];
-            async move {
-                if let Ok(payload) = message {
-                    if payload.key == key {
-                        *storage_entry_signal.write() =
-                            get_from_storage::<S, T>(key, || storage_entry_signal.value())
-                    }
-                }
-            }
-        });
-    }
+    cx.use_hook(|| synced_storage_entry::<S, T>(key, init, cx))
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -219,18 +175,18 @@ where
 /// Returns a synced StorageEntry with the latest value from storage or the init value if it doesn't exist.
 ///
 /// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage.
-pub fn storage_entry_with_channel<S, T>(
+pub fn synced_storage_entry<S, T>(
     key: S::Key,
     init: impl FnOnce() -> T,
     cx: &ScopeState,
-) -> StorageEntry<S, T>
+) -> SyncedStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + 'static,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + Send + Sync + 'static,
     S::Key: Clone,
 {
     let data = get_from_storage::<S, T>(key.clone(), init);
-    StorageEntry::new_with_channel(key, data, cx)
+    SyncedStorageEntry::new(key, data, cx)
 }
 
 /// Returns a value from storage or the init value if it doesn't exist.
@@ -246,38 +202,146 @@ pub fn get_from_storage<S: StorageBacking, T: Serialize + DeserializeOwned>(
 }
 // End use_storage hooks
 
+/// A trait for common functionality between StorageEntry and SyncedStorageEntry
+pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
+    Clone + 'static
+{
+    /// Saves the current state to storage
+    fn save(&self);
+
+    /// Updates the state from storage
+    fn update(&mut self);
+
+    /// Gets the key used to store the data in storage
+    fn key(&self) -> &S::Key;
+
+    /// Gets the signal that can be used to read and modify the state
+    fn data(&self) -> &Signal<T>;
+
+    /// Creates a hook that will save the state to storage when the state changes
+    fn use_save_to_storage_on_change(&self, cx: &ScopeState)
+    where
+        S: StorageBacking,
+        T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+    {
+        let entry_clone = self.clone();
+        use_effect(cx, (&self.data().value(),), move |_| async move {
+            log::info!("state value changed, trying to save");
+            entry_clone.save();
+        });
+    }
+}
+
+// Start SyncedStorageEntry
+
+/// A wrapper around StorageEntry that provides a channel to subscribe to updates to the underlying storage.
+#[derive(Clone)]
+pub struct SyncedStorageEntry<
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
+> {
+    /// The underlying StorageEntry that is used to store the data and track the state
+    pub(crate) entry: StorageEntry<S, T>,
+    /// The channel to subscribe to updates to the underlying storage
+    pub(crate) channel: Receiver<StorageChannelPayload>,
+}
+
+impl<S, T> SyncedStorageEntry<S, T>
+where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
+{
+    pub fn new(key: S::Key, data: T, cx: &ScopeState) -> Self {
+        let channel = S::subscribe::<T>(cx, &key);
+        Self {
+            entry: StorageEntry::new(key, data, cx),
+            channel,
+        }
+    }
+
+    /// Gets the channel to subscribe to updates to the underlying storage
+    pub fn channel(&self) -> Receiver<StorageChannelPayload> {
+        self.channel.clone()
+    }
+
+    /// Creates a hool that will update the state when the underlying storage changes
+    pub fn use_subscribe_to_storage(&self, cx: &ScopeState) {
+        let storage_entry_signal = *self.data();
+        let channel = self.channel.clone();
+        use_effect(cx, (), move |_| async move {
+            to_owned![channel, storage_entry_signal];
+            loop {
+                // Wait for an update to the channel
+                if channel.changed().await.is_ok() {
+                    // Retrieve the latest value from the channel, mark it as read, and update the state
+                    let payload = channel.borrow_and_update();
+                    *storage_entry_signal.write() = payload
+                        .data
+                        .downcast_ref::<T>()
+                        .expect("Type mismatch with storage entry")
+                        .clone();
+                }
+            }
+        });
+    }
+}
+
+impl<S, T> StorageEntryTrait<S, T> for SyncedStorageEntry<S, T>
+where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
+{
+    fn save(&self) {
+        //  We want to save in the following conditions
+        //      - The value from the channel is different from the current value
+        //      - The value from the channel could not be determined, likely because it hasn't been set yet
+        if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
+            if *self.entry.data.read() == *payload {
+                log::info!("value is the same, not saving");
+                return;
+            }
+        }
+        log::info!("saving");
+        self.entry.save();
+    }
+
+    fn update(&mut self) {
+        self.entry.update();
+    }
+
+    fn key(&self) -> &S::Key {
+        self.entry.key()
+    }
+
+    fn data(&self) -> &Signal<T> {
+        &self.entry.data
+    }
+}
+
+impl<S,T> Drop for SyncedStorageEntry<S, T> 
+where
+    S: StorageBacking + StorageSubscriber<S>,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
+{
+    fn drop(&mut self) {
+        S::unsubscribe(self.key());
+    }
+}
+
+// End SyncedStorageEntry
+
 // Start StorageEntry
 
 /// A storage entry that can be used to store data across application reloads. It optionally provides a channel to subscribe to updates to the underlying storage.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + 'static> {
     /// The key used to store the data in storage
     pub(crate) key: S::Key,
     /// A signal that can be used to read and modify the state
     pub(crate) data: Signal<T>,
     /// An optional channel to subscribe to updates to the underlying storage
-    pub(crate) channel: Option<UseChannel<StorageChannelPayload<S>>>,
     /// A lock to prevent multiple saves from happening at the same time
-    storage_save_lock: Arc<Mutex<()>>,
-}
-
-impl<S, T> StorageEntry<S, T>
-where
-    S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + 'static,
-    S::Key: Clone,
-{
-    /// Creates a new StorageEntry with a channel to subscribe to updates to the underlying storage
-    fn new_with_channel(key: S::Key, data: T, cx: &ScopeState) -> Self {
-        let channel = S::subscribe::<T>(cx, &key);
-
-        Self {
-            key,
-            data: Signal::new_in_scope(data, cx.scope_id()),
-            channel,
-            storage_save_lock: Arc::new(Mutex::new(())),
-        }
-    }
+    storage_save_lock: Arc<Mutex<()>>, // TODO: probably unnecessary
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -291,31 +355,32 @@ where
         Self {
             key,
             data: Signal::new_in_scope(data, cx.scope_id()),
-            channel: None,
             storage_save_lock: Arc::new(Mutex::new(())),
         }
     }
+}
 
-    /// Saves the current state to storage. Only one save can happen at a time.
-    pub(crate) fn save(&self) {
+impl<S, T> StorageEntryTrait<S, T> for StorageEntry<S, T>
+where
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
+{
+    fn save(&self) {
         let _ = self.storage_save_lock.try_lock().map(|_| {
             S::set(self.key.clone(), &self.data);
         });
     }
 
-    /// Updates the state from storage
-    pub fn update(&mut self) {
+    fn update(&mut self) {
         self.data = S::get(&self.key).unwrap_or(self.data);
     }
 
-    /// Gets the channel to subscribe to updates to the underlying storage
-    pub fn channel(&self) -> Option<UseChannel<StorageChannelPayload<S>>> {
-        self.channel.clone()
+    fn key(&self) -> &S::Key {
+        &self.key
     }
 
-    /// Gets the key used to store the data in storage
-    pub fn key(&self) -> &S::Key {
-        &self.key
+    fn data(&self) -> &Signal<T> {
+        &self.data
     }
 }
 
@@ -349,7 +414,7 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone> Debug
 /// A trait for a storage backing
 pub trait StorageBacking: Clone + 'static {
     /// The key type used to store data in storage
-    type Key: PartialEq + Clone + Debug;
+    type Key: PartialEq + Clone + Debug + Send + Sync + 'static;
     /// Gets a value from storage for the given key
     fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
     /// Sets a value in storage for the given key
@@ -359,29 +424,78 @@ pub trait StorageBacking: Clone + 'static {
 /// A trait for a subscriber to events from a storage backing
 pub trait StorageSubscriber<S: StorageBacking> {
     /// Subscribes to events from a storage backing for the given key
-    fn subscribe<T: DeserializeOwned + 'static>(
+    fn subscribe<T: DeserializeOwned + Send + Sync + 'static>(
         cx: &ScopeState,
         key: &S::Key,
-    ) -> Option<UseChannel<StorageChannelPayload<S>>>;
+    ) -> Receiver<StorageChannelPayload>;
     /// Unsubscribes from events from a storage backing for the given key
     fn unsubscribe(key: &S::Key);
 }
 // End Storage Backing traits
 
-// Start StorageChannelPayload
+// Start StorageSenderEntry
 
-/// A payload for a storage channel that contains the key that was updated
-#[derive(Clone)]
-pub struct StorageChannelPayload<S: StorageBacking> {
-    /// The key that was updated in storage
-    pub key: S::Key,
+/// A struct to hold information about processing a storage event.
+pub struct StorageEventChannel {
+    /// A getter function that will get the data from storage and return it as a StorageChannelPayload.
+    pub(crate) getter: Box<dyn Fn() -> StorageChannelPayload + 'static + Send + Sync>,
+
+    /// The channel to send the data to.
+    pub(crate) tx: Sender<StorageChannelPayload>,
 }
 
-impl<S: StorageBacking> Debug for StorageChannelPayload<S> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("StorageChannelPayload")
-            .field("key", &self.key)
-            .finish()
+impl StorageEventChannel {
+    pub fn new<
+        S: StorageBacking + StorageSubscriber<S>,
+        T: DeserializeOwned + Send + Sync + 'static,
+    >(
+        tx: Sender<StorageChannelPayload>,
+        key: S::Key,
+    ) -> Self {
+        let getter = move || {
+            let data = S::get::<T>(&key).unwrap();
+            StorageChannelPayload::new(data)
+        };
+        Self {
+            getter: Box::new(getter),
+            tx,
+        }
+    }
+
+    /// Gets the latest data from storage and sends it to the channel.
+    pub fn get_and_send(&self) -> Result<(), SendError<StorageChannelPayload>> {
+        let payload = (self.getter)();
+        self.tx.send(payload)
+    }
+}
+
+// End StorageSenderEntry
+
+// Start StorageChannelPayload
+
+/// A payload for a storage channel that contains the latest value from storage.
+#[derive(Clone, Debug)]
+pub struct StorageChannelPayload {
+    data: Arc<dyn Any + Send + Sync>,
+}
+
+impl StorageChannelPayload {
+    /// Creates a new StorageChannelPayload
+    pub fn new<T: Send + Sync + 'static>(data: T) -> Self {
+        Self {
+            data: Arc::new(data),
+        }
+    }
+
+    /// Gets the data from the payload
+    pub fn data<T: 'static>(&self) -> Option<&T> {
+        self.data.downcast_ref::<T>()
+    }
+}
+
+impl Default for StorageChannelPayload {
+    fn default() -> Self {
+        Self { data: Arc::new(()) }
     }
 }
 // End StorageChannelPayload

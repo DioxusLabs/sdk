@@ -1,17 +1,16 @@
-use async_broadcast::broadcast;
+use dashmap::DashMap;
 use dioxus::prelude::*;
+use once_cell::sync::Lazy;
 use serde::{de::DeserializeOwned, Serialize};
-use std::sync::OnceLock;
-use uuid::Uuid;
+use tokio::sync::watch::{channel, Receiver};
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
 use crate::storage::{
     serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
-    StorageSubscriber,
+    StorageEventChannel, StorageSubscriber,
 };
-use crate::utils::channel::UseChannel;
 
 // Start LocalStorage
 #[derive(Clone)]
@@ -30,44 +29,58 @@ impl StorageBacking for LocalStorage {
 }
 
 impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + 'static>(
+    fn subscribe<T: DeserializeOwned + Send + Sync + 'static>(
         _cx: &ScopeState,
-        _key: &String,
-    ) -> Option<UseChannel<StorageChannelPayload<Self>>> {
-        let channel = CHANNEL.get_or_init(|| {
-            let (tx, rx) = broadcast::<StorageChannelPayload<Self>>(5);
-            let channel = UseChannel::new(Uuid::new_v4(), tx, rx.deactivate());
-            let channel_clone = channel.clone();
-            let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
-                log::info!("Storage event: {:?}", e);
-                let key: String = e.key().unwrap();
-                let channel_clone_clone = channel_clone.clone();
-                wasm_bindgen_futures::spawn_local(async move {
-                    let result = channel_clone_clone
-                        .send(StorageChannelPayload::<Self> { key })
-                        .await;
-                    match result {
-                        Ok(_) => log::info!("Sent storage event"),
-                        Err(err) => log::info!("Error sending storage event: {:?}", err),
-                    }
-                });
-            }) as Box<dyn FnMut(web_sys::StorageEvent)>);
-            window()
-                .unwrap()
-                .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
-                .unwrap();
-            closure.forget();
-            channel
-        });
-        Some(channel.clone())
+        key: &String,
+    ) -> Receiver<StorageChannelPayload> {
+        let rx = CHANNELS.get(key).map_or_else(
+            || {
+                let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
+                let entry = StorageEventChannel::new::<LocalStorage, T>(tx, key.clone());
+                CHANNELS.insert(key.clone(), entry);
+                rx
+            },
+            |entry| entry.tx.subscribe(),
+        );
+        rx
     }
 
-    fn unsubscribe(_key: &String) {
-        // Do nothing for web case, since we don't actually subscribe to specific keys.
+    fn unsubscribe(key: &String) {
+        log::info!("Unsubscribing from {}", key);
+        if let Some(entry) = CHANNELS.get(key) {
+            if entry.tx.is_closed() {
+                log::info!("Channel is closed, removing entry");
+                CHANNELS.remove(key);
+            }
+        }
     }
 }
 
-static CHANNEL: OnceLock<UseChannel<StorageChannelPayload<LocalStorage>>> = OnceLock::new();
+/// A map of all the channels that are currently subscribed to. This gets initialized lazily and will set up a listener for storage events.
+static CHANNELS: Lazy<DashMap<String, StorageEventChannel>> = Lazy::new(|| {
+    // Create a closure that will be called when a storage event occurs.
+    let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
+        log::info!("Storage event: {:?}", e);
+        let key: String = e.key().unwrap();
+        if let Some(entry) = CHANNELS.get(&key) {
+            // Call the getter for the given entry and send the value to said entry's channel.
+            let result = entry.get_and_send();
+            match result {
+                Ok(_) => log::info!("Sent storage event"),
+                Err(err) => log::info!("Error sending storage event: {:?}", err),
+            }
+        }
+    }) as Box<dyn FnMut(web_sys::StorageEvent)>);
+    // Register the closure to be called when a storage event occurs.
+    window()
+        .unwrap()
+        .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
+        .unwrap();
+    // Relinquish ownership of the closure to the JS runtime so that it can be called later.
+    closure.forget();
+    DashMap::new()
+});
+
 // End LocalStorage
 
 // Start SessionStorage
