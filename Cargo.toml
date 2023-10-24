@@ -22,7 +22,7 @@ geolocation = ["dep:windows", "dep:futures-util", "dep:futures", "dep:web-sys", 
 color_scheme = ["dep:web-sys", "dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
 utils = ["dep:async-broadcast", "dep:uuid"]
 i18n = ["dep:serde", "dep:serde_json", "dep:unic-langid"]
-storage = ["dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:directories", "dep:yazi", "dep:tokio", "dep:dashmap"]
+storage = ["dep:dioxus-signals", "dep:serde", "dep:postcard", "dep:once_cell", "dep:web-sys", "web-sys/Document", "web-sys/Element", "web-sys/HtmlDocument", "web-sys/Storage", "dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:directories", "dep:yazi", "dep:tokio"]
 all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i18n", "storage"]
 default = ["storage"]
 
@@ -56,7 +56,6 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "6478
     "serialize",
 ], optional = true }
 tokio = { version = "1.33.0", features = ["sync"], optional = true }
-dashmap = { version = "5.5.3", optional = true }
 yazi = { version = "0.1.4", optional = true }
 log = "0.4.6"
 

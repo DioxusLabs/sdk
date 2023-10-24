@@ -1,4 +1,8 @@
-use dashmap::DashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
+
 use dioxus::prelude::*;
 use once_cell::sync::Lazy;
 use serde::{de::DeserializeOwned, Serialize};
@@ -33,41 +37,51 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         _cx: &ScopeState,
         key: &String,
     ) -> Receiver<StorageChannelPayload> {
-        let rx = CHANNELS.get(key).map_or_else(
-            || {
+        let read_binding = CHANNELS.read().unwrap();
+        match read_binding.get(key) {
+            Some(entry) => entry.tx.subscribe(),
+            None => {
+                drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
                 let entry = StorageEventChannel::new::<LocalStorage, T>(tx, key.clone());
-                CHANNELS.insert(key.clone(), entry);
+                CHANNELS.write().unwrap().insert(key.clone(), entry);
                 rx
-            },
-            |entry| entry.tx.subscribe(),
-        );
-        rx
+            }
+        }
     }
 
     fn unsubscribe(key: &String) {
-        log::info!("Unsubscribing from {}", key);
-        if let Some(entry) = CHANNELS.get(key) {
+        log::info!("Unsubscribing from \"{}\"", key);
+        let read_binding = CHANNELS.read().unwrap();
+        if let Some(entry) = read_binding.get(key) {
+            log::info!("Found entry for \"{}\"", key);
             if entry.tx.is_closed() {
-                log::info!("Channel is closed, removing entry");
-                CHANNELS.remove(key);
+                log::info!("Channel is closed, removing entry for \"{}\"", key);
+                drop(read_binding);
+                CHANNELS.write().unwrap().remove(key);
             }
         }
     }
 }
 
 /// A map of all the channels that are currently subscribed to. This gets initialized lazily and will set up a listener for storage events.
-static CHANNELS: Lazy<DashMap<String, StorageEventChannel>> = Lazy::new(|| {
+static CHANNELS: Lazy<Arc<RwLock<HashMap<String, StorageEventChannel>>>> = Lazy::new(|| {
     // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
         log::info!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
-        if let Some(entry) = CHANNELS.get(&key) {
+        let read_binding = CHANNELS.read().unwrap();
+        if let Some(entry) = read_binding.get(&key) {
+            if entry.tx.is_closed() {
+                log::info!("Channel is closed, removing entry for \"{}\"", key);
+                drop(read_binding);
+                CHANNELS.write().unwrap().remove(&key);
+                return;
+            }
             // Call the getter for the given entry and send the value to said entry's channel.
-            let result = entry.get_and_send();
-            match result {
+            match entry.get_and_send() {
                 Ok(_) => log::info!("Sent storage event"),
-                Err(err) => log::info!("Error sending storage event: {:?}", err),
+                Err(err) => log::error!("Error sending storage event: {:?}", err.to_string()),
             }
         }
     }) as Box<dyn FnMut(web_sys::StorageEvent)>);
@@ -78,7 +92,7 @@ static CHANNELS: Lazy<DashMap<String, StorageEventChannel>> = Lazy::new(|| {
         .unwrap();
     // Relinquish ownership of the closure to the JS runtime so that it can be called later.
     closure.forget();
-    DashMap::new()
+    Arc::new(RwLock::new(HashMap::new()))
 });
 
 // End LocalStorage

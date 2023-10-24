@@ -260,8 +260,8 @@ where
     }
 
     /// Gets the channel to subscribe to updates to the underlying storage
-    pub fn channel(&self) -> Receiver<StorageChannelPayload> {
-        self.channel.clone()
+    pub fn channel(&self) -> &Receiver<StorageChannelPayload> {
+        &self.channel
     }
 
     /// Creates a hook that will update the state when the underlying storage changes
@@ -273,6 +273,7 @@ where
             loop {
                 // Wait for an update to the channel
                 if channel.changed().await.is_ok() {
+                    log::info!("channel changed");
                     // Retrieve the latest value from the channel, mark it as read, and update the state
                     let payload = channel.borrow_and_update();
                     *storage_entry_signal.write() = payload
@@ -315,16 +316,6 @@ where
 
     fn data(&self) -> &Signal<T> {
         &self.entry.data
-    }
-}
-
-impl<S,T> Drop for SyncedStorageEntry<S, T> 
-where
-    S: StorageBacking + StorageSubscriber<S>,
-    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
-{
-    fn drop(&mut self) {
-        S::unsubscribe(self.key());
     }
 }
 
@@ -441,7 +432,7 @@ pub struct StorageEventChannel {
     pub(crate) getter: Box<dyn Fn() -> StorageChannelPayload + 'static + Send + Sync>,
 
     /// The channel to send the data to.
-    pub(crate) tx: Sender<StorageChannelPayload>,
+    pub(crate) tx: Arc<Sender<StorageChannelPayload>>,
 }
 
 impl StorageEventChannel {
@@ -458,7 +449,7 @@ impl StorageEventChannel {
         };
         Self {
             getter: Box::new(getter),
-            tx,
+            tx: Arc::new(tx),
         }
     }
 
