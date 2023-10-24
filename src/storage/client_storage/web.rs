@@ -9,7 +9,7 @@ use web_sys::{window, Storage};
 
 use crate::storage::{
     serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
-    StorageSenderEntry, StorageSubscriber,
+    StorageEventChannel, StorageSubscriber,
 };
 
 // Start LocalStorage
@@ -36,7 +36,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         let rx = CHANNELS.get(key).map_or_else(
             || {
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let entry = StorageSenderEntry::new::<LocalStorage, T>(tx, key.clone());
+                let entry = StorageEventChannel::new::<LocalStorage, T>(tx, key.clone());
                 CHANNELS.insert(key.clone(), entry);
                 rx
             },
@@ -46,30 +46,37 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 
     fn unsubscribe(key: &String) {
+        log::info!("Unsubscribing from {}", key);
         if let Some(entry) = CHANNELS.get(key) {
             if entry.tx.is_closed() {
+                log::info!("Channel is closed, removing entry");
                 CHANNELS.remove(key);
             }
         }
     }
 }
 
-static CHANNELS: Lazy<DashMap<String, StorageSenderEntry>> = Lazy::new(|| {
+/// A map of all the channels that are currently subscribed to. This gets initialized lazily and will set up a listener for storage events.
+static CHANNELS: Lazy<DashMap<String, StorageEventChannel>> = Lazy::new(|| {
+    // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
         log::info!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
         if let Some(entry) = CHANNELS.get(&key) {
-            let result = entry.tx.send((entry.getter)());
+            // Call the getter for the given entry and send the value to said entry's channel.
+            let result = entry.get_and_send();
             match result {
                 Ok(_) => log::info!("Sent storage event"),
                 Err(err) => log::info!("Error sending storage event: {:?}", err),
             }
         }
     }) as Box<dyn FnMut(web_sys::StorageEvent)>);
+    // Register the closure to be called when a storage event occurs.
     window()
         .unwrap()
         .add_event_listener_with_callback("storage", closure.as_ref().unchecked_ref())
         .unwrap();
+    // Relinquish ownership of the closure to the JS runtime so that it can be called later.
     closure.forget();
     DashMap::new()
 });
