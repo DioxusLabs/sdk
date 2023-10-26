@@ -134,7 +134,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 
     fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
-        log::info!("Unsubscribing from \"{}\"", key);
+        log::trace!("Unsubscribing from \"{}\"", key);
 
         // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
@@ -142,7 +142,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 
             // If the subscription exists, remove it from the subscriptions map.
             if let Some(entry) = read_binding.get(key) {
-                log::info!("Found entry for \"{}\"", key);
+                log::trace!("Found entry for \"{}\"", key);
                 drop(read_binding);
                 subscriptions.write().unwrap().remove(key);
             }

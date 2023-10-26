@@ -36,6 +36,6 @@ pub fn use_singleton_persistent<
 ) -> Signal<T> {
     let caller = std::panic::Location::caller();
     let key = cx.use_hook(move || format!("{}:{}", caller.file(), caller.line()));
-    log::info!("use_singleton_persistent key: \"{}\"", key);
+    log::trace!("use_singleton_persistent key: \"{}\"", key);
     use_persistent(cx, key, init)
 }

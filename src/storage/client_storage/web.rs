@@ -54,12 +54,12 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 
     fn unsubscribe(key: &String) {
-        log::info!("Unsubscribing from \"{}\"", key);
+        log::trace!("Unsubscribing from \"{}\"", key);
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(entry) = read_binding.get(key) {
-            log::info!("Found entry for \"{}\"", key);
+            log::trace!("Found entry for \"{}\"", key);
             if entry.tx.is_closed() {
-                log::info!("Channel is closed, removing entry for \"{}\"", key);
+                log::trace!("Channel is closed, removing entry for \"{}\"", key);
                 drop(read_binding);
                 SUBSCRIPTIONS.write().unwrap().remove(key);
             }
@@ -71,19 +71,19 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = Lazy::new(|| {
     // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
-        log::info!("Storage event: {:?}", e);
+        log::trace!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(subscription) = read_binding.get(&key) {
             if subscription.tx.is_closed() {
-                log::info!("Channel is closed, removing subscription for \"{}\"", key);
+                log::trace!("Channel is closed, removing subscription for \"{}\"", key);
                 drop(read_binding);
                 SUBSCRIPTIONS.write().unwrap().remove(&key);
                 return;
             }
             // Call the getter for the given entry and send the value to said entry's channel.
             match subscription.get_and_send() {
-                Ok(_) => log::info!("Sent storage event"),
+                Ok(_) => log::trace!("Sent storage event"),
                 Err(err) => log::error!("Error sending storage event: {:?}", err.to_string()),
             }
         }

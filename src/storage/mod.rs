@@ -229,7 +229,7 @@ pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
     {
         let entry_clone = self.clone();
         use_effect(cx, (&self.data().value(),), move |_| async move {
-            log::info!("state value changed, trying to save");
+            log::trace!("state value changed, trying to save");
             entry_clone.save();
         });
     }
@@ -276,7 +276,7 @@ where
             loop {
                 // Wait for an update to the channel
                 if channel.changed().await.is_ok() {
-                    log::info!("channel changed");
+                    log::trace!("channel changed");
                     // Retrieve the latest value from the channel, mark it as read, and update the state
                     let payload = channel.borrow_and_update();
                     *storage_entry_signal.write() = payload
@@ -301,11 +301,11 @@ where
         //      - The value from the channel could not be determined, likely because it hasn't been set yet
         if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
             if *self.entry.data.read() == *payload {
-                log::info!("value is the same, not saving");
+                log::trace!("value is the same, not saving");
                 return;
             }
         }
-        log::info!("saving");
+        log::trace!("saving");
         self.entry.save();
     }
 
