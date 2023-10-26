@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_router::prelude::*;
 use dioxus_std::storage::*;
 use std::{collections::HashMap, str::FromStr};
 
@@ -8,10 +9,65 @@ fn main() {
         Err(e) => panic!("Failed to initialize logger: {}", e),
     }
     dioxus_std::storage::set_dir!();
-    dioxus_desktop::launch(app);
+    dioxus_desktop::launch(App);
 }
 
-fn app(cx: Scope) -> Element {
+#[component]
+fn App(cx: Scope) -> Element {
+    render! {
+        Router::<Route> {}
+    }
+}
+
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum Route {
+    #[layout(Footer)]
+        #[route("/")]
+        Page1 {},
+        #[route("/page2")]
+        Page2 {},
+}
+
+#[component]
+fn Footer(cx: Scope) -> Element {
+    let window = dioxus_desktop::use_window(cx);
+
+    render! {
+        div {
+            Outlet::<Route> { }
+
+            p {
+                "----"
+            }
+
+            div {
+                button {
+                    onclick: move |_| {
+                        let dom = VirtualDom::new(App);
+                        window.new_window(dom, Default::default());
+                    },
+                    "New Window"
+                }
+            }
+
+            nav {
+                ul {
+                    li { Link { to: Route::Page1 {}, "Page1" } }
+                    li { Link { to: Route::Page2 {}, "Page2" } }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn Page1(cx: Scope) -> Element {
+    render!("Home")
+}
+
+#[component]
+fn Page2(cx: Scope) -> Element {
     let count_session = use_singleton_persistent(cx, || 0);
     let count_local = use_synced_storage::<LocalStorage, i32>(cx, "synced".to_string(), || 0);
 

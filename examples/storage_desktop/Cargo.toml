@@ -7,5 +7,6 @@ edition = "2021"
 dioxus-std = { path="../../", features = ["storage"] }
 dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
 dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
 log = "0.4.6"
 
