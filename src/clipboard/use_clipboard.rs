@@ -38,8 +38,8 @@ impl UseClipboard {
 ///
 /// # Examples
 ///
-/// ```no_run
-/// use dioxus_std;
+/// ```ignore
+/// use dioxus_std::clipboard::use_clipboard;
 ///
 /// // Get a handle to the clipboard
 /// let clipboard = use_clipboard(cx);
