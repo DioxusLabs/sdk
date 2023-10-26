@@ -23,7 +23,7 @@ pub struct LocalStorage;
 impl StorageBacking for LocalStorage {
     type Key = String;
 
-    fn set<T: Serialize>(key: String, value: &T) {
+    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
         set(key, value, WebStorageType::Local);
     }
 
@@ -107,7 +107,7 @@ pub struct SessionStorage;
 impl StorageBacking for SessionStorage {
     type Key = String;
 
-    fn set<T: Serialize>(key: String, value: &T) {
+    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
         set(key, value, WebStorageType::Session);
     }
 
