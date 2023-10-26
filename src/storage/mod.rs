@@ -44,7 +44,7 @@ use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
 #[cfg(not(target_family = "wasm"))]
-pub use client_storage::{set_dir, set_directory, set_dir_name};
+pub use client_storage::{set_dir, set_dir_name, set_directory};
 
 /// A storage hook that can be used to store data that will persist across application reloads.
 ///
@@ -190,7 +190,10 @@ where
 }
 
 /// Returns a value from storage or the init value if it doesn't exist.
-pub fn get_from_storage<S: StorageBacking, T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static>(
+pub fn get_from_storage<
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static,
+>(
     key: S::Key,
     init: impl FnOnce() -> T,
 ) -> T {
@@ -299,7 +302,7 @@ where
         if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
             if *self.entry.data.read() == *payload {
                 log::info!("value is the same, not saving");
-                return
+                return;
             }
         }
         log::info!("saving");
@@ -325,7 +328,10 @@ where
 
 /// A storage entry that can be used to store data across application reloads. It optionally provides a channel to subscribe to updates to the underlying storage.
 #[derive(Clone)]
-pub struct StorageEntry<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + Send + Sync + 'static> {
+pub struct StorageEntry<
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + 'static,
+> {
     /// The key used to store the data in storage
     pub(crate) key: S::Key,
     /// A signal that can be used to read and modify the state
@@ -375,7 +381,9 @@ where
     }
 }
 
-impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + Send + Sync> Deref for StorageEntry<S, T> {
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + Send + Sync> Deref
+    for StorageEntry<S, T>
+{
     type Target = Signal<T>;
 
     fn deref(&self) -> &Signal<T> {

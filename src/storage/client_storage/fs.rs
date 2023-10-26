@@ -1,12 +1,11 @@
 use crate::storage::{StorageChannelPayload, StorageSubscription};
 use dioxus::prelude::*;
-use notify::Watcher;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::io::Write;
-use std::sync::{OnceLock, RwLock, Arc};
-use tokio::sync::{mpsc, watch};
+use std::sync::{OnceLock, RwLock};
+use tokio::sync::watch;
 
 use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, StorageSubscriber};
 
@@ -88,7 +87,10 @@ impl StorageBacking for LocalStorage {
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
             if let Some(subscription) = read_binding.get(&key_clone) {
-                subscription.tx.send(StorageChannelPayload::new(value_clone)).unwrap();
+                subscription
+                    .tx
+                    .send(StorageChannelPayload::new(value_clone))
+                    .unwrap();
             }
         }
     }
@@ -104,9 +106,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         key: &<LocalStorage as StorageBacking>::Key,
     ) -> watch::Receiver<StorageChannelPayload> {
         // Initialize the watcher helper if it hasn't been initialized yet.
-        let subscriptions = SUBSCRIPTIONS.get_or_init(|| {
-            RwLock::new(HashMap::new())
-        });
+        let subscriptions = SUBSCRIPTIONS.get_or_init(|| RwLock::new(HashMap::new()));
 
         // Check if the subscription already exists. If it does, return the existing subscription's channel.
         // If it doesn't, create a new subscription, register it with the watcher, and return its channel.
