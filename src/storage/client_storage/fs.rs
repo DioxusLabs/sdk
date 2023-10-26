@@ -5,7 +5,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::{OnceLock, RwLock};
-use tokio::sync::watch;
+use tokio::sync::watch::{channel, Receiver};
 
 use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, StorageSubscriber};
 
@@ -84,6 +84,8 @@ impl StorageBacking for LocalStorage {
         let key_clone = key.clone();
         let value_clone = (*value).clone();
         set(key, value);
+
+        // If the subscriptions map is not initialized, we don't need to notify any subscribers.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
             if let Some(subscription) = read_binding.get(&key_clone) {
@@ -100,23 +102,26 @@ impl StorageBacking for LocalStorage {
     }
 }
 
+// Note that this module contains an optimization that differs from the web version. Dioxus Desktop runs all windows in
+// the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
+// storage event listener.
 impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn subscribe<T: DeserializeOwned + Send + Sync + 'static>(
         cx: &ScopeState,
         key: &<LocalStorage as StorageBacking>::Key,
-    ) -> watch::Receiver<StorageChannelPayload> {
-        // Initialize the watcher helper if it hasn't been initialized yet.
+    ) -> Receiver<StorageChannelPayload> {
+        // Initialize the subscriptions map if it hasn't been initialized yet.
         let subscriptions = SUBSCRIPTIONS.get_or_init(|| RwLock::new(HashMap::new()));
 
         // Check if the subscription already exists. If it does, return the existing subscription's channel.
-        // If it doesn't, create a new subscription, register it with the watcher, and return its channel.
+        // If it doesn't, create a new subscription and return its channel.
         let read_binding = subscriptions.read().unwrap();
         match read_binding.get(key) {
             Some(subscription) => subscription.tx.subscribe(),
             None => {
                 drop(read_binding);
                 let (tx, rx) =
-                    watch::channel::<StorageChannelPayload>(StorageChannelPayload::default());
+                    channel::<StorageChannelPayload>(StorageChannelPayload::default());
                 let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
 
                 subscriptions
@@ -131,11 +136,11 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
         log::info!("Unsubscribing from \"{}\"", key);
 
-        // Fail silently if unsubscribe is called but the watcher isn't initialized yet.
+        // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
 
-            // If the subscription exists, remove it from the subscriptions map and send an unsubscribe message to the watcher.
+            // If the subscription exists, remove it from the subscriptions map.
             if let Some(entry) = read_binding.get(key) {
                 log::info!("Found entry for \"{}\"", key);
                 drop(read_binding);
@@ -146,5 +151,5 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 }
 
 /// A map of all the channels that are currently subscribed to and the getters for the corresponding storage entry.
-/// This gets initialized lazily and will set up a listener for storage events.
+/// This gets initialized lazily.
 static SUBSCRIPTIONS: OnceLock<RwLock<HashMap<String, StorageSubscription>>> = OnceLock::new();
