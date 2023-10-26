@@ -4,9 +4,10 @@ use std::{collections::HashMap, str::FromStr};
 
 fn main() {
     match log::set_boxed_logger(Box::new(simple_logger::SimpleLogger)) {
-        Ok(_) => log::set_max_level(level.to_level_filter()),
+        Ok(_) => log::set_max_level(log::LevelFilter::Info),
         Err(e) => panic!("Failed to initialize logger: {}", e),
     }
+    dioxus_std::storage::set_dir!();
     dioxus_desktop::launch(app);
 }
 

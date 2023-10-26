@@ -5,5 +5,7 @@ cfg_if::cfg_if! {
     } else {
         pub mod fs;
         pub use fs::*;
+        pub mod memory;
+        pub use memory::SessionStorage;
     }
 }

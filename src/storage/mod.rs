@@ -44,7 +44,7 @@ use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
 #[cfg(not(target_family = "wasm"))]
-pub use client_storage::set_dir;
+pub use client_storage::{set_dir, set_directory, set_dir_name};
 
 /// A storage hook that can be used to store data that will persist across application reloads.
 ///
@@ -427,7 +427,7 @@ pub trait StorageSubscriber<S: StorageBacking> {
 // Start StorageSenderEntry
 
 /// A struct to hold information about processing a storage event.
-pub struct StorageEventChannel {
+pub struct StorageSubscription {
     /// A getter function that will get the data from storage and return it as a StorageChannelPayload.
     pub(crate) getter: Box<dyn Fn() -> StorageChannelPayload + 'static + Send + Sync>,
 
@@ -435,7 +435,7 @@ pub struct StorageEventChannel {
     pub(crate) tx: Arc<Sender<StorageChannelPayload>>,
 }
 
-impl StorageEventChannel {
+impl StorageSubscription {
     pub fn new<
         S: StorageBacking + StorageSubscriber<S>,
         T: DeserializeOwned + Send + Sync + 'static,

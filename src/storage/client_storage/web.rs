@@ -13,7 +13,7 @@ use web_sys::{window, Storage};
 
 use crate::storage::{
     serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
-    StorageEventChannel, StorageSubscriber,
+    StorageSubscriber, StorageSubscription,
 };
 
 // Start LocalStorage
@@ -37,14 +37,17 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         _cx: &ScopeState,
         key: &String,
     ) -> Receiver<StorageChannelPayload> {
-        let read_binding = CHANNELS.read().unwrap();
+        let read_binding = SUBSCRIPTIONS.read().unwrap();
         match read_binding.get(key) {
-            Some(entry) => entry.tx.subscribe(),
+            Some(subscription) => subscription.tx.subscribe(),
             None => {
                 drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let entry = StorageEventChannel::new::<LocalStorage, T>(tx, key.clone());
-                CHANNELS.write().unwrap().insert(key.clone(), entry);
+                let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+                SUBSCRIPTIONS
+                    .write()
+                    .unwrap()
+                    .insert(key.clone(), subscription);
                 rx
             }
         }
@@ -52,34 +55,34 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 
     fn unsubscribe(key: &String) {
         log::info!("Unsubscribing from \"{}\"", key);
-        let read_binding = CHANNELS.read().unwrap();
+        let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(entry) = read_binding.get(key) {
             log::info!("Found entry for \"{}\"", key);
             if entry.tx.is_closed() {
                 log::info!("Channel is closed, removing entry for \"{}\"", key);
                 drop(read_binding);
-                CHANNELS.write().unwrap().remove(key);
+                SUBSCRIPTIONS.write().unwrap().remove(key);
             }
         }
     }
 }
 
-/// A map of all the channels that are currently subscribed to. This gets initialized lazily and will set up a listener for storage events.
-static CHANNELS: Lazy<Arc<RwLock<HashMap<String, StorageEventChannel>>>> = Lazy::new(|| {
+/// A map of all the channels that are currently subscribed to and the getters for the corresponding storage entry. This gets initialized lazily and will set up a listener for storage events.
+static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = Lazy::new(|| {
     // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
         log::info!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
-        let read_binding = CHANNELS.read().unwrap();
-        if let Some(entry) = read_binding.get(&key) {
-            if entry.tx.is_closed() {
-                log::info!("Channel is closed, removing entry for \"{}\"", key);
+        let read_binding = SUBSCRIPTIONS.read().unwrap();
+        if let Some(subscription) = read_binding.get(&key) {
+            if subscription.tx.is_closed() {
+                log::info!("Channel is closed, removing subscription for \"{}\"", key);
                 drop(read_binding);
-                CHANNELS.write().unwrap().remove(&key);
+                SUBSCRIPTIONS.write().unwrap().remove(&key);
                 return;
             }
             // Call the getter for the given entry and send the value to said entry's channel.
-            match entry.get_and_send() {
+            match subscription.get_and_send() {
                 Ok(_) => log::info!("Sent storage event"),
                 Err(err) => log::error!("Error sending storage event: {:?}", err.to_string()),
             }
