@@ -50,8 +50,10 @@ pub fn set_dir_name(name: &str) {
     )
 }
 
+/// The location where the storage files are located.
 static LOCATION: OnceLock<std::path::PathBuf> = OnceLock::new();
 
+/// Set a value in the configured storage location using the key as the file name.
 fn set<T: Serialize>(key: String, value: &T) {
     let as_str = serde_to_string(value);
     let path = LOCATION
@@ -63,6 +65,7 @@ fn set<T: Serialize>(key: String, value: &T) {
     file.write_all(as_str.as_bytes()).unwrap();
 }
 
+/// Get a value from the configured storage location using the key as the file name.
 fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     let path = LOCATION
         .get()
@@ -92,19 +95,24 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         cx: &ScopeState,
         key: &<LocalStorage as StorageBacking>::Key,
     ) -> watch::Receiver<StorageChannelPayload> {
+        // Initialize the watcher helper if it hasn't been initialized yet.
         let watcher_helper = WATCHER_HELPER.get_or_init(|| {
             let (tx, mut rx) = mpsc::channel::<WatcherAction>(10);
 
+            // The watcher is spawned and managed in a separate thread because it is not thread-safe.
             cx.spawn_forever(async move {
+                // Create a watcher and set up a listener for storage events that will notify the correct subscribers.
                 let mut watcher =
                     notify::recommended_watcher(|result: Result<notify::Event, notify::Error>| {
                         match result {
                             Ok(event) => {
+                                // Get the path of the file that was changed and use it as the key.
                                 let path = event.paths.first().unwrap();
                                 let key = path.file_name().unwrap().to_str().unwrap().to_string();
                                 let read_binding =
                                     WATCHER_HELPER.get().unwrap().subscriptions.read().unwrap();
                                 if let Some(subscription) = read_binding.get(&key) {
+                                    // If the subscription channel is closed, remove it from the subscriptions map the watcher.
                                     if subscription.tx.is_closed() {
                                         log::info!(
                                             "Channel is closed, removing subscription for \"{}\"",
@@ -136,6 +144,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
                         }
                     })
                     .unwrap();
+                // Create an infinite loop that will listen for watcher actions and subscribe/unsubscribe from the watcher accordingly.
                 while let Some(message) = rx.recv().await {
                     match message {
                         WatcherAction::Subscribe(key) => {
@@ -162,6 +171,9 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
                 subscriptions: RwLock::new(HashMap::new()),
             }
         });
+
+        // Check if the subscription already exists. If it does, return the existing subscription's channel.
+        // If it doesn't, create a new subscription, register it with the watcher, and return its channel.
         let read_binding = watcher_helper.subscriptions.read().unwrap();
         match read_binding.get(key) {
             Some(subscription) => subscription.tx.subscribe(),
@@ -170,6 +182,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
                 let (tx, rx) =
                     watch::channel::<StorageChannelPayload>(StorageChannelPayload::default());
                 let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+
                 watcher_helper
                     .subscriptions
                     .write()
@@ -186,8 +199,12 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 
     fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
         log::info!("Unsubscribing from \"{}\"", key);
+
+        // Fail silently if unsubscribe is called but the watcher isn't initialized yet.
         if let Some(watcher_helper) = WATCHER_HELPER.get() {
             let read_binding = watcher_helper.subscriptions.read().unwrap();
+
+            // If the subscription exists, remove it from the subscriptions map and send an unsubscribe message to the watcher.
             if let Some(entry) = read_binding.get(key) {
                 log::info!("Found entry for \"{}\"", key);
                 drop(read_binding);
@@ -201,20 +218,22 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 }
 
+/// A map of all the channels that are currently subscribed to and the getters for the corresponding storage entry.
+/// This gets initialized lazily and will set up a listener for storage events.
 static WATCHER_HELPER: OnceLock<WatcherHelper> = OnceLock::new();
 
+/// A helper struct that manages the watcher channel and subscriptions.
 struct WatcherHelper {
+    /// The channel that the application uses to communicate with the watcher thread.
     channel: mpsc::Sender<WatcherAction>,
+    /// A map of all the subscriptions that are currently active.
     subscriptions: RwLock<HashMap<String, StorageSubscription>>,
 }
 
+/// The actions that can be sent to the watcher thread.
 enum WatcherAction {
+    /// Subscribe to a key.
     Subscribe(String),
+    /// Unsubscribe from a key.
     Unsubscribe(String),
 }
-
-enum WatcherResult {
-    Changed(String),
-    Error(String),
-}
-// TODO: add single thread to manage watcher
