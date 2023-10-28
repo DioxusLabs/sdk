@@ -415,7 +415,7 @@ pub trait StorageBacking: Clone + 'static {
     /// The key type used to store data in storage
     type Key: PartialEq + Clone + Debug + Send + Sync + 'static;
     /// Gets a value from storage for the given key
-    fn get<T: DeserializeOwned>(key: &Self::Key) -> Option<T>;
+    fn get<T: DeserializeOwned + Clone + 'static>(key: &Self::Key) -> Option<T>;
     /// Sets a value in storage for the given key
     fn set<T: Serialize + Send + Sync + Clone + 'static>(key: Self::Key, value: &T);
 }
@@ -423,7 +423,7 @@ pub trait StorageBacking: Clone + 'static {
 /// A trait for a subscriber to events from a storage backing
 pub trait StorageSubscriber<S: StorageBacking> {
     /// Subscribes to events from a storage backing for the given key
-    fn subscribe<T: DeserializeOwned + Send + Sync + 'static>(
+    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
         cx: &ScopeState,
         key: &S::Key,
     ) -> Receiver<StorageChannelPayload>;
@@ -446,7 +446,7 @@ pub struct StorageSubscription {
 impl StorageSubscription {
     pub fn new<
         S: StorageBacking + StorageSubscriber<S>,
-        T: DeserializeOwned + Send + Sync + 'static,
+        T: DeserializeOwned + Send + Sync + Clone + 'static,
     >(
         tx: Sender<StorageChannelPayload>,
         key: S::Key,

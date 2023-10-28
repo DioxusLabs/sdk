@@ -106,7 +106,7 @@ impl StorageBacking for LocalStorage {
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
 impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Send + Sync + 'static>(
+    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
         cx: &ScopeState,
         key: &<LocalStorage as StorageBacking>::Key,
     ) -> Receiver<StorageChannelPayload> {
@@ -120,8 +120,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
             Some(subscription) => subscription.tx.subscribe(),
             None => {
                 drop(read_binding);
-                let (tx, rx) =
-                    channel::<StorageChannelPayload>(StorageChannelPayload::default());
+                let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
                 let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
 
                 subscriptions
