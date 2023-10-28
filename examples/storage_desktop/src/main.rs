@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use dioxus_std::storage::*;
-use std::{collections::HashMap, str::FromStr};
 
 fn main() {
     match log::set_boxed_logger(Box::new(simple_logger::SimpleLogger)) {
@@ -94,7 +93,7 @@ fn Page2(cx: Scope) -> Element {
 }
 
 mod simple_logger {
-    use log::{Record, Metadata};
+    use log::{Metadata, Record};
 
     pub struct SimpleLogger;
 

@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use dioxus_std::storage::*;
-use std::{collections::HashMap, str::FromStr};
 
 fn main() {
     // init debug tool for WebAssembly

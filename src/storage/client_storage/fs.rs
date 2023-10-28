@@ -107,7 +107,7 @@ impl StorageBacking for LocalStorage {
 // storage event listener.
 impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        cx: &ScopeState,
+        _cx: &ScopeState,
         key: &<LocalStorage as StorageBacking>::Key,
     ) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
@@ -140,7 +140,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
             let read_binding = subscriptions.read().unwrap();
 
             // If the subscription exists, remove it from the subscriptions map.
-            if let Some(entry) = read_binding.get(key) {
+            if read_binding.contains_key(key) {
                 log::trace!("Found entry for \"{}\"", key);
                 drop(read_binding);
                 subscriptions.write().unwrap().remove(key);
