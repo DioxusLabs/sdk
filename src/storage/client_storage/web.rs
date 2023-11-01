@@ -34,7 +34,6 @@ impl StorageBacking for LocalStorage {
 
 impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        _cx: &ScopeState,
         key: &String,
     ) -> Receiver<StorageChannelPayload> {
         let read_binding = SUBSCRIPTIONS.read().unwrap();

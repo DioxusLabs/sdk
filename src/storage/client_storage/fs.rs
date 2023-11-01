@@ -1,5 +1,4 @@
 use crate::storage::{StorageChannelPayload, StorageSubscription};
-use dioxus::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -107,7 +106,6 @@ impl StorageBacking for LocalStorage {
 // storage event listener.
 impl StorageSubscriber<LocalStorage> for LocalStorage {
     fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        _cx: &ScopeState,
         key: &<LocalStorage as StorageBacking>::Key,
     ) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
