@@ -1,4 +1,4 @@
-use crate::storage::storage_entry;
+use crate::storage::new_storage_entry;
 use crate::storage::SessionStorage;
 use dioxus::prelude::ScopeState;
 use dioxus_signals::Signal;
@@ -18,20 +18,20 @@ pub fn use_persistent<
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    *cx.use_hook(|| persistent(key, init))
+    *cx.use_hook(|| new_persistent(key, init))
 }
 
 /// Creates a persistent storage signal that can be used to store data across application reloads.
 ///
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
-pub fn persistent<
+pub fn new_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    let storage_entry = storage_entry::<SessionStorage, T>(key.to_string(), init);
+    let storage_entry = new_storage_entry::<SessionStorage, T>(key.to_string(), init);
     storage_entry.save_to_storage_on_change();
     storage_entry.data
 }
@@ -48,7 +48,7 @@ pub fn use_singleton_persistent<
     cx: &ScopeState,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    *cx.use_hook(|| singleton_persistent(init))
+    *cx.use_hook(|| new_singleton_persistent(init))
 }
 
 /// Create a persistent storage signal that can be used to store data across application reloads.
@@ -57,7 +57,7 @@ pub fn use_singleton_persistent<
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 #[track_caller]
-pub fn singleton_persistent<
+pub fn new_singleton_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
     init: impl FnOnce() -> T,
@@ -65,5 +65,5 @@ pub fn singleton_persistent<
     let caller = std::panic::Location::caller();
     let key = format!("{}:{}", caller.file(), caller.line());
     log::trace!("singleton_persistent key: \"{}\"", key);
-    persistent(key, init)
+    new_persistent(key, init)
 }

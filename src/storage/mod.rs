@@ -55,13 +55,13 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    *cx.use_hook(|| storage::<S, T>(cx, key, init))
+    *cx.use_hook(|| new_storage::<S, T>(cx, key, init))
 }
 
 /// Creates a Signal that can be used to store data that will persist across application reloads.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
-pub fn storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn new_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
@@ -75,7 +75,7 @@ where
             Signal::new(init.take().unwrap()())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
-            let storage_entry = storage_entry::<S, T>(key, init.take().unwrap());
+            let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
             if cx.generation() == 0 {
                 // The first generation is rendered on the server side and so must be hydrated.
                 cx.needs_update();
@@ -88,7 +88,7 @@ where
             storage_entry.data
         } else {
             // The client is rendered normally, so we can just use the storage entry.
-            let storage_entry = storage_entry::<S, T>( key, init.take().unwrap());
+            let storage_entry = new_storage_entry::<S, T>( key, init.take().unwrap());
             storage_entry.save_to_storage_on_change();
             storage_entry.data
         }
@@ -106,14 +106,14 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    *cx.use_hook(|| synced_storage::<S, T>(cx, key, init))
+    *cx.use_hook(|| new_synced_storage::<S, T>(cx, key, init))
 }
 
 /// Create a signal that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
-pub fn synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn new_synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
@@ -127,7 +127,7 @@ where
             Signal::new(init.take().unwrap()())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
-            let storage_entry = synced_storage_entry::<S, T>(key, init.take().unwrap());
+            let storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
             if cx.generation() == 0 {
                 // The first generation is rendered on the server side and so must be hydrated.
                 cx.needs_update();
@@ -143,7 +143,7 @@ where
             *storage_entry.data()
         } else {
             // The client is rendered normally, so we can just use the synced storage entry.
-            let storage_entry = synced_storage_entry::<S, T>(key, init.take().unwrap());
+            let storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
             storage_entry.save_to_storage_on_change();
             storage_entry.subscribe_to_storage(cx);
             *storage_entry.data()
@@ -163,7 +163,7 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    cx.use_hook(|| storage_entry::<S, T>(key, init))
+    cx.use_hook(|| new_storage_entry::<S, T>(key, init))
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist, and provides a channel to subscribe to updates to the underlying storage.
@@ -177,11 +177,11 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    cx.use_hook(|| synced_storage_entry::<S, T>(key, init))
+    cx.use_hook(|| new_synced_storage_entry::<S, T>(key, init))
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
-pub fn storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> StorageEntry<S, T>
+pub fn new_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> StorageEntry<S, T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + 'static,
@@ -194,7 +194,7 @@ where
 /// Returns a synced StorageEntry with the latest value from storage or the init value if it doesn't exist.
 ///
 /// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage.
-pub fn synced_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> SyncedStorageEntry<S, T>
+pub fn new_synced_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> SyncedStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + PartialEq + Send + Sync + 'static,
