@@ -49,14 +49,14 @@ pub use client_storage::{set_dir, set_dir_name, set_directory};
 /// A storage hook that can be used to store data that will persist across application reloads. This hook is generic over the storage location which can be useful for other hooks.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
-/// 
+///
 /// ## Usage
-/// 
+///
 /// ```rust
 /// use dioxus_std::storage::{use_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
-/// 
+///
 /// // This hook can be used with any storage backing without multiple versions of the hook
 /// fn use_user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
 ///     use_storage::<S, _>(cx, "user-id", || 123)
@@ -74,14 +74,14 @@ where
 /// Creates a Signal that can be used to store data that will persist across application reloads.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
-/// 
+///
 /// ## Usage
-/// 
+///
 /// ```rust
 /// use dioxus_std::storage::{use_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
-/// 
+///
 /// // This hook can be used with any storage backing without multiple versions of the hook
 /// fn user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
 ///     new_storage::<S, _>(cx, "user-id", || 123)
@@ -94,32 +94,30 @@ where
     S::Key: Clone,
 {
     let mut init = Some(init);
-    let signal = {
-        if cfg!(feature = "ssr") {
-            // SSR does not support storage on the backend. We will just use a normal Signal to represent the initial state.
-            // The client will hydrate this with a correct StorageEntry and maintain state.
-            Signal::new(init.take().unwrap()())
-        } else if cfg!(feature = "hydrate") {
-            let key_clone = key.clone();
-            let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
-            if cx.generation() == 0 {
-                // The first generation is rendered on the server side and so must be hydrated.
-                cx.needs_update();
-            }
-            if cx.generation() == 1 {
-                // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
-                storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
-                storage_entry.save_to_storage_on_change();
-            }
-            storage_entry.data
-        } else {
-            // The client is rendered normally, so we can just use the storage entry.
-            let storage_entry = new_storage_entry::<S, T>( key, init.take().unwrap());
-            storage_entry.save_to_storage_on_change();
-            storage_entry.data
+
+    if cfg!(feature = "ssr") {
+        // SSR does not support storage on the backend. We will just use a normal Signal to represent the initial state.
+        // The client will hydrate this with a correct StorageEntry and maintain state.
+        Signal::new(init.take().unwrap()())
+    } else if cfg!(feature = "hydrate") {
+        let key_clone = key.clone();
+        let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
+        if cx.generation() == 0 {
+            // The first generation is rendered on the server side and so must be hydrated.
+            cx.needs_update();
         }
-    };
-    signal
+        if cx.generation() == 1 {
+            // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
+            storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
+            storage_entry.save_to_storage_on_change();
+        }
+        storage_entry.data
+    } else {
+        // The client is rendered normally, so we can just use the storage entry.
+        let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
+        storage_entry.save_to_storage_on_change();
+        storage_entry.data
+    }
 }
 
 /// A storage hook that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
@@ -220,7 +218,10 @@ where
 /// Returns a synced StorageEntry with the latest value from storage or the init value if it doesn't exist.
 ///
 /// This differs from `storage_entry` in that this one will return a channel to subscribe to updates to the underlying storage.
-pub fn new_synced_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> SyncedStorageEntry<S, T>
+pub fn new_synced_storage_entry<S, T>(
+    key: S::Key,
+    init: impl FnOnce() -> T,
+) -> SyncedStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + PartialEq + Send + Sync + 'static,
@@ -272,7 +273,7 @@ pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
         let old = Signal::new(self.data().value());
         let data = *self.data();
         Effect::new(move || {
-            if &*old() != &*data() {
+            if *old() != *data() {
                 log::trace!("state value changed, trying to save");
                 entry_clone.save();
             }
