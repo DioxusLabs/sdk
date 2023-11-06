@@ -74,6 +74,19 @@ where
 /// Creates a Signal that can be used to store data that will persist across application reloads.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
+/// 
+/// ## Usage
+/// 
+/// ```rust
+/// use dioxus_std::storage::{use_storage, StorageBacking};
+/// use dioxus::prelude::*;
+/// use dioxus_signals::Signal;
+/// 
+/// // This hook can be used with any storage backing without multiple versions of the hook
+/// fn user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
+///     new_storage::<S, _>(cx, "user-id", || 123)
+/// }
+/// ```
 pub fn new_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
