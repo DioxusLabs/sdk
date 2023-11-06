@@ -46,9 +46,22 @@ use tokio::sync::watch::{Receiver, Sender};
 #[cfg(not(target_family = "wasm"))]
 pub use client_storage::{set_dir, set_dir_name, set_directory};
 
-/// A storage hook that can be used to store data that will persist across application reloads.
+/// A storage hook that can be used to store data that will persist across application reloads. This hook is generic over the storage location which can be useful for other hooks.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
+/// 
+/// ## Usage
+/// 
+/// ```rust
+/// use dioxus_std::storage::{use_storage, StorageBacking};
+/// use dioxus::prelude::*;
+/// use dioxus_signals::Signal;
+/// 
+/// // This hook can be used with any storage backing without multiple versions of the hook
+/// fn use_user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
+///     use_storage::<S, _>(cx, "user-id", || 123)
+/// }
+/// ```
 pub fn use_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
