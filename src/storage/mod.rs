@@ -2,7 +2,7 @@
 //! A library for handling local storage ergonomically in Dioxus
 //! ## Usage
 //! ```rust
-//! use dioxus_storage::use_storage;
+//! use dioxus_std::storage::use_storage;
 //! use dioxus::prelude::*;
 //! fn main() {
 //!     dioxus_web::launch(app)
