@@ -30,7 +30,9 @@ mod client_storage;
 mod persistence;
 
 pub use client_storage::{LocalStorage, SessionStorage};
-pub use persistence::{use_persistent, use_singleton_persistent, new_persistent, new_singleton_persistent};
+pub use persistence::{
+    new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
+};
 
 use dioxus::prelude::{current_scope_id, to_owned, ScopeState};
 use dioxus_signals::{Effect, Signal};
