@@ -593,12 +593,12 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
         Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
             Ok(v) => Some(v),
             Err(err) => {
-                tracing::error!("Error deserializing value from storage: {:?}", err);
+                log::error!("Error deserializing value from storage: {:?}", err);
                 None
             }
         },
         Err(err) => {
-            tracing::error!("Error decompressing value from storage: {:?}", err);
+            log::error!("Error decompressing value from storage: {:?}", err);
             None
         }
     }

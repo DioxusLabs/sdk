@@ -27,8 +27,8 @@ all = ["clipboard", "notifications", "geolocation", "color_scheme", "utils", "i1
 default = []
 
 # CI testing
-wasm-testing = ["geolocation", "color_scheme", "utils", "i18n"]
-desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
+wasm-testing = ["geolocation", "color_scheme", "utils", "i18n", "storage"]
+desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n", "storage"]
 
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus.git", rev = "647815fa6f6db2304cda5bd36c78b4f8b0379f39" }
