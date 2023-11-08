@@ -1,6 +1,6 @@
-# use_persistant
+# use_persistent (Web)
 
-Learn how to use `use_persistant`.
+Use persistent allows you to create data that will persist across sessions. This example will teach you how to use the `use_persistent` hook.
 
 Run:
 

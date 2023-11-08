@@ -11,3 +11,6 @@ Learn how to use the `i18n` abstraction.
 
 ### [`channel`](./channel/)
 Learn how to use the `channel` abstraction.
+
+### [`storage`](./storage/)
+Learn how to use the `storage` abstraction.
