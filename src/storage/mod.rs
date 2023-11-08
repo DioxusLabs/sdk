@@ -587,7 +587,18 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
         let n2 = c2.to_digit(16)?;
         bytes.push((n1 * 16 + n2) as u8);
     }
-    let (decompressed, _) = yazi::decompress(&bytes, yazi::Format::Zlib).ok()?;
-    postcard::from_bytes(&decompressed).ok()
+    match yazi::decompress(&bytes, yazi::Format::Zlib) {
+        Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
+            Ok(v) => Some(v),
+            Err(err) => {
+                tracing::error!("Error deserializing value from storage: {:?}", err);
+                None
+            }
+        },
+        Err(err) => {
+            tracing::error!("Error decompressing value from storage: {:?}", err);
+            None
+        }
+    }
 }
 // End helper functions
