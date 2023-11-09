@@ -12,22 +12,28 @@ use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, Sto
 /// Set the directory where the storage files are located on non-wasm targets.
 ///
 /// ```rust
+/// use dioxus_std::set_dir;
+/// 
 /// fn main(){
 ///     // set the directory to the default location
 ///     set_dir!();
+/// }
+/// ```
+/// ```rust
+/// use dioxus_std::set_dir;
+/// 
+/// fn main(){
 ///     // set the directory to a custom location
-///     set_dir!(PathBuf::from("path/to/dir"));
+///     set_dir!("path/to/dir");
 /// }
 /// ```
 #[macro_export]
 macro_rules! set_dir {
     () => {
-        extern crate self as storage;
-        storage::set_dir_name(env!("CARGO_PKG_NAME"));
+        $crate::storage::set_dir_name(env!("CARGO_PKG_NAME"))
     };
     ($path: literal) => {
-        extern crate self as storage;
-        storage::set_directory(std::path::PathBuf::from($path));
+        $crate::storage::set_directory(std::path::PathBuf::from($path))
     };
 }
 pub use set_dir;

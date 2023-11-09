@@ -2,11 +2,8 @@
 //! A library for handling local storage ergonomically in Dioxus
 //! ## Usage
 //! ```rust
-//! use dioxus_std::storage::use_storage;
+//! use dioxus_std::storage::use_persistent;
 //! use dioxus::prelude::*;
-//! fn main() {
-//!     dioxus_web::launch(app)
-//! }
 //!
 //! fn app(cx: Scope) -> Element {
 //!     let num = use_persistent(cx, "count", || 0);
@@ -14,7 +11,7 @@
 //!         div {
 //!             button {
 //!                 onclick: move |_| {
-//!                     num.modify(|num| *num += 1);
+//!                     *num.write() += 1;
 //!                 },
 //!                 "Increment"
 //!             }
@@ -80,7 +77,7 @@ where
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_std::storage::{use_storage, StorageBacking};
+/// use dioxus_std::storage::{new_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
