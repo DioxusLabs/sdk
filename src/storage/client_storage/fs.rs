@@ -13,7 +13,7 @@ use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, Sto
 ///
 /// ```rust
 /// use dioxus_std::set_dir;
-/// 
+///
 /// fn main(){
 ///     // set the directory to the default location
 ///     set_dir!();
@@ -21,7 +21,7 @@ use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, Sto
 /// ```
 /// ```rust
 /// use dioxus_std::set_dir;
-/// 
+///
 /// fn main(){
 ///     // set the directory to a custom location
 ///     set_dir!("path/to/dir");
