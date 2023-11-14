@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { path="../../", features = ["utils"] }
+dioxus-std = { workspace = true, features = ["utils"]}
 dioxus = "0.4"
 dioxus-web = "0.4"
 

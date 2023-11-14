@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { path="../../", features = ["geolocation"] }
+dioxus-std = { workspace = true, features = ["geolocation"] }
 dioxus = "0.4"
 dioxus-desktop = "0.4"
 #dioxus-web = "0.4"
