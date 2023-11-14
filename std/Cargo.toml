@@ -5,6 +5,7 @@ authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark", "marc2332"]
 edition = "2021"
 description = "Platform agnostic library for supercharging your productivity with Dioxus"
 license = "MIT"
+readme = "../README.md"
 repository = "https://github.com/DioxusLabs/dioxus-std/"
 homepage = "https://dioxuslabs.com"
 keywords = ["dom", "gui", "dioxus", "standard", "hooks"]
