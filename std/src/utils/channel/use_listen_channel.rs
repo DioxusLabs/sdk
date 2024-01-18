@@ -1,7 +1,7 @@
 use std::future::Future;
 
 use async_broadcast::RecvError;
-use dioxus::prelude::{to_owned, use_effect, ScopeState};
+use dioxus::prelude::{use_effect, ScopeState};
 
 use super::UseChannel;
 
@@ -15,8 +15,7 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
 ) where
     Handler: Future<Output = ()> + 'static,
 {
-    use_effect(cx, (channel,), move |(channel,)| {
-        to_owned![channel];
+    use_effect(cx, (channel,), move |(mut channel,)| {
         async move {
             let action = Box::new(action);
             let mut receiver = channel.receiver();
