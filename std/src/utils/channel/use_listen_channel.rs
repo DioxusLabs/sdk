@@ -16,7 +16,6 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
     Handler: Future<Output = ()> + 'static,
 {
     use_effect(cx, (channel,), move |(mut channel,)| async move {
-        let action = Box::new(action);
         let mut receiver = channel.receiver();
 
         loop {
