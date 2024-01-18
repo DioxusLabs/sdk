@@ -43,8 +43,8 @@ pub fn use_channel<MessageType: Clone + 'static>(
         let id = Uuid::new_v4();
         let (sender, receiver) = broadcast::<MessageType>(size);
         UseChannel {
-            id: id,
-            sender: sender.clone(),
+            id,
+            sender,
             inactive_receiver: receiver.deactivate(),
         }
     })
