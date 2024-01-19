@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-std"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark", "marc2332"]
 edition = "2021"
 description = "Platform agnostic library for supercharging your productivity with Dioxus"
