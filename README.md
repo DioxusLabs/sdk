@@ -55,13 +55,13 @@ fn app(cx: Scope) -> Element {
 
     match coords {
       Ok(coords) => {
-        render! { p { format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) } }
+        rsx! { p { format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) } }
       }
       Err(Error::NotInitialized) => {
-        render! { p { "Initializing..." }}
+        rsx! { p { "Initializing..." }}
       }
       Err(e) => {
-        render! { p { "An error occurred {e}" }}
+        rsx! { p { "An error occurred {e}" }}
       }
     }
 }
@@ -79,7 +79,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { version = "0.4.2", features = [] }
+dioxus-std =  { version = "0.5", features = [] }
 ```
 
 ## License

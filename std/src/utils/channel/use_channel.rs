@@ -1,5 +1,5 @@
 use async_broadcast::{broadcast, InactiveReceiver, Receiver, SendError, Sender, TrySendError};
-use dioxus::prelude::ScopeState;
+use dioxus::prelude::*;
 use uuid::Uuid;
 
 /// Send and listen for messages between multiple components.
@@ -35,11 +35,8 @@ impl<MessageType: Clone> UseChannel<MessageType> {
 }
 
 /// Send and listen for messages between multiple components.
-pub fn use_channel<MessageType: Clone + 'static>(
-    cx: &ScopeState,
-    size: usize,
-) -> &UseChannel<MessageType> {
-    cx.use_hook(|| {
+pub fn use_channel<MessageType: Clone + 'static>(size: usize) -> UseChannel<MessageType> {
+    use_hook(|| {
         let id = Uuid::new_v4();
         let (sender, receiver) = broadcast::<MessageType>(size);
         UseChannel {

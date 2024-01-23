@@ -5,18 +5,18 @@ fn main() {
     dioxus_desktop::launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let clipboard = use_clipboard(cx);
-    let text = use_state(cx, String::new);
+fn app() -> Element {
+    let clipboard = use_clipboard();
+    let mut text = use_signal(String::new);
 
-    let oninput = |e: FormEvent| {
+    let oninput = move |e: FormEvent| {
         text.set(e.data.value.clone());
     };
 
     let oncopy = {
         to_owned![clipboard];
-        move |_| match clipboard.set(text.get().clone()) {
-            Ok(_) => println!("Copied to clipboard: {}", text.get()),
+        move |_| match clipboard.set(text.read().clone()) {
+            Ok(_) => println!("Copied to clipboard: {}", text.read()),
             Err(err) => println!("Error on copy: {err:?}"),
         }
     };
@@ -29,7 +29,7 @@ fn app(cx: Scope) -> Element {
         Err(err) => println!("Error on paste: {err:?}"),
     };
 
-    render!(
+    rsx!(
         input {
             oninput: oninput,
             value: "{text}"

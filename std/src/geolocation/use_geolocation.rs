@@ -1,7 +1,7 @@
 //! Provides an initialization and use_geolocation hook.
 
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
-use dioxus::prelude::{use_coroutine, ScopeState, UnboundedReceiver};
+use dioxus::prelude::{provide_context, try_consume_context, use_coroutine, UnboundedReceiver};
 use futures_util::stream::StreamExt;
 use std::{rc::Rc, sync::Once};
 
@@ -10,13 +10,12 @@ use crate::utils::rw::{use_rw, UseRw};
 static INIT: Once = Once::new();
 
 /// Provides the latest geocoordinates. Good for navigation-type apps.
-pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
+pub fn use_geolocation() -> Result<Geocoordinates, Error> {
     // Store the coords
-    let coords: &mut UseRw<Result<Geocoordinates, Error>> =
-        use_rw(cx, || Err(Error::NotInitialized));
+    let coords: UseRw<Result<Geocoordinates, Error>> = use_rw(|| Err(Error::NotInitialized));
 
     // Get geolocator
-    let geolocator = match cx.consume_context::<Rc<Geolocator>>() {
+    let geolocator = match try_consume_context::<Rc<Geolocator>>() {
         Some(v) => v,
         None => return Err(Error::NotInitialized),
     };
@@ -24,7 +23,7 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
     let coords_cloned = coords.clone();
 
     // Initialize the handler of events
-    let listener = use_coroutine(cx, |mut rx: UnboundedReceiver<Event>| async move {
+    let listener = use_coroutine(|mut rx: UnboundedReceiver<Event>| async move {
         while let Some(event) = rx.next().await {
             match event {
                 Event::NewGeocoordinates(new_coords) => {
@@ -48,9 +47,9 @@ pub fn use_geolocation(cx: &ScopeState) -> Result<Geocoordinates, Error> {
 }
 
 /// Must be called before any use of the geolocation abstraction.
-pub fn init_geolocator(cx: &ScopeState, power_mode: PowerMode) -> Result<Rc<Geolocator>, Error> {
+pub fn init_geolocator(power_mode: PowerMode) -> Result<Rc<Geolocator>, Error> {
     let geolocator = Geolocator::new(power_mode)?;
     let shared_locator = Rc::new(geolocator);
-    cx.provide_context(shared_locator.clone());
+    provide_context(shared_locator.clone());
     Ok(shared_locator)
 }

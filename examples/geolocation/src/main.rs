@@ -6,12 +6,10 @@ fn main() {
     //dioxus_web::launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
-    let initial_coords = use_future(cx, (), |_| async move {
-        geolocator.get_coordinates().await.unwrap()
-    });
-    let latest_coords = use_geolocation(cx);
+fn app() -> Element {
+    let geolocator = init_geolocator(PowerMode::High).unwrap();
+    let initial_coords = use_future(|_| async move { geolocator.get_coordinates().await.unwrap() });
+    let latest_coords = use_geolocation();
 
     let latest_coords = match latest_coords {
         Ok(v) => v,

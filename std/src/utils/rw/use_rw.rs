@@ -1,24 +1,17 @@
 //! Essentially the use_ref hook except Send + Sync using Arc and RwLock.
+use dioxus::prelude::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use dioxus::prelude::ScopeState;
-
-pub fn use_rw<T: Send + Sync + 'static>(
-    cx: &ScopeState,
-    init_rw: impl FnOnce() -> T,
-) -> &mut UseRw<T> {
-    let hook = cx.use_hook(|| UseRw {
-        update: cx.schedule_update(),
+pub fn use_rw<T: Send + Sync + 'static>(init_rw: impl FnOnce() -> T) -> UseRw<T> {
+    use_hook(|| UseRw {
+        update: schedule_update(),
         value: Arc::new(RwLock::new(init_rw())),
-    });
-
-    hook
+    })
 }
 
 pub struct UseRw<T> {
     update: Arc<dyn Fn() + Send + Sync + 'static>,
     value: Arc<RwLock<T>>,
-    //dirty: Arc<RwLock<bool>>,
 }
 
 impl<T> Clone for UseRw<T> {

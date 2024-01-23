@@ -9,10 +9,10 @@ fn main() {
     dioxus_web::launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let color_scheme = use_preferred_color_scheme(cx);
+fn app() -> Element {
+    let color_scheme = use_preferred_color_scheme();
 
-    render!(
+    rsx!(
         div {
             style: "text-align: center;",
             h1 { "🌗 Dioxus 🚀" }

@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-std"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark", "marc2332"]
 edition = "2021"
 description = "Platform agnostic library for supercharging your productivity with Dioxus"
@@ -25,7 +25,7 @@ wasm-testing = ["geolocation", "color_scheme", "utils", "i18n"]
 desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
 
 [dependencies]
-dioxus = { version = "0.4" }
+dioxus = { workspace = true }
 cfg-if = "1.0.0"
 
 # utils
