@@ -53,7 +53,7 @@ impl UseClipboard {
 ///  
 /// ```
 pub fn use_clipboard() -> UseClipboard {
-    let clipboard = match consume_context() {
+    let clipboard = match try_consume_context() {
         Some(rt) => rt,
         None => {
             let clipboard = ClipboardContext::new().expect("Cannot create Clipboard.");
