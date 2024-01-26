@@ -19,7 +19,7 @@ impl UseClipboard {
     // Read from the clipboard
     pub fn get(&self) -> Result<String, ClipboardError> {
         self.clipboard
-            .read()
+            .write()
             .get_contents()
             .map_err(|_| ClipboardError::FailedToRead)
     }
