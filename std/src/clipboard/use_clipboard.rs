@@ -21,6 +21,7 @@ impl UseClipboard {
     pub fn get(&self) -> Result<String, ClipboardError> {
         self.clipboard
             .write()
+            .as_ref()
             .ok_or_else(|| ClipboardError::NotAvailable)?
             .get_contents()
             .map_err(|_| ClipboardError::FailedToRead)
@@ -30,6 +31,7 @@ impl UseClipboard {
     pub fn set(&self, contents: String) -> Result<(), ClipboardError> {
         self.clipboard
             .write()
+            .as_ref()
             .ok_or_else(|| ClipboardError::NotAvailable)?
             .set_contents(contents)
             .map_err(|_| ClipboardError::FailedToSet)
