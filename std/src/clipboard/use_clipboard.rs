@@ -7,12 +7,13 @@ use dioxus::prelude::*;
 pub enum ClipboardError {
     FailedToRead,
     FailedToSet,
+    NotAvailable,
 }
 
 /// Handle to access the ClipboardContext.
 #[derive(Clone)]
 pub struct UseClipboard {
-    clipboard: Signal<ClipboardContext>,
+    clipboard: Signal<Option<ClipboardContext>>,
 }
 
 impl UseClipboard {
@@ -20,6 +21,7 @@ impl UseClipboard {
     pub fn get(&self) -> Result<String, ClipboardError> {
         self.clipboard
             .write()
+            .ok_or_else(|| ClipboardError::NotAvailable)?
             .get_contents()
             .map_err(|_| ClipboardError::FailedToRead)
     }
@@ -28,6 +30,7 @@ impl UseClipboard {
     pub fn set(&self, contents: String) -> Result<(), ClipboardError> {
         self.clipboard
             .write()
+            .ok_or_else(|| ClipboardError::NotAvailable)?
             .set_contents(contents)
             .map_err(|_| ClipboardError::FailedToSet)
     }
@@ -56,7 +59,7 @@ pub fn use_clipboard() -> UseClipboard {
     let clipboard = match try_consume_context() {
         Some(rt) => rt,
         None => {
-            let clipboard = ClipboardContext::new().expect("Cannot create Clipboard.");
+            let clipboard = ClipboardContext::new().ok();
             provide_root_context(Signal::new(clipboard)).unwrap()
         }
     };
