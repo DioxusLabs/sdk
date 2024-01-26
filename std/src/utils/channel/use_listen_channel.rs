@@ -26,7 +26,7 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
                 if message_err == Some(UseListenChannelError::Closed) {
                     break;
                 }
-            }   
+            }
         })
     });
 }
