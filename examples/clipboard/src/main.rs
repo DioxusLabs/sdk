@@ -6,7 +6,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let clipboard = use_clipboard();
+    let mut clipboard = use_clipboard();
     let mut text = use_signal(String::new);
 
     let oninput = move |e: FormEvent| {

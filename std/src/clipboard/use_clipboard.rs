@@ -18,7 +18,7 @@ pub struct UseClipboard {
 
 impl UseClipboard {
     // Read from the clipboard
-    pub fn get(&self) -> Result<String, ClipboardError> {
+    pub fn get(&mut self) -> Result<String, ClipboardError> {
         self.clipboard
             .write()
             .as_mut()
@@ -28,7 +28,7 @@ impl UseClipboard {
     }
 
     // Write to the clipboard
-    pub fn set(&self, contents: String) -> Result<(), ClipboardError> {
+    pub fn set(&mut self, contents: String) -> Result<(), ClipboardError> {
         self.clipboard
             .write()
             .as_mut()
@@ -46,7 +46,7 @@ impl UseClipboard {
 /// use dioxus_std::clipboard::use_clipboard;
 ///
 /// // Get a handle to the clipboard
-/// let clipboard = use_clipboard();
+/// let mut clipboard = use_clipboard();
 ///
 /// // Read the clipboard content
 /// if let Ok(content) = clipboard.get() {
