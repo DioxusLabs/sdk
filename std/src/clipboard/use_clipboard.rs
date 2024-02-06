@@ -62,7 +62,7 @@ pub fn use_clipboard() -> UseClipboard {
         Some(rt) => rt,
         None => {
             let clipboard = ClipboardContext::new().ok();
-            provide_root_context(Signal::new(clipboard)).unwrap()
+            provide_root_context(Signal::new(clipboard))
         }
     };
     UseClipboard { clipboard }
