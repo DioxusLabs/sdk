@@ -7,6 +7,6 @@ members = [
 
 [workspace.dependencies]
 dioxus-std = { path = "./std" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be" }
-dioxus-web = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "ef101dd876ee8ecdd702a7e22addfd47f2ebd892" }
+dioxus-web = { git = "https://github.com/DioxusLabs/dioxus", rev = "ef101dd876ee8ecdd702a7e22addfd47f2ebd892" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "ef101dd876ee8ecdd702a7e22addfd47f2ebd892" }
