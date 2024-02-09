@@ -75,10 +75,11 @@ impl Geolocator {
 
     /// Subscribe a mpsc channel to the events.
     pub fn listen(&self, listener: Coroutine<Event>) -> Result<(), Error> {
+        let tx = listener.tx();
         platform::listen(
             &self.device_geolocator,
             Arc::new(move |event: Event| {
-                listener.send(event);
+                tx.unbounded_send(event);
             }),
         )
     }
