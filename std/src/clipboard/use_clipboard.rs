@@ -11,7 +11,7 @@ pub enum ClipboardError {
 }
 
 /// Handle to access the ClipboardContext.
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct UseClipboard {
     clipboard: Signal<Option<ClipboardContext>>,
 }

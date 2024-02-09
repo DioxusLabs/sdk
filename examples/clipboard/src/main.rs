@@ -13,12 +13,9 @@ fn app() -> Element {
         text.set(e.data.value.clone());
     };
 
-    let oncopy = {
-        to_owned![clipboard];
-        move |_| match clipboard.set(text.read().clone()) {
-            Ok(_) => println!("Copied to clipboard: {}", text.read()),
-            Err(err) => println!("Error on copy: {err:?}"),
-        }
+    let oncopy = move |_| match clipboard.set(text.read().clone()) {
+        Ok(_) => println!("Copied to clipboard: {}", text.read()),
+        Err(err) => println!("Error on copy: {err:?}"),
     };
 
     let onpaste = move |_| match clipboard.get() {

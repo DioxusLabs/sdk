@@ -15,7 +15,7 @@ fn app() -> Element {
         Ok(v) => v,
         Err(e) => {
             let e = format!("Initializing: {:?}", e);
-            return cx.render(rsx!(p { "{e}" }));
+            return rsx!(p { "{e}" });
         }
     };
 
@@ -24,7 +24,7 @@ fn app() -> Element {
 
     let initial_coords = initial_coords.value();
 
-    cx.render(rsx! (
+    rsx!(
         div {
             style: "text-align: center;",
             h1 { "🗺️ Dioxus Geolocation Example 🛰️" }
@@ -32,7 +32,7 @@ fn app() -> Element {
 
             p {
                 if let Some(coords) = initial_coords {
-                    format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) 
+                    format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude)
                 } else {
                     "Loading...".to_string()
                 }
@@ -49,5 +49,5 @@ fn app() -> Element {
             //    src: "https://www.google.com/maps/embed/v1/view?key={key}&center={latest_coords.latitude},{latest_coords.longitude}&zoom=16",
             //}
         }
-    ))
+    )
 }

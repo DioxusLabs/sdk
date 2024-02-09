@@ -49,9 +49,9 @@ use dioxus_std::geolocation::{
     init_geolocator, use_geolocation, PowerMode
 };
 
-fn app(cx: Scope) -> Element {
-    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
-    let coords = use_geolocation(cx);
+fn app() -> Element {
+    let geolocator = init_geolocator(, PowerMode::High).unwrap();
+    let coords = use_geolocation();
 
     match coords {
       Ok(coords) => {

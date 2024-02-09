@@ -3,11 +3,11 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 /// Send and listen for messages between multiple components.
-#[derive(Debug, Clone)]
-pub struct UseChannel<MessageType: Clone> {
+#[derive(Clone, Copy)]
+pub struct UseChannel<MessageType: Clone + 'static> {
     id: Uuid,
-    sender: Sender<MessageType>,
-    inactive_receiver: InactiveReceiver<MessageType>,
+    sender: Signal<Sender<MessageType>>,
+    inactive_receiver: Signal<InactiveReceiver<MessageType>>,
 }
 
 impl<T: Clone> PartialEq for UseChannel<T> {
@@ -16,21 +16,21 @@ impl<T: Clone> PartialEq for UseChannel<T> {
     }
 }
 
-impl<MessageType: Clone> UseChannel<MessageType> {
+impl<MessageType: Clone + 'static> UseChannel<MessageType> {
     /// Tries to send a message to all listeners of the channel.
     pub fn try_send(&self, msg: impl Into<MessageType>) -> Result<(), TrySendError<MessageType>> {
-        self.sender.try_broadcast(msg.into()).map(|_| ())
+        self.sender.peek().try_broadcast(msg.into()).map(|_| ())
     }
 
     /// Sends a message to all listeners of the channel.
     pub async fn send(&self, msg: impl Into<MessageType>) -> Result<(), SendError<MessageType>> {
-        self.sender.broadcast(msg.into()).await.map(|_| ())
+        self.sender.peek().broadcast(msg.into()).await.map(|_| ())
     }
 
     /// Create a receiver for the channel.
     /// You probably want to use [`super::use_listen_channel()`].
     pub fn receiver(&mut self) -> Receiver<MessageType> {
-        self.inactive_receiver.clone().activate()
+        self.inactive_receiver.peek().clone().activate()
     }
 }
 
@@ -41,8 +41,8 @@ pub fn use_channel<MessageType: Clone + 'static>(size: usize) -> UseChannel<Mess
         let (sender, receiver) = broadcast::<MessageType>(size);
         UseChannel {
             id,
-            sender,
-            inactive_receiver: receiver.deactivate(),
+            sender: Signal::new(sender),
+            inactive_receiver: Signal::new(receiver.deactivate()),
         }
     })
 }
