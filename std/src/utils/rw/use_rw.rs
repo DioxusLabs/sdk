@@ -26,13 +26,15 @@ impl<T> Clone for UseRw<T> {
 
 impl<T> UseRw<T> {
     pub fn read(&self) -> Result<RwLockReadGuard<'_, T>, UseRwError> {
-        self.value.read().read().map_err(|_| UseRwError::Poisoned)
+        let rw_lock = self.value.read();
+        rw_lock.read().map_err(|_| UseRwError::Poisoned)
     }
 
     pub fn write(&self, new_value: T) -> Result<(), UseRwError> {
-        let mut lock = self
+        let rw_lock = self
             .value
-            .read()
+            .read();
+        let mut lock = rw_lock
             .write()
             .map_err(|_| UseRwError::Poisoned)?;
         *lock = new_value;

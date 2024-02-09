@@ -1,4 +1,4 @@
-use std::future::Future;
+use std::{future::Future, rc::Rc};
 
 use async_broadcast::RecvError;
 use dioxus::prelude::*;
@@ -14,7 +14,9 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
 ) where
     Handler: Future<Output = ()> + 'static,
 {
+    let action = use_hook(|| Rc::new(action));
     use_memo_with_dependencies((channel,), move |(mut channel,)| {
+        to_owned![action];
         spawn(async move {
             let mut receiver = channel.receiver();
             loop {
