@@ -29,3 +29,9 @@ cfg_if::cfg_if! {
         pub mod clipboard;
     }
 }
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "conn_mgr")] {
+        pub mod conn_manager;
+    }
+}
