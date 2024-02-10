@@ -7,7 +7,6 @@ use futures_util::{
 use std::collections::HashMap;
 
 pub struct Manager {
-    conn: Box<dyn Connection>,
     recv_from_channels: UnboundedReceiver<Message>,
     send_from_channel: UnboundedSender<Message>,
     channels: HashMap<String, UnboundedSender<Message>>,
@@ -15,11 +14,10 @@ pub struct Manager {
 
 impl Manager {
     /// Create a new manager of a connection.
-    pub fn new(conn: Box<dyn Connection>) -> Self {
+    pub fn new() -> Self {
         let (send_from_channel, recv_from_channels) = mpsc::unbounded();
 
         Self {
-            conn,
             recv_from_channels,
             send_from_channel,
             channels: HashMap::new(),
@@ -39,20 +37,22 @@ impl Manager {
         conn_channel
     }
 
-    /// Starts the manager.
-    pub async fn listen(mut self) {
+    /// Starts the manager with the specified connection.
+    pub async fn listen(&mut self, conn: &mut impl Connection) {
         loop {
             let recv_channel = self.recv_from_channels.next();
-            let recv_conn = self.conn.recv();
+            let recv_conn = conn.recv();
 
             match select(recv_channel, recv_conn).await {
                 Either::Left((data, _)) => {
                     if let Some(data) = data {
                         // TODO: error handling
-                        _ = self.conn.send(data);
+                        _ = conn.send(data);
                     }
                 }
                 Either::Right((data, _)) => {
+                    // TODO: Handle none
+                    let data = data.unwrap();
                     if let Some(sender) = self.channels.get_mut(&data.channel) {
                         // TODO: error handling
                         _ = sender.send(data).await;
@@ -101,6 +101,7 @@ impl ConnectionChannel {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Message {
     channel: String,
     pub data: String,

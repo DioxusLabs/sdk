@@ -1,6 +1,6 @@
-use async_trait::async_trait;
-
 pub mod manager;
+use futures::channel::mpsc::UnboundedReceiver;
+use futures_util::stream::Next;
 pub use manager::*;
 
 cfg_if::cfg_if! {
@@ -9,10 +9,9 @@ cfg_if::cfg_if! {
     }
 }
 
-#[async_trait]
 pub trait Connection {
     fn send(&self, msg: Message) -> Result<(), ConnError>;
-    async fn recv(&self) -> Message;
+    fn recv(&mut self) -> Next<'_, UnboundedReceiver<Message>>;
 }
 
 /// Represents a connection error.

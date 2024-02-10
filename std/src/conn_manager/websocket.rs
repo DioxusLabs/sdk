@@ -1,20 +1,18 @@
 use super::{ConnError, Connection, Message};
-use async_trait::async_trait;
-use dioxus::hooks::{UnboundedReceiver, UnboundedSender};
-use futures::channel::mpsc;
-use futures_util::{SinkExt, StreamExt};
+use futures::channel::mpsc::{self, UnboundedReceiver};
+use futures_util::{stream::Next, StreamExt};
 use wasm_bindgen::{closure::Closure, JsCast};
-use web_sys::MessageEvent;
+use web_sys::{MessageEvent, WebSocket};
 
 pub struct WebsocketClient {
-    reciever: UnboundedReceiver,
+    reciever: UnboundedReceiver<Message>,
+    socket: WebSocket,
 }
 
 impl WebsocketClient {
     pub fn connect(url: &str) -> Self {
         //TODO: Handle errors
-        let ws = web_sys::Websocket::new(url).unwrap();
-
+        let ws = WebSocket::new(url).unwrap();
         let (tx, rx) = mpsc::unbounded();
 
         let cl = Closure::wrap(Box::new(move |e: MessageEvent| {
@@ -22,8 +20,9 @@ impl WebsocketClient {
                 let string: String = text.into();
                 // TODO: Handle error
                 let val = serde_json::from_str::<Message>(&string).unwrap();
-                // TODO: Handle error
-                tx.unbounded_send(val).unwrap();
+
+                // Can't handle this error without panicking
+                _ = tx.unbounded_send(val);
             }
         }) as Box<dyn FnMut(MessageEvent)>);
 
@@ -32,17 +31,31 @@ impl WebsocketClient {
 
         Self {
             reciever: rx,
+            socket: ws,
         }
     }
 }
 
-#[async_trait]
+
 impl Connection for WebsocketClient {
     fn send(&self, msg: Message) -> Result<(), ConnError> {
-        todo!()
+        // Serialize message
+        let data = match serde_json::to_string(&msg) {
+            Ok(d) => d,
+            Err(e) => return Err(ConnError::Send(e.to_string())),
+        };
+
+        // Send it across the socket
+        match self.socket.send_with_str(&data) {
+            Ok(()) => Ok(()),
+            Err(e) => Err(ConnError::Send(
+                e.as_string()
+                    .unwrap_or("failed to deserialize error".to_string()),
+            )),
+        }
     }
 
-    async fn recv(&self) -> Message {
-        self.reciever.next().await
+    fn recv(&mut self) -> Next<'_, UnboundedReceiver<Message>> {
+        self.reciever.next()
     }
 }

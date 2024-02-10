@@ -1,6 +1,7 @@
 {
     "rust-analyzer.cargo.features": [
-        "desktop-testing"
+        "local-dev-testing"
+        //"wasm-testing"
+        //"desktop-testing"
     ],
-    "rust-analyzer.cargo.extraArgs": ["--exclude=color_scheme"]
 }
