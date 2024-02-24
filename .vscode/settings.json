@@ -2,4 +2,5 @@
     "rust-analyzer.cargo.features": [
         "desktop-testing"
     ],
+    "rust-analyzer.cargo.extraArgs": ["--exclude=color_scheme"]
 } 
