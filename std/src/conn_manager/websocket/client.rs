@@ -4,12 +4,12 @@ use futures_util::{stream::Next, StreamExt};
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{MessageEvent, WebSocket};
 
-pub struct WebsocketClient {
+pub struct Client {
     reciever: UnboundedReceiver<Message>,
     socket: WebSocket,
 }
 
-impl WebsocketClient {
+impl Client {
     pub fn connect(url: &str) -> Self {
         //TODO: Handle errors
         let ws = WebSocket::new(url).unwrap();
@@ -36,8 +36,7 @@ impl WebsocketClient {
     }
 }
 
-
-impl Connection for WebsocketClient {
+impl Connection for Client {
     fn send(&self, msg: Message) -> Result<(), ConnError> {
         // Serialize message
         let data = match serde_json::to_string(&msg) {

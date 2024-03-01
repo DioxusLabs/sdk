@@ -16,7 +16,7 @@ impl Manager {
     /// Create a new manager of a connection.
     pub fn new() -> Self {
         let (send_from_channel, recv_from_channels) = mpsc::unbounded();
-
+        
         Self {
             recv_from_channels,
             send_from_channel,
@@ -38,7 +38,7 @@ impl Manager {
     }
 
     /// Starts the manager with the specified connection.
-    pub async fn listen(&mut self, conn: &mut impl Connection) {
+    pub async fn listen(mut self, mut conn: impl Connection) {
         loop {
             let recv_channel = self.recv_from_channels.next();
             let recv_conn = conn.recv();

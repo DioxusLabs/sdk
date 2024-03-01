@@ -66,11 +66,15 @@ conn_mgr_ws = [
     "dep:wasm-bindgen",
     "dep:js-sys",
 ]
+conn_mgr_ws_axum = [
+    # Shared
+    "conn_mgr",
+    "dep:serde_json",
+]
 
 # CI testing
 wasm-testing = ["geolocation", "color_scheme", "utils", "i18n", "conn_mgr_ws"]
-desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
-local-dev-testing = ["conn_mgr_ws"]
+desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n", "conn_mgr_ws_axum"]
 
 
 # # # # # # # # # # # # # # #
