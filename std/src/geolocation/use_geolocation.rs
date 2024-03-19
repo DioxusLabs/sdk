@@ -41,7 +41,7 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
 
     // Start listening
     INIT.call_once(|| {
-        let _ = geolocator.listen(listener.clone());
+        geolocator.listen(listener).ok();
     });
 
     // Get the result and return a clone

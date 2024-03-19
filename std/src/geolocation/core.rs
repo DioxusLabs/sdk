@@ -79,7 +79,7 @@ impl Geolocator {
         platform::listen(
             &self.device_geolocator,
             Arc::new(move |event: Event| {
-                tx.unbounded_send(event);
+                tx.unbounded_send(event).ok();
             }),
         )
     }
