@@ -34,7 +34,6 @@
 - [x] Notifications - (Desktop)
 - [x] Color Scheme - (any)
 - [x] Utility Hooks 
-  - [x] use_rw - (any)
   - [x] use_channel - (any)
   - [ ] use_interval (any)
 - [x] i18n - (any)

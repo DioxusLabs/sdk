@@ -1,18 +1,22 @@
 //! Provides an initialization and use_geolocation hook.
 
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
-use dioxus::prelude::{provide_context, try_consume_context, use_coroutine, UnboundedReceiver};
+use dioxus::{
+    prelude::{
+        provide_context, try_consume_context, use_coroutine, use_signal, Signal, UnboundedReceiver,
+    },
+    signals::{Readable, Writable},
+};
 use futures_util::stream::StreamExt;
 use std::{rc::Rc, sync::Once};
-
-use crate::utils::rw::{use_rw, UseRw};
 
 static INIT: Once = Once::new();
 
 /// Provides the latest geocoordinates. Good for navigation-type apps.
 pub fn use_geolocation() -> Result<Geocoordinates, Error> {
     // Store the coords
-    let coords: UseRw<Result<Geocoordinates, Error>> = use_rw(|| Err(Error::NotInitialized));
+    let mut coords: Signal<Result<Geocoordinates, Error>> =
+        use_signal(|| Err(Error::NotInitialized));
 
     // Get geolocator
     let geolocator = match try_consume_context::<Rc<Geolocator>>() {
@@ -20,17 +24,15 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
         None => return Err(Error::NotInitialized),
     };
 
-    let coords_cloned = coords.clone();
-
     // Initialize the handler of events
     let listener = use_coroutine(|mut rx: UnboundedReceiver<Event>| async move {
         while let Some(event) = rx.next().await {
             match event {
                 Event::NewGeocoordinates(new_coords) => {
-                    let _ = coords_cloned.write(Ok(new_coords));
+                    *coords.write() = Ok(new_coords);
                 }
                 Event::StatusChanged(Status::Disabled) => {
-                    let _ = coords_cloned.write(Err(Error::AccessDenied));
+                    *coords.write() = Err(Error::AccessDenied);
                 }
                 _ => {}
             }
@@ -43,7 +45,7 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
     });
 
     // Get the result and return a clone
-    coords.read().map_err(|_| Error::Poisoned)?.clone()
+    coords.read_unchecked().clone()
 }
 
 /// Must be called before any use of the geolocation abstraction.
