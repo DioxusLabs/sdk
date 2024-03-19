@@ -15,7 +15,7 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
     Handler: Future<Output = ()> + 'static,
 {
     let action = use_hook(|| Rc::new(action));
-    use_memo_with_dependencies((channel,), move |(mut channel,)| {
+    use_memo(use_reactive(channel, move |mut channel| {
         to_owned![action];
         spawn(async move {
             let mut receiver = channel.receiver();
@@ -28,5 +28,5 @@ pub fn use_listen_channel<MessageType: Clone + 'static, Handler>(
                 }
             }
         })
-    });
+    }));
 }

@@ -31,12 +31,8 @@ impl<T> UseRw<T> {
     }
 
     pub fn write(&self, new_value: T) -> Result<(), UseRwError> {
-        let rw_lock = self
-            .value
-            .read();
-        let mut lock = rw_lock
-            .write()
-            .map_err(|_| UseRwError::Poisoned)?;
+        let rw_lock = self.value.read();
+        let mut lock = rw_lock.write().map_err(|_| UseRwError::Poisoned)?;
         *lock = new_value;
         self.needs_update();
         Ok(())
