@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_std::geolocation::{
-    init_geolocator, use_geolocation, PowerMode
-};
+use dioxus_std::geolocation::{init_geolocator, use_geolocation, PowerMode};
 
 fn main() {
     dioxus_desktop::launch(app);
@@ -34,7 +32,7 @@ fn app(cx: Scope) -> Element {
             h1 { "🗺️ Dioxus Geolocation Example 🛰️" }
             h3 { "Your initial location is:"}
 
-            p { 
+            p {
                 if let Some(coords) = initial_coords {
                     format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) 
                 } else {

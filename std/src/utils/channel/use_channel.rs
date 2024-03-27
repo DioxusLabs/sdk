@@ -48,13 +48,15 @@ impl<MessageType: Clone> UseChannel<MessageType> {
 pub fn use_channel<MessageType: Clone + 'static>(
     cx: &ScopeState,
     size: usize,
-) -> UseChannel<MessageType> {
-    let id = cx.use_hook(Uuid::new_v4);
-    let (sender, inactive_receiver) = cx.use_hook(|| {
+) -> &UseChannel<MessageType> {
+    cx.use_hook(|| {
+        let id = Uuid::new_v4();
         let (sender, receiver) = broadcast::<MessageType>(size);
-
-        (sender, receiver.deactivate())
-    });
-
-    UseChannel::new(*id, sender.clone(), inactive_receiver.clone())
+        
+        UseChannel {
+            id,
+            sender,
+            inactive_receiver: receiver.deactivate(),
+        }
+    })
 }

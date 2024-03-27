@@ -1,9 +1,6 @@
 {
     "rust-analyzer.cargo.features": [
-        "clipboard",
-        "geolocation",
-        "utils",
-        "i18n"
+        "desktop-testing"
     ],
-    //"rust-analyzer.check.allTargets": true,
-}
+    "rust-analyzer.cargo.extraArgs": ["--exclude=color_scheme"]
+} 
