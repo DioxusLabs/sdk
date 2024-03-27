@@ -9,14 +9,16 @@ pub struct UseInitI18Data {
 }
 
 pub fn use_init_i18n(
-    cx: &ScopeState,
     selected_language: LanguageIdentifier,
     fallback_language: LanguageIdentifier,
     languages: impl FnOnce() -> Vec<Language>,
 ) {
-    use_shared_state_provider(cx, || selected_language);
-    use_shared_state_provider(cx, || UseInitI18Data {
+    let selected_language = use_signal(|| selected_language);
+    let init_i18_data = use_signal(|| UseInitI18Data {
         languages: languages(),
         fallback_language,
-    })
+    });
+
+    provide_context(selected_language);
+    provide_context(init_i18_data);
 }

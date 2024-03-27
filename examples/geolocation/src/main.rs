@@ -6,18 +6,16 @@ fn main() {
     //dioxus_web::launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
-    let initial_coords = use_future(cx, (), |_| async move {
-        geolocator.get_coordinates().await.unwrap()
-    });
-    let latest_coords = use_geolocation(cx);
+fn app() -> Element {
+    let geolocator = init_geolocator(PowerMode::High).unwrap();
+    let initial_coords = use_future(|_| async move { geolocator.get_coordinates().await.unwrap() });
+    let latest_coords = use_geolocation();
 
     let latest_coords = match latest_coords {
         Ok(v) => v,
         Err(e) => {
             let e = format!("Initializing: {:?}", e);
-            return cx.render(rsx!(p { "{e}" }));
+            return rsx!(p { "{e}" });
         }
     };
 
@@ -26,7 +24,7 @@ fn app(cx: Scope) -> Element {
 
     let initial_coords = initial_coords.value();
 
-    cx.render(rsx! (
+    rsx!(
         div {
             style: "text-align: center;",
             h1 { "🗺️ Dioxus Geolocation Example 🛰️" }
@@ -34,7 +32,7 @@ fn app(cx: Scope) -> Element {
 
             p {
                 if let Some(coords) = initial_coords {
-                    format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) 
+                    format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude)
                 } else {
                     "Loading...".to_string()
                 }
@@ -51,5 +49,5 @@ fn app(cx: Scope) -> Element {
             //    src: "https://www.google.com/maps/embed/v1/view?key={key}&center={latest_coords.latitude},{latest_coords.longitude}&zoom=16",
             //}
         }
-    ))
+    )
 }

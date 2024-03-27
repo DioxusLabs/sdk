@@ -1,5 +1,5 @@
 //! Provides a hook to access the user's preferred color scheme.
-use dioxus::prelude::ScopeState;
+use dioxus::prelude::*;
 use std::{fmt, sync::Once};
 use wasm_bindgen::{prelude::Closure, JsCast};
 
@@ -13,9 +13,7 @@ pub enum PreferredColorScheme {
 static INIT: Once = Once::new();
 
 /// Retrieves (as well as listens for changes) to the user's preferred color scheme (dark or light) so your application can adapt accordingly.
-pub fn use_preferred_color_scheme(
-    cx: &ScopeState,
-) -> Result<PreferredColorScheme, PreferredColorSchemeError> {
+pub fn use_preferred_color_scheme() -> Result<PreferredColorScheme, PreferredColorSchemeError> {
     // This code is kinda messy..
     let window = match web_sys::window() {
         Some(w) => w,
@@ -44,7 +42,7 @@ pub fn use_preferred_color_scheme(
         }
     };
 
-    let update_callback = cx.schedule_update();
+    let update_callback = schedule_update();
 
     // Create closure that listens to the event of matchMedia and calls write to scheme
     INIT.call_once(|| {

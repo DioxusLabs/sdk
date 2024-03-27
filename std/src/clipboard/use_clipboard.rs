@@ -1,34 +1,38 @@
 //! Provides a clipboard abstraction to access the target system's clipboard.
 
 use copypasta::{ClipboardContext, ClipboardProvider};
-use dioxus::prelude::{RefCell, ScopeState};
-use std::rc::Rc;
+use dioxus::prelude::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ClipboardError {
     FailedToRead,
     FailedToSet,
+    NotAvailable,
 }
 
 /// Handle to access the ClipboardContext.
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct UseClipboard {
-    clipboard: Rc<RefCell<ClipboardContext>>,
+    clipboard: Signal<Option<ClipboardContext>>,
 }
 
 impl UseClipboard {
     // Read from the clipboard
-    pub fn get(&self) -> Result<String, ClipboardError> {
+    pub fn get(&mut self) -> Result<String, ClipboardError> {
         self.clipboard
-            .borrow_mut()
+            .write()
+            .as_mut()
+            .ok_or(ClipboardError::NotAvailable)?
             .get_contents()
             .map_err(|_| ClipboardError::FailedToRead)
     }
 
     // Write to the clipboard
-    pub fn set(&self, contents: String) -> Result<(), ClipboardError> {
+    pub fn set(&mut self, contents: String) -> Result<(), ClipboardError> {
         self.clipboard
-            .borrow_mut()
+            .write()
+            .as_mut()
+            .ok_or(ClipboardError::NotAvailable)?
             .set_contents(contents)
             .map_err(|_| ClipboardError::FailedToSet)
     }
@@ -42,7 +46,7 @@ impl UseClipboard {
 /// use dioxus_std::clipboard::use_clipboard;
 ///
 /// // Get a handle to the clipboard
-/// let clipboard = use_clipboard(cx);
+/// let mut clipboard = use_clipboard();
 ///
 /// // Read the clipboard content
 /// if let Ok(content) = clipboard.get() {
@@ -53,12 +57,12 @@ impl UseClipboard {
 /// clipboard.set("Hello, Dioxus!".to_string());;
 ///  
 /// ```
-pub fn use_clipboard(cx: &ScopeState) -> UseClipboard {
-    let clipboard = match cx.consume_context() {
+pub fn use_clipboard() -> UseClipboard {
+    let clipboard = match try_consume_context() {
         Some(rt) => rt,
         None => {
-            let clipboard = ClipboardContext::new().expect("Cannot create Clipboard.");
-            cx.provide_root_context(Rc::new(RefCell::new(clipboard)))
+            let clipboard = ClipboardContext::new().ok();
+            provide_root_context(Signal::new(clipboard))
         }
     };
     UseClipboard { clipboard }
