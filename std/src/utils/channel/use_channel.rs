@@ -10,16 +10,6 @@ pub struct UseChannel<MessageType: Clone + 'static> {
     inactive_receiver: Signal<InactiveReceiver<MessageType>>,
 }
 
-impl<T: Clone> UseChannel<T> {
-    pub(crate) fn new(id: Uuid, sender: Sender<T>, inactive_receiver: InactiveReceiver<T>) -> Self {
-        Self {
-            id,
-            sender,
-            inactive_receiver,
-        }
-    }
-}
-
 impl<T: Clone> PartialEq for UseChannel<T> {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
@@ -49,7 +39,6 @@ pub fn use_channel<MessageType: Clone + 'static>(size: usize) -> UseChannel<Mess
     use_hook(|| {
         let id = Uuid::new_v4();
         let (sender, receiver) = broadcast::<MessageType>(size);
-        
         UseChannel {
             id,
             sender: Signal::new(sender),
