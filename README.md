@@ -49,18 +49,18 @@ use dioxus_std::geolocation::{
 };
 
 fn app() -> Element {
-    let geolocator = init_geolocator(, PowerMode::High).unwrap();
+    let geolocator = init_geolocator(PowerMode::High).unwrap();
     let coords = use_geolocation();
 
     match coords {
       Ok(coords) => {
-        rsx! { p { format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) } }
+        rsx!( p { "Latitude: {coords.latitude} | Longitude: {coords.longitude}" } )
       }
       Err(Error::NotInitialized) => {
-        rsx! { p { "Initializing..." }}
+        rsx!( p { "Initializing..." } )
       }
       Err(e) => {
-        rsx! { p { "An error occurred {e}" }}
+        rsx!( p { "An error occurred {e}" } )
       }
     }
 }
