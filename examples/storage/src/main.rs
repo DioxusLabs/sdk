@@ -25,7 +25,6 @@ enum Route {
 
 #[component]
 fn Footer() -> Element {
-    
     let new_window = {
         #[cfg(feature = "desktop")]
         {

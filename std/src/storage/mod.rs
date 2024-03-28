@@ -42,9 +42,9 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
+pub use client_storage::set_dir;
 #[cfg(not(target_family = "wasm"))]
 pub use client_storage::{set_dir_name, set_directory};
-pub use client_storage::set_dir;
 
 /// A storage hook that can be used to store data that will persist across application reloads. This hook is generic over the storage location which can be useful for other hooks.
 ///
