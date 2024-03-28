@@ -74,13 +74,13 @@ impl Language {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct UseI18<'a> {
-    pub selected_language: &'a UseSharedState<LanguageIdentifier>,
-    pub data: &'a UseSharedState<UseInitI18Data>,
+#[derive(Clone, PartialEq, Copy)]
+pub struct UseI18 {
+    pub selected_language: Signal<LanguageIdentifier>,
+    pub data: Signal<UseInitI18Data>,
 }
 
-impl<'a> UseI18<'a> {
+impl UseI18 {
     pub fn translate_with_params(&self, id: &str, params: HashMap<&str, String>) -> String {
         let i18n_data = self.data.read();
 
@@ -106,17 +106,19 @@ impl<'a> UseI18<'a> {
         self.translate_with_params(id, HashMap::default())
     }
 
-    pub fn set_language(&self, id: LanguageIdentifier) {
+    pub fn set_language(&mut self, id: LanguageIdentifier) {
         *self.selected_language.write() = id;
     }
 }
 
-pub fn use_i18(cx: &ScopeState) -> UseI18 {
-    let selected_language = use_shared_state::<LanguageIdentifier>(cx).unwrap();
-    let data = use_shared_state::<UseInitI18Data>(cx).unwrap();
+pub fn use_i18() -> UseI18 {
+    use_hook(|| {
+        let selected_language = consume_context::<Signal<LanguageIdentifier>>();
+        let data = consume_context::<Signal<UseInitI18Data>>();
 
-    UseI18 {
-        selected_language,
-        data,
-    }
+        UseI18 {
+            selected_language,
+            data,
+        }
+    })
 }

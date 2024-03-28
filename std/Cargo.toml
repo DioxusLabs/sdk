@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-std"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark", "marc2332"]
 edition = "2021"
 description = "Platform agnostic library for supercharging your productivity with Dioxus"
@@ -18,11 +18,10 @@ categories = ["multimedia", "os", "wasm"]
 
 [features]
 utils = ["dep:async-broadcast", "uuid/v4"]
-clipboard = ["dep:dioxus", "dep:copypasta"]
-notifications = ["dep:dioxus", "dep:notify-rust"]
+clipboard = ["dep:copypasta"]
+notifications = ["dep:notify-rust"]
 geolocation = [
     # Shared
-    "dep:dioxus",
     "dep:futures",
     "dep:futures-util",
 
@@ -37,9 +36,6 @@ geolocation = [
     "dep:wasm-bindgen",
 ]
 color_scheme = [
-    # Shared
-    "dep:dioxus",
-
     # Wasm
     "web-sys/Window",
     "web-sys/MediaQueryList",
@@ -65,8 +61,8 @@ desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n"]
 # # # # # # # # # # # # # # #
 
 [dependencies]
+dioxus = { workspace = true }
 cfg-if = "1.0.0"
-dioxus = { version = "0.4", optional = true }
 
 # Used by: clipboard
 copypasta = { version = "0.8.2", optional = true }

@@ -34,7 +34,6 @@
 - [x] Notifications - (Desktop)
 - [x] Color Scheme - (any)
 - [x] Utility Hooks 
-  - [x] use_rw - (any)
   - [x] use_channel - (any)
   - [ ] use_interval (any)
 - [x] i18n - (any)
@@ -49,19 +48,19 @@ use dioxus_std::geolocation::{
     init_geolocator, use_geolocation, PowerMode
 };
 
-fn app(cx: Scope) -> Element {
-    let geolocator = init_geolocator(cx, PowerMode::High).unwrap();
-    let coords = use_geolocation(cx);
+fn app() -> Element {
+    let geolocator = init_geolocator(PowerMode::High).unwrap();
+    let coords = use_geolocation();
 
     match coords {
       Ok(coords) => {
-        render! { p { format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude) } }
+        rsx!( p { "Latitude: {coords.latitude} | Longitude: {coords.longitude}" } )
       }
       Err(Error::NotInitialized) => {
-        render! { p { "Initializing..." }}
+        rsx!( p { "Initializing..." } )
       }
       Err(e) => {
-        render! { p { "An error occurred {e}" }}
+        rsx!( p { "An error occurred {e}" } )
       }
     }
 }
@@ -79,7 +78,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-std` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-std =  { version = "0.4.2", features = [] }
+dioxus-std =  { version = "0.5", features = [] }
 ```
 
 ## License

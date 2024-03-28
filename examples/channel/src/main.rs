@@ -6,27 +6,24 @@ fn main() {
     wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
 
-    dioxus_web::launch(app);
+    launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let channel = use_channel::<String>(cx, 5);
+fn app() -> Element {
+    let channel = use_channel::<String>(5);
 
-    use_listen_channel(cx, &channel, |message| async {
+    use_listen_channel(&channel, |message| async {
         match message {
             Ok(value) => log::info!("Incoming message: {value}"),
             Err(err) => log::info!("Error: {err:?}"),
         }
     });
 
-    let send = |_: MouseEvent| {
-        to_owned![channel];
-        async move {
-            channel.send("Hello").await.ok();
-        }
+    let send = move |_: MouseEvent| async move {
+        channel.send("Hello").await.ok();
     };
 
-    render!(
+    rsx!(
         button {
             onclick: send,
             "Send hello"
