@@ -8,36 +8,6 @@ use tokio::sync::watch::{channel, Receiver};
 
 use crate::storage::{serde_to_string, try_serde_from_string, StorageBacking, StorageSubscriber};
 
-#[allow(clippy::needless_doctest_main)]
-/// Set the directory where the storage files are located on non-wasm targets.
-///
-/// ```rust
-/// use dioxus_std::set_dir;
-///
-/// fn main(){
-///     // set the directory to the default location
-///     set_dir!();
-/// }
-/// ```
-/// ```rust
-/// use dioxus_std::set_dir;
-///
-/// fn main(){
-///     // set the directory to a custom location
-///     set_dir!("path/to/dir");
-/// }
-/// ```
-#[macro_export]
-macro_rules! set_dir {
-    () => {
-        $crate::storage::set_dir_name(env!("CARGO_PKG_NAME"))
-    };
-    ($path: literal) => {
-        $crate::storage::set_directory(std::path::PathBuf::from($path))
-    };
-}
-pub use set_dir;
-
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
 pub fn set_directory(path: std::path::PathBuf) {
@@ -137,7 +107,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 
     fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
-        log::trace!("Unsubscribing from \"{}\"", key);
+        tracing::trace!("Unsubscribing from \"{}\"", key);
 
         // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
@@ -145,7 +115,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 
             // If the subscription exists, remove it from the subscriptions map.
             if read_binding.contains_key(key) {
-                log::trace!("Found entry for \"{}\"", key);
+                tracing::trace!("Found entry for \"{}\"", key);
                 drop(read_binding);
                 subscriptions.write().unwrap().remove(key);
             }

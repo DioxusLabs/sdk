@@ -3,15 +3,12 @@ use dioxus_router::prelude::*;
 use dioxus_std::storage::*;
 
 fn main() {
-    // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
-    console_error_panic_hook::set_once();
-    dioxus_web::launch(App);
+    dioxus_std::storage::set_dir!();
+    launch(app);
 }
 
-#[component]
-fn App(cx: Scope) -> Element {
-    render! {
+fn app() -> Element {
+    rsx! {
         Router::<Route> {}
     }
 }
@@ -27,14 +24,41 @@ enum Route {
 }
 
 #[component]
-fn Footer(cx: Scope) -> Element {
-    render! {
+fn Footer() -> Element {
+    
+    let new_window = {
+        #[cfg(feature = "desktop")]
+        {
+            let window = dioxus::desktop::use_window();
+            rsx! {
+                div {
+                    button {
+                        onclick: move |_| {
+                            let dom = VirtualDom::new(app);
+                            window.new_window(dom, Default::default());
+                        },
+                        "New Window"
+                    }
+                }
+            }
+        }
+        #[cfg(not(feature = "desktop"))]
+        {
+            rsx! {
+                div {}
+            }
+        }
+    };
+
+    rsx! {
         div {
             Outlet::<Route> { }
 
             p {
                 "----"
             }
+
+            {new_window}
 
             nav {
                 ul {
@@ -47,16 +71,16 @@ fn Footer(cx: Scope) -> Element {
 }
 
 #[component]
-fn Page1(cx: Scope) -> Element {
-    render!("Home")
+fn Page1() -> Element {
+    rsx!("Home")
 }
 
 #[component]
-fn Page2(cx: Scope) -> Element {
-    let count_session = use_singleton_persistent(cx, || 0);
-    let count_local = use_synced_storage::<LocalStorage, i32>(cx, "synced".to_string(), || 0);
+fn Page2() -> Element {
+    let mut count_session = use_singleton_persistent(|| 0);
+    let mut count_local = use_synced_storage::<LocalStorage, i32>("synced".to_string(), || 0);
 
-    render!(
+    rsx!(
         div {
             button {
                 onclick: move |_| {

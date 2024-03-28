@@ -1,6 +1,6 @@
 use crate::storage::new_storage_entry;
 use crate::storage::SessionStorage;
-use dioxus::prelude::ScopeState;
+use dioxus::prelude::*;
 use dioxus_signals::Signal;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -14,11 +14,10 @@ use super::StorageEntryTrait;
 pub fn use_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
-    cx: &ScopeState,
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    *cx.use_hook(|| new_persistent(key, init))
+    use_hook(|| new_persistent(key, init))
 }
 
 /// Creates a persistent storage signal that can be used to store data across application reloads.
@@ -45,10 +44,9 @@ pub fn new_persistent<
 pub fn use_singleton_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
-    cx: &ScopeState,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    *cx.use_hook(|| new_singleton_persistent(init))
+    use_hook(|| new_singleton_persistent(init))
 }
 
 /// Create a persistent storage signal that can be used to store data across application reloads.
@@ -64,6 +62,5 @@ pub fn new_singleton_persistent<
 ) -> Signal<T> {
     let caller = std::panic::Location::caller();
     let key = format!("{}:{}", caller.file(), caller.line());
-    log::trace!("singleton_persistent key: \"{}\"", key);
     new_persistent(key, init)
 }

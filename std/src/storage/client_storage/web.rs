@@ -16,7 +16,6 @@ use crate::storage::{
     StorageSubscriber, StorageSubscription,
 };
 
-// Start LocalStorage
 #[derive(Clone)]
 pub struct LocalStorage;
 
@@ -53,12 +52,9 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
     }
 
     fn unsubscribe(key: &String) {
-        log::trace!("Unsubscribing from \"{}\"", key);
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(entry) = read_binding.get(key) {
-            log::trace!("Found entry for \"{}\"", key);
             if entry.tx.is_closed() {
-                log::trace!("Channel is closed, removing entry for \"{}\"", key);
                 drop(read_binding);
                 SUBSCRIPTIONS.write().unwrap().remove(key);
             }
@@ -70,20 +66,20 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = Lazy::new(|| {
     // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
-        log::trace!("Storage event: {:?}", e);
+        tracing::trace!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(subscription) = read_binding.get(&key) {
             if subscription.tx.is_closed() {
-                log::trace!("Channel is closed, removing subscription for \"{}\"", key);
+                tracing::trace!("Channel is closed, removing subscription for \"{}\"", key);
                 drop(read_binding);
                 SUBSCRIPTIONS.write().unwrap().remove(&key);
                 return;
             }
             // Call the getter for the given entry and send the value to said entry's channel.
             match subscription.get_and_send() {
-                Ok(_) => log::trace!("Sent storage event"),
-                Err(err) => log::error!("Error sending storage event: {:?}", err.to_string()),
+                Ok(_) => tracing::trace!("Sent storage event"),
+                Err(err) => tracing::error!("Error sending storage event: {:?}", err.to_string()),
             }
         }
     }) as Box<dyn FnMut(web_sys::StorageEvent)>);
@@ -97,9 +93,6 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
     Arc::new(RwLock::new(HashMap::new()))
 });
 
-// End LocalStorage
-
-// Start SessionStorage
 #[derive(Clone)]
 pub struct SessionStorage;
 
@@ -114,9 +107,7 @@ impl StorageBacking for SessionStorage {
         get(key, WebStorageType::Session)
     }
 }
-// End SessionStorage
 
-// Start common
 fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
     let as_str = serde_to_string(value);
     get_storage_by_type(storage_type)
@@ -144,4 +135,3 @@ enum WebStorageType {
     Local,
     Session,
 }
-// End common

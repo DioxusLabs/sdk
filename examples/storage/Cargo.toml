@@ -1,0 +1,12 @@
+[package]
+name = "storage-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus-std = { workspace = true, features = ["storage"] }
+dioxus = { version = "0.5.0-alpha.2", features = ["router"] }
+
+[features]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]

@@ -5,9 +5,9 @@
 //! use dioxus_std::storage::use_persistent;
 //! use dioxus::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     let num = use_persistent(cx, "count", || 0);
-//!     cx.render(rsx! {
+//! fn app() -> Element {
+//!     let num = use_persistent("count", || 0);
+//!     rsx! {
 //!         div {
 //!             button {
 //!                 onclick: move |_| {
@@ -19,7 +19,7 @@
 //!                 "{*num.read()}"
 //!             }
 //!         }
-//!     })
+//!     }
 //! }
 //! ```
 
@@ -27,23 +27,24 @@ mod client_storage;
 mod persistence;
 
 pub use client_storage::{LocalStorage, SessionStorage};
+use futures_util::stream::StreamExt;
 pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
 };
 
-use dioxus::prelude::{current_scope_id, to_owned, ScopeState};
-use dioxus_signals::{Effect, Signal};
+use dioxus::prelude::*;
 use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::any::Any;
 use std::fmt::{Debug, Display};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
 #[cfg(not(target_family = "wasm"))]
-pub use client_storage::{set_dir, set_dir_name, set_directory};
+pub use client_storage::{set_dir_name, set_directory};
+pub use client_storage::set_dir;
 
 /// A storage hook that can be used to store data that will persist across application reloads. This hook is generic over the storage location which can be useful for other hooks.
 ///
@@ -57,17 +58,17 @@ pub use client_storage::{set_dir, set_dir_name, set_directory};
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn use_user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
-///     use_storage::<S, _>(cx, "user-id", || 123)
+/// fn use_user_id<S>() -> Signal<usize> where S: StorageBacking<Key=&'static str> {
+///     use_storage::<S, _>("user-id", || 123)
 /// }
 /// ```
-pub fn use_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn use_storage<S, T>(key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    *cx.use_hook(|| new_storage::<S, T>(cx, key, init))
+    use_hook(|| new_storage::<S, T>(key, init))
 }
 
 /// Creates a Signal that can be used to store data that will persist across application reloads.
@@ -82,11 +83,11 @@ where
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn user_id<S>(cx: &ScopeState) -> Signal<usize> where S: StorageBacking<Key=&'static str> {
-///     new_storage::<S, _>(cx, "user-id", || 123)
+/// fn user_id<S>() -> Signal<usize> where S: StorageBacking<Key=&'static str> {
+///     new_storage::<S, _>("user-id", || 123)
 /// }
 /// ```
-pub fn new_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn new_storage<S, T>(key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
@@ -100,12 +101,12 @@ where
         Signal::new(init.take().unwrap()())
     } else if cfg!(feature = "hydrate") {
         let key_clone = key.clone();
-        let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
-        if cx.generation() == 0 {
+        let mut storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
+        if generation() == 0 {
             // The first generation is rendered on the server side and so must be hydrated.
-            cx.needs_update();
+            needs_update();
         }
-        if cx.generation() == 1 {
+        if generation() == 1 {
             // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
             storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
             storage_entry.save_to_storage_on_change();
@@ -123,20 +124,20 @@ where
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
-pub fn use_synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn use_synced_storage<S, T>(key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    *cx.use_hook(|| new_synced_storage::<S, T>(cx, key, init))
+    use_hook(|| new_synced_storage::<S, T>(key, init))
 }
 
 /// Create a signal that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
 ///
 /// This hook returns a Signal that can be used to read and modify the state.
 /// The changes to the state will be persisted to storage and all other app sessions will be notified of the change to update their local state.
-pub fn new_synced_storage<S, T>(cx: &ScopeState, key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
+pub fn new_synced_storage<S, T>(key: S::Key, init: impl FnOnce() -> T) -> Signal<T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
@@ -150,25 +151,25 @@ where
             Signal::new(init.take().unwrap()())
         } else if cfg!(feature = "hydrate") {
             let key_clone = key.clone();
-            let storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
-            if cx.generation() == 0 {
+            let mut storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
+            if generation() == 0 {
                 // The first generation is rendered on the server side and so must be hydrated.
-                cx.needs_update();
+                needs_update();
             }
-            if cx.generation() == 1 {
+            if generation() == 1 {
                 // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
                 storage_entry
                     .entry
                     .set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
                 storage_entry.save_to_storage_on_change();
-                storage_entry.subscribe_to_storage(cx);
+                storage_entry.subscribe_to_storage();
             }
             *storage_entry.data()
         } else {
             // The client is rendered normally, so we can just use the synced storage entry.
             let storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
             storage_entry.save_to_storage_on_change();
-            storage_entry.subscribe_to_storage(cx);
+            storage_entry.subscribe_to_storage();
             *storage_entry.data()
         }
     };
@@ -176,31 +177,26 @@ where
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
-pub fn use_storage_entry<S, T>(
-    cx: &ScopeState,
-    key: S::Key,
-    init: impl FnOnce() -> T,
-) -> &mut StorageEntry<S, T>
+pub fn use_storage_entry<S, T>(key: S::Key, init: impl FnOnce() -> T) -> StorageEntry<S, T>
 where
     S: StorageBacking,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    cx.use_hook(|| new_storage_entry::<S, T>(key, init))
+    use_hook(|| new_storage_entry::<S, T>(key, init))
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist, and provides a channel to subscribe to updates to the underlying storage.
 pub fn use_synced_storage_entry<S, T>(
-    cx: &ScopeState,
     key: S::Key,
     init: impl FnOnce() -> T,
-) -> &mut SyncedStorageEntry<S, T>
+) -> SyncedStorageEntry<S, T>
 where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    cx.use_hook(|| new_synced_storage_entry::<S, T>(key, init))
+    use_hook(|| new_synced_storage_entry::<S, T>(key, init))
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -244,7 +240,6 @@ pub fn get_from_storage<
         data
     })
 }
-// End use_storage hooks
 
 /// A trait for common functionality between StorageEntry and SyncedStorageEntry
 pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
@@ -269,18 +264,24 @@ pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
         T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     {
         let entry_clone = self.clone();
-        let old = Signal::new(self.data().value());
+        let old = Signal::new(self.data().cloned());
         let data = *self.data();
-        Effect::new(move || {
-            if *old() != *data() {
-                log::trace!("state value changed, trying to save");
-                entry_clone.save();
+        spawn(async move {
+            loop {
+                let (rc, mut reactive_context) = ReactiveContext::new();
+                rc.run_in(|| {
+                    if *old.read() != *data.read() {
+                        tracing::trace!("Saving to storage");
+                        entry_clone.save();
+                    }
+                });
+                if reactive_context.next().await.is_none() {
+                    break;
+                }
             }
         });
     }
 }
-
-// Start SyncedStorageEntry
 
 /// A wrapper around StorageEntry that provides a channel to subscribe to updates to the underlying storage.
 #[derive(Clone)]
@@ -313,15 +314,14 @@ where
     }
 
     /// Creates a hook that will update the state when the underlying storage changes
-    pub fn subscribe_to_storage(&self, cx: &ScopeState) {
+    pub fn subscribe_to_storage(&self) {
         let storage_entry_signal = *self.data();
         let channel = self.channel.clone();
-        cx.spawn(async move {
+        spawn(async move {
             to_owned![channel, storage_entry_signal];
             loop {
                 // Wait for an update to the channel
                 if channel.changed().await.is_ok() {
-                    log::trace!("channel changed");
                     // Retrieve the latest value from the channel, mark it as read, and update the state
                     let payload = channel.borrow_and_update();
                     *storage_entry_signal.write() = payload
@@ -346,11 +346,9 @@ where
         //      - The value from the channel could not be determined, likely because it hasn't been set yet
         if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
             if *self.entry.data.read() == *payload {
-                log::trace!("value is the same, not saving");
                 return;
             }
         }
-        log::trace!("saving");
         self.entry.save();
     }
 
@@ -366,10 +364,6 @@ where
         &self.entry.data
     }
 }
-
-// End SyncedStorageEntry
-
-// Start StorageEntry
 
 /// A storage entry that can be used to store data across application reloads. It optionally provides a channel to subscribe to updates to the underlying storage.
 #[derive(Clone)]
@@ -412,7 +406,7 @@ where
 {
     fn save(&self) {
         let _ = self.storage_save_lock.try_lock().map(|_| {
-            S::set(self.key.clone(), &self.data.value());
+            S::set(self.key.clone(), &*self.data.read());
         });
     }
 
@@ -439,6 +433,14 @@ impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + Send + Sync> D
     }
 }
 
+impl<S: StorageBacking, T: Serialize + DeserializeOwned + Clone + Send + Sync> DerefMut
+    for StorageEntry<S, T>
+{
+    fn deref_mut(&mut self) -> &mut Signal<T> {
+        &mut self.data
+    }
+}
+
 impl<S: StorageBacking, T: Display + Serialize + DeserializeOwned + Clone + Send + Sync> Display
     for StorageEntry<S, T>
 {
@@ -454,9 +456,6 @@ impl<S: StorageBacking, T: Debug + Serialize + DeserializeOwned + Clone + Send +
         self.data.fmt(f)
     }
 }
-// End StorageEntry
-
-// Start Storage Backing traits
 
 /// A trait for a storage backing
 pub trait StorageBacking: Clone + 'static {
@@ -477,9 +476,6 @@ pub trait StorageSubscriber<S: StorageBacking> {
     /// Unsubscribes from events from a storage backing for the given key
     fn unsubscribe(key: &S::Key);
 }
-// End Storage Backing traits
-
-// Start StorageSenderEntry
 
 /// A struct to hold information about processing a storage event.
 pub struct StorageSubscription {
@@ -515,10 +511,6 @@ impl StorageSubscription {
     }
 }
 
-// End StorageSenderEntry
-
-// Start StorageChannelPayload
-
 /// A payload for a storage channel that contains the latest value from storage.
 #[derive(Clone, Debug)]
 pub struct StorageChannelPayload {
@@ -544,9 +536,8 @@ impl Default for StorageChannelPayload {
         Self { data: Arc::new(()) }
     }
 }
-// End StorageChannelPayload
 
-// Start helper functions
+// Helper functions
 
 /// Serializes a value to a string and compresses it.
 pub(crate) fn serde_to_string<T: Serialize>(value: &T) -> String {
@@ -589,15 +580,8 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
     match yazi::decompress(&bytes, yazi::Format::Zlib) {
         Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
             Ok(v) => Some(v),
-            Err(err) => {
-                log::error!("Error deserializing value from storage: {:?}", err);
-                None
-            }
+            Err(err) => None,
         },
-        Err(err) => {
-            log::error!("Error decompressing value from storage: {:?}", err);
-            None
-        }
+        Err(err) => None,
     }
 }
-// End helper functions
