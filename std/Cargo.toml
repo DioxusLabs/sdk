@@ -63,10 +63,10 @@ storage = [
     "dep:futures-util",
 
     # WASM
-    "dep:directories",
+    "dep:wasm-bindgen",
 
     # Not WASM
-    "dep:wasm-bindgen",
+    "dep:directories",
 ]
 
 # CI testing
