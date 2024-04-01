@@ -38,7 +38,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::any::Any;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
@@ -375,9 +375,6 @@ pub struct StorageEntry<
     pub(crate) key: S::Key,
     /// A signal that can be used to read and modify the state
     pub(crate) data: Signal<T>,
-    /// An optional channel to subscribe to updates to the underlying storage
-    /// A lock to prevent multiple saves from happening at the same time
-    storage_save_lock: Arc<Mutex<()>>, // TODO: probably unnecessary
 }
 
 impl<S, T> StorageEntry<S, T>
@@ -394,7 +391,6 @@ where
                 data,
                 current_scope_id().expect("must be called from inside of the dioxus context"),
             ),
-            storage_save_lock: Arc::new(Mutex::new(())),
         }
     }
 }
@@ -405,9 +401,7 @@ where
     T: Serialize + DeserializeOwned + Clone + PartialEq + Send + Sync + 'static,
 {
     fn save(&self) {
-        let _ = self.storage_save_lock.try_lock().map(|_| {
-            S::set(self.key.clone(), &*self.data.read());
-        });
+        S::set(self.key.clone(), &*self.data.read());
     }
 
     fn update(&mut self) {
