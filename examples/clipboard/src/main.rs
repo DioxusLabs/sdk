@@ -10,7 +10,7 @@ fn app() -> Element {
     let mut text = use_signal(String::new);
 
     let oninput = move |e: FormEvent| {
-        text.set(e.data.value.clone());
+        text.set(e.data.value());
     };
 
     let oncopy = move |_| match clipboard.set(text.read().clone()) {
