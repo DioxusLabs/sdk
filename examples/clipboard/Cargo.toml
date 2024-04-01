@@ -5,5 +5,4 @@ edition = "2021"
 
 [dependencies]
 dioxus-std = { workspace = true, features = ["clipboard"] }
-dioxus = { workspace = true }
-dioxus-desktop = { workspace = true }
+dioxus = { workspace = true, features = ["desktop"]}
