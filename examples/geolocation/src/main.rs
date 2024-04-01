@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 use dioxus_std::geolocation::{init_geolocator, use_geolocation, PowerMode};
 
 fn main() {
-    dioxus_desktop::launch(app);
-    //dioxus_web::launch(app);
+    launch(app);
 }
 
 fn app() -> Element {
