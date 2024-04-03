@@ -5,6 +5,5 @@ edition = "2021"
 
 [dependencies]
 dioxus-std = { workspace = true, features = ["geolocation"] }
-dioxus = { workspace = true }
-dioxus-desktop ={ workspace = true }
-# dioxus-web ={ workspace = true }
+# You can change from 'desktop' to 'web' as well
+dioxus = { workspace = true, features = ["desktop"] } 

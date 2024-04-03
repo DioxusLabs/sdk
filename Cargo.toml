@@ -8,5 +8,3 @@ members = [
 [workspace.dependencies]
 dioxus-std = { path = "./std" }
 dioxus = { version = "0.5" }
-dioxus-web = { version = "0.5" }
-dioxus-desktop = { version = "0.5" }

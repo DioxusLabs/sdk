@@ -19,8 +19,11 @@ fn app() -> Element {
         }
     });
 
-    let send = move |_: MouseEvent| async move {
-        channel.send("Hello").await.ok();
+    let send = move |_: MouseEvent| {
+        to_owned![channel];
+        async move {
+            channel.send("Hello").await.ok();
+        }
     };
 
     rsx!(
