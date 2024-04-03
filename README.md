@@ -1,4 +1,7 @@
-<h3 align="center"><u>This crate is no longer updated as it has been moved to <a href="https://crates.io/crates/dioxus-sdk">dioxus-sdk</a>.</u></h1>
+> Warning
+> 
+> <u>This crate is no longer updated as it has been moved to <a href="https://crates.io/crates/dioxus-sdk">dioxus-sdk</a>.</u>
+
 <br/>
 <br/>
 
