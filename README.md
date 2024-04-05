@@ -1,5 +1,5 @@
 > [!NOTE]
-> The crate has been renamed from `dioxus-std` to `dioxus-sdk` as of April 3rd, 2024.
+> The crate has been renamed from `dioxus-std` to `dioxus-sdk` as of April 4th, 2024.
 
 <br/>
 <br/>
