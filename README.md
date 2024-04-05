@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🧰 Dioxus Standard Development Kit 🚀</h1>
+  <h1>🧰 Dioxus Development Kit 🚀</h1>
   <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
 </div>
 
