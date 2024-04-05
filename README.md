@@ -26,7 +26,7 @@
 <p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
 <br/>
 
-`dioxus-sdk` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, geolocation and storage with more to come!
+`dioxus-sdk` is a development kit for Dioxus that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, geolocation and storage with more to come!
 
 **Features**
 - [x] Geolocation - (Web, Windows)
