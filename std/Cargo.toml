@@ -74,7 +74,14 @@ conn_mgr_ws_axum = [
 
 # CI testing
 wasm-testing = ["geolocation", "color_scheme", "utils", "i18n", "conn_mgr_ws"]
-desktop-testing = ["clipboard", "notifications", "geolocation", "utils", "i18n", "conn_mgr_ws_axum"]
+desktop-testing = [
+    "clipboard",
+    "notifications",
+    "geolocation",
+    "utils",
+    "i18n",
+    "conn_mgr_ws_axum",
+]
 
 
 # # # # # # # # # # # # # # #

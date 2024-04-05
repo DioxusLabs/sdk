@@ -4,7 +4,7 @@ use futures_util::stream::Next;
 pub use manager::*;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "conn_mgr_ws")] {
+    if #[cfg(any(feature = "conn_mgr_ws", feature = "conn_mgr_ws_axum"))] {
         pub mod websocket;
     }
 }
