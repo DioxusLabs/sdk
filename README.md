@@ -1,3 +1,9 @@
+> [!NOTE]
+> This crate is no longer updated as it has been moved from `dioxus-std` to `dioxus-sdk` as of April 4th, 2024.
+
+<br/>
+<br/>
+
 <div align="center">
   <h1>🧰 Dioxus Standard Library 🚀</h1>
   <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
@@ -26,20 +32,21 @@
 <p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
 <br/>
 
-`dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, and more to come.
+`dioxus-std` is a Dioxus standard library that provides abstractions for your Dioxus app. Abstractions included are notifications, clipboard, geolocation and storage with more to come!
 
 **Features**
-- [x] Geolocation - (wasm, Windows)
+- [x] Geolocation - (Web, Windows)
+- [x] Storage - (Web, Desktop)
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
-- [x] Color Scheme - (any)
+- [x] Color Scheme - (Web)
+- [x] i18n
 - [x] Utility Hooks 
-  - [x] use_channel - (any)
-  - [ ] use_interval (any)
-- [x] i18n - (any)
-- [ ] Camera (Desktop)
-- [ ] WiFi (Desktop)
-- [ ] Bluetooth (Desktop)
+  - [x] use_channel
+  - [ ] use_interval
+- [ ] Camera
+- [ ] WiFi
+- [ ] Bluetooth
 
 Geolocation example:
 
