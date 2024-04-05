@@ -1,3 +1,9 @@
+> [!NOTE]
+> This crate is no longer updated as it has been moved from `dioxus-std` to `dioxus-sdk` as of April 4th, 2024.
+
+<br/>
+<br/>
+
 <div align="center">
   <h1>🧰 Dioxus Development Kit 🚀</h1>
   <p><strong>A platform agnostic library for supercharging your productivity with Dioxus.</strong></p>
@@ -33,7 +39,7 @@
 - [x] Storage - (Web, Desktop)
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
-- [x] Color Scheme
+- [x] Color Scheme - (Web)
 - [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
