@@ -6,7 +6,7 @@ fn main() {
     wasm_logger::init(wasm_logger::Config::default());
     console_error_panic_hook::set_once();
 
-    dioxus_web::launch(app);
+    launch(app);
 }
 
 fn app() -> Element {
@@ -17,13 +17,9 @@ fn app() -> Element {
             style: "text-align: center;",
             h1 { "🌗 Dioxus 🚀" }
             if let Ok(color_scheme) = color_scheme {
-                rsx!(
-                    h3 { "You preferred color scheme is {color_scheme:?}." }
-                )
+                h3 { "You preferred color scheme is {color_scheme:?}." }
             } else {
-                rsx!(
-                    h3 { "There was an error when reading your preferred color scheme."}
-                )
+                h3 { "There was an error when reading your preferred color scheme."}
             }
         }
     )

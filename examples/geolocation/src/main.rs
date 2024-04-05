@@ -2,13 +2,20 @@ use dioxus::prelude::*;
 use dioxus_sdk::geolocation::{init_geolocator, use_geolocation, PowerMode};
 
 fn main() {
-    dioxus_desktop::launch(app);
-    //dioxus_web::launch(app);
+    launch(app);
 }
 
 fn app() -> Element {
-    let geolocator = init_geolocator(PowerMode::High).unwrap();
-    let initial_coords = use_future(|_| async move { geolocator.get_coordinates().await.unwrap() });
+    let geolocator = init_geolocator(PowerMode::High);
+    let initial_coords = use_resource(move || async move {
+        geolocator
+            .read()
+            .as_ref()
+            .unwrap()
+            .get_coordinates()
+            .await
+            .unwrap()
+    });
     let latest_coords = use_geolocation();
 
     let latest_coords = match latest_coords {
@@ -22,8 +29,6 @@ fn app() -> Element {
     // Google maps embed api key
     //let key = std::env::var("DIOXUS_GEOLOCATION_MAP_KEY").unwrap();
 
-    let initial_coords = initial_coords.value();
-
     rsx!(
         div {
             style: "text-align: center;",
@@ -31,15 +36,15 @@ fn app() -> Element {
             h3 { "Your initial location is:"}
 
             p {
-                if let Some(coords) = initial_coords {
-                    format!("Latitude: {} | Longitude: {}", coords.latitude, coords.longitude)
+                if let Some(coords) = initial_coords.read().as_ref() {
+                    "Latitude: {coords.latitude} | Longitude: {coords.longitude}"
                 } else {
-                    "Loading...".to_string()
+                    "Loading..."
                 }
             }
 
             h3 { "Your latest location is:" }
-            p { format!("Latitude: {} | Longitude: {}", latest_coords.latitude, latest_coords.longitude) }
+            p { "Latitude: {latest_coords.latitude} | Longitude: {latest_coords.longitude}" }
 
             // Google maps embed
             //iframe {

@@ -3,12 +3,13 @@
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::{
     prelude::{
-        provide_context, try_consume_context, use_coroutine, use_signal, Signal, UnboundedReceiver,
+        provide_context, try_consume_context, use_coroutine, use_hook, use_signal, Signal,
+        UnboundedReceiver,
     },
     signals::{Readable, Writable},
 };
 use futures_util::stream::StreamExt;
-use std::{rc::Rc, sync::Once};
+use std::sync::Once;
 
 static INIT: Once = Once::new();
 
@@ -17,11 +18,14 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
     // Store the coords
     let mut coords: Signal<Result<Geocoordinates, Error>> =
         use_signal(|| Err(Error::NotInitialized));
+    let Some(geolocator) = try_consume_context::<Signal<Result<Geolocator, Error>>>() else {
+        return Err(Error::NotInitialized);
+    };
+    let geolocator = geolocator.read();
 
     // Get geolocator
-    let geolocator = match try_consume_context::<Rc<Geolocator>>() {
-        Some(v) => v,
-        None => return Err(Error::NotInitialized),
+    let Ok(geolocator) = geolocator.as_ref() else {
+        return Err(Error::NotInitialized);
     };
 
     // Initialize the handler of events
@@ -49,9 +53,9 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
 }
 
 /// Must be called before any use of the geolocation abstraction.
-pub fn init_geolocator(power_mode: PowerMode) -> Result<Rc<Geolocator>, Error> {
-    let geolocator = Geolocator::new(power_mode)?;
-    let shared_locator = Rc::new(geolocator);
-    provide_context(shared_locator.clone());
-    Ok(shared_locator)
+pub fn init_geolocator(power_mode: PowerMode) -> Signal<Result<Geolocator, Error>> {
+    use_hook(|| {
+        let geolocator = Signal::new(Geolocator::new(power_mode));
+        provide_context(geolocator)
+    })
 }
