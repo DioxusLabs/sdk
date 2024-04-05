@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_std::clipboard::use_clipboard;
+use dioxus_sdk::clipboard::use_clipboard;
 
 fn main() {
     dioxus_desktop::launch(app);

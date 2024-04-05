@@ -8,7 +8,7 @@ use std::fmt;
 /// # Examples
 ///
 /// ```
-/// use dioxus_std::notification::Notification;
+/// use dioxus_sdk::notification::Notification;
 ///
 /// Notification::new()
 ///     .app_name("dioxus test".to_string())

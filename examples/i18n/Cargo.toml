@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { workspace = true, features = ["i18n"] }
+dioxus-sdk = { workspace = true, features = ["i18n"] }
 dioxus = { workspace = true }
 dioxus-web = { workspace = true }
 

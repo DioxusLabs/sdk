@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
-use dioxus_std::storage::*;
+use dioxus_sdk::storage::*;
 
 fn main() {
-    dioxus_std::storage::set_dir!();
+    dioxus_sdk::storage::set_dir!();
     launch(app);
 }
 

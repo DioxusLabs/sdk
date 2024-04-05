@@ -2,7 +2,7 @@
 //! A library for handling local storage ergonomically in Dioxus
 //! ## Usage
 //! ```rust
-//! use dioxus_std::storage::use_persistent;
+//! use dioxus_sdk::storage::use_persistent;
 //! use dioxus::prelude::*;
 //!
 //! fn app() -> Element {
@@ -53,7 +53,7 @@ pub use client_storage::{set_dir_name, set_directory};
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_std::storage::{use_storage, StorageBacking};
+/// use dioxus_sdk::storage::{use_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
@@ -78,7 +78,7 @@ where
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_std::storage::{new_storage, StorageBacking};
+/// use dioxus_sdk::storage::{new_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///

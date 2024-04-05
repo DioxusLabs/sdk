@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_std::geolocation::{init_geolocator, use_geolocation, PowerMode};
+use dioxus_sdk::geolocation::{init_geolocator, use_geolocation, PowerMode};
 
 fn main() {
     dioxus_desktop::launch(app);
