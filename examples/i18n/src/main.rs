@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use dioxus_std::i18n::*;
-use dioxus_std::translate;
+use dioxus_sdk::i18n::*;
+use dioxus_sdk::translate;
 use std::str::FromStr;
 
 fn main() {

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-std = { workspace = true, features = ["storage"] }
+dioxus-sdk = { workspace = true, features = ["storage"] }
 dioxus = { workspace = true, features = ["router"] }
 
 [features]

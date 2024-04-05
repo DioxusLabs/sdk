@@ -43,7 +43,7 @@ impl UseClipboard {
 /// # Examples
 ///
 /// ```ignore
-/// use dioxus_std::clipboard::use_clipboard;
+/// use dioxus_sdk::clipboard::use_clipboard;
 ///
 /// // Get a handle to the clipboard
 /// let mut clipboard = use_clipboard();

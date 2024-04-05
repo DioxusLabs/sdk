@@ -1,10 +1,9 @@
 [workspace]
 resolver = "2"
-members = [
-    "std",
-    "examples/*",
-]
+members = ["sdk", "examples/*"]
 
 [workspace.dependencies]
-dioxus-std = { path = "./std" }
+dioxus-sdk = { path = "./sdk" }
 dioxus = { version = "0.5" }
+dioxus-web = { version = "0.5" }
+dioxus-desktop = { version = "0.5" }
