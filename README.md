@@ -37,7 +37,9 @@
 - [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
-  - [ ] use_interval
+  - [x] use_interval
+  - [ ] use_timeout
+  - [ ] use_debouncer
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
