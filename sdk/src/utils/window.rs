@@ -1,11 +1,41 @@
+//! Utilities for the window.
+
 use dioxus::prelude::*;
 use futures_util::stream::StreamExt;
 use std::sync::Once;
 
 #[allow(dead_code)]
 static INIT: Once = Once::new();
-type WindowSize = (u32, u32);
 
+/// Stores the width and height of a window, screen, or viewport.
+#[derive(Clone, Copy)]
+pub struct WindowSize {
+    /// The horizontal size in pixels.
+    pub width: u32,
+    /// The vertical size in pixels.
+    pub height: u32,
+}
+
+/// A hook for receiving the size of the Window.
+///
+/// The initial window size will be returned with this hook and
+/// updated continously as the window is resized.
+///
+/// # Example
+///
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_sdk::utils::window::use_window_size;
+///
+/// fn App() -> Element {
+///     let size = use_window_size();
+///
+///     rsx! {
+///         p { "Width: {size.width}" }
+///         p { "Height: {size.height}" }
+///     }
+/// }
+/// ```
 pub fn use_window_size() -> WindowSize {
     let mut window_size = use_signal(get_window_size);
 
@@ -44,7 +74,7 @@ fn listen(tx: Coroutine<WindowSize>) {
                 .as_f64()
                 .unwrap_or(0.0) as u32;
 
-            tx.send((width, height));
+            tx.send(WindowSize { width, height });
         }) as Box<dyn FnMut()>);
 
         let on_resize_cb = on_resize.as_ref().clone();
@@ -53,9 +83,49 @@ fn listen(tx: Coroutine<WindowSize>) {
     });
 }
 
+// Listener for anything but the web implementation.
+#[cfg(not(target_arch = "wasm32"))]
+fn listen(tx: Coroutine<WindowSize>) {
+    use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
+
+    use_wry_event_handler(move |event, _| {
+        if let Event::WindowEvent {
+            event: WindowEvent::Resized(size),
+            ..
+        } = event
+        {
+            tx.send(WindowSize {
+                width: size.width,
+                height: size.height,
+            });
+        }
+    });
+}
+
+/// Get the size of the current window.
+///
+/// This function will return the current size of the window.
+///
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_sdk::utils::window::get_window_size;
+///
+/// fn App() -> Element {
+///     let size = use_signal(get_window_size);
+///
+///     rsx! {
+///         p { "Width: {size().width}" }
+///         p { "Height: {size().height}" }
+///     }
+/// }
+/// ```
+pub fn get_window_size() -> WindowSize {
+    get_window_size_platform()
+}
+
 // Web implementation of size getter.
 #[cfg(target_arch = "wasm32")]
-pub fn get_window_size() -> WindowSize {
+fn get_window_size_platform() -> WindowSize {
     use wasm_bindgen::JsValue;
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
 
@@ -72,29 +142,16 @@ pub fn get_window_size() -> WindowSize {
         .as_f64()
         .unwrap_or(0.0) as u32;
 
-    (width, height)
-}
-
-// Listener for anything but the web implementation.
-#[cfg(not(target_arch = "wasm32"))]
-fn listen(tx: Coroutine<WindowSize>) {
-    use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
-
-    use_wry_event_handler(move |event, _| {
-        if let Event::WindowEvent {
-            event: WindowEvent::Resized(size),
-            ..
-        } = event
-        {
-            tx.send((size.width, size.height));
-        }
-    });
+    WindowSize { width, height }
 }
 
 // Desktop implementation of size getter.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn get_window_size() -> WindowSize {
+fn get_window_size_platform() -> WindowSize {
     let window = dioxus_desktop::window();
     let size = window.inner_size();
-    (size.width, size.height)
+    WindowSize {
+        width: size.width,
+        height: size.height,
+    }
 }
