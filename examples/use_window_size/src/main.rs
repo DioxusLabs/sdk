@@ -2,10 +2,6 @@ use dioxus::prelude::*;
 use dioxus_sdk::utils::use_window_size;
 
 fn main() {
-    // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
-    console_error_panic_hook::set_once();
-
     launch(app);
 }
 

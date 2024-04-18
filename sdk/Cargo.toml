@@ -44,6 +44,9 @@ color_scheme = [
 use_window_size = [
     # Shared
     "dep:futures-util",
+
+    # Desktop
+    "dep:dioxus-desktop",
     
     # Wasm
     "web-sys/Window",
@@ -90,6 +93,7 @@ desktop-testing = [
     "notifications",
     "geolocation",
     "channel",
+    "use_window_size",
     "i18n",
 ]
 
@@ -164,6 +168,9 @@ uuid = { version = "1.3.2", features = ["js"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Used by: storage
 directories = { version = "4.0.1", optional = true }
+
+# Used by: use_window_size
+dioxus-desktop = { workspace = true, optional = true }
 
 # # # # #
 # Docs. #

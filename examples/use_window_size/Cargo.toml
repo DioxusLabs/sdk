@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 dioxus-sdk = { workspace = true, features = ["use_window_size"] }
-dioxus = { workspace = true, features = ["web"] }
+dioxus = { workspace = true }
 
-log = "0.4.6"
+[features]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
 
-# WebAssembly Debug
-wasm-logger = "0.2.0"
-console_error_panic_hook = "0.1.7"
+
