@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_sdk::utils::interval::use_interval;
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
 fn main() {
     // init debug tool for WebAssembly
