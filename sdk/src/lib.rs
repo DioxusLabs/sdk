@@ -13,7 +13,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(any(feature = "utils"))] {
+    if #[cfg(any(feature = "channel", feature = "use_window_size"))] {
         pub mod utils;
     }
 }
@@ -35,3 +35,4 @@ cfg_if::cfg_if! {
         pub mod storage;
     }
 }
+

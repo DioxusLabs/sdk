@@ -1,6 +1,8 @@
 [workspace]
 resolver = "2"
 members = ["sdk", "examples/*"]
+#members = ["sdk"]
+
 
 [workspace.dependencies]
 dioxus-sdk = { path = "./sdk" }

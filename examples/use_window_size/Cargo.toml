@@ -1,12 +1,11 @@
 [package]
-name = "channel"
+name = "use_window_size"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["channel"] }
+dioxus-sdk = { workspace = true, features = ["use_window_size"] }
 dioxus = { workspace = true, features = ["web"] }
-
 
 log = "0.4.6"
 
