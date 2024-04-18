@@ -18,7 +18,7 @@ pub fn use_window_size() -> WindowSize {
 
     listen(tx);
 
-    window_size.read_unchecked().clone()
+    *window_size.read_unchecked()
 }
 
 // Listener for the web implementation.
@@ -81,10 +81,12 @@ fn listen(tx: Coroutine<WindowSize>) {
     use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
 
     use_wry_event_handler(move |event, _| {
-        if let Event::WindowEvent { event, .. } = event {
-            if let WindowEvent::Resized(size) = event {
-                tx.send((size.width, size.height));
-            }
+        if let Event::WindowEvent {
+            event: WindowEvent::Resized(size),
+            ..
+        } = event
+        {
+            tx.send((size.width, size.height));
         }
     });
 }
