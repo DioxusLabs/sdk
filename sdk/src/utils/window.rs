@@ -8,7 +8,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 /// Stores the width and height of a window, screen, or viewport.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct WindowSize {
     /// The horizontal size in pixels.
     pub width: u32,
