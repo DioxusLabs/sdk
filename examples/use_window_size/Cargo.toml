@@ -1,0 +1,14 @@
+[package]
+name = "use_window_size"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus-sdk = { workspace = true, features = ["use_window_size"] }
+dioxus = { workspace = true }
+
+[features]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+
+

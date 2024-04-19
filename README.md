@@ -37,6 +37,7 @@
 - [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
+  - [x] use_window_size
   - [ ] use_interval
 - [ ] Camera
 - [ ] WiFi
