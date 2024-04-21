@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["utils"] }
+dioxus-sdk = { workspace = true, features = ["interval"] }
 dioxus = { workspace = true, features = ["web"] }
 
 log = "0.4.6"

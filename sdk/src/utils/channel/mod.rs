@@ -1,3 +1,5 @@
+//! Channels for moving data around your app.
+
 mod use_channel;
 mod use_listen_channel;
 

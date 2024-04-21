@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use dioxus::prelude::{spawn, use_hook, Task, Writable};
+use dioxus::prelude::{use_hook, Writable};
 
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {
@@ -12,7 +12,7 @@ struct InnerUseInterval {
     pub(crate) interval: Option<gloo_timers::callback::Interval>,
 
     #[cfg(not(target_family = "wasm"))]
-    pub(crate) interval: Option<Task>,
+    pub(crate) interval: Option<dioxus::prelude::Task>,
 }
 
 #[cfg(target_family = "wasm")]
@@ -50,7 +50,7 @@ pub fn use_interval(period: Duration, action: impl FnMut() + 'static) -> UseInte
 
         #[cfg(not(target_family = "wasm"))]
         dioxus::prelude::Signal::new(InnerUseInterval {
-            interval: Some(spawn(async move {
+            interval: Some(dioxus::prelude::spawn(async move {
                 let mut interval = tokio::time::interval(period);
                 loop {
                     interval.tick().await;

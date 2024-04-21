@@ -37,6 +37,7 @@
 - [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
+  - [x] use_window_size
   - [x] use_interval
   - [ ] use_timeout
   - [ ] use_debouncer
