@@ -13,7 +13,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(any(feature = "channel", feature = "use_window_size"))] {
+    if #[cfg(any(feature = "channel", feature = "use_window_size", feature = "interval"))] {
         pub mod utils;
     }
 }

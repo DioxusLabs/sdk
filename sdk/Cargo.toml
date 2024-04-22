@@ -68,6 +68,7 @@ storage = [
     "dep:once_cell",
     "dep:dioxus-signals",
     "dep:tokio",
+    "tokio/sync",
     "dep:yazi",
     "web-sys/StorageEvent",
     "dep:serde",
@@ -78,6 +79,14 @@ storage = [
 
     # Not WASM
     "dep:directories",
+]
+interval = [
+    # Desktop
+    "dep:tokio", 
+    "tokio/time",
+    
+    # Wasm
+    "dep:gloo-timers"
 ]
 
 # CI testing
@@ -133,9 +142,15 @@ once_cell = { version = "1.17.0", optional = true }
 dioxus-signals = { version = "0.5.0-alpha.2", features = [
     "serialize",
 ], optional = true }
-tokio = { version = "1.33.0", features = ["sync"], optional = true }
+
 yazi = { version = "0.1.4", optional = true }
 tracing = "0.1.40"
+
+# Used by: interval
+gloo-timers = { version = "0.3.0", optional = true }
+
+# Used by: interval & storage
+tokio = { version = "1.33.0", optional = true }
 
 # # # # # # # # #
 # Windows Deps. #
@@ -163,7 +178,6 @@ js-sys = "0.3.62"
 
 # Used by: channel
 uuid = { version = "1.3.2", features = ["js"] }
-
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Used by: storage
