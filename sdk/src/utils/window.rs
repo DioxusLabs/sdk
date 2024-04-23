@@ -36,7 +36,7 @@ pub struct WindowSize {
 ///     }
 /// }
 /// ```
-pub fn use_window_size() -> WindowSize {
+pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
     let mut window_size = use_signal(get_window_size);
 
     // Initialize the handler
@@ -48,7 +48,7 @@ pub fn use_window_size() -> WindowSize {
 
     listen(tx);
 
-    *window_size.read_unchecked()
+    use_hook(|| ReadOnlySignal::new(window_size))
 }
 
 // Listener for the web implementation.

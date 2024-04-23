@@ -18,7 +18,7 @@ fn app() -> Element {
     });
     let latest_coords = use_geolocation();
 
-    let latest_coords = match latest_coords {
+    let latest_coords = match latest_coords() {
         Ok(v) => v,
         Err(e) => {
             let e = format!("Initializing: {:?}", e);
