@@ -31,8 +31,8 @@ pub struct WindowSize {
 ///     let size = use_window_size();
 ///
 ///     rsx! {
-///         p { "Width: {size.width}" }
-///         p { "Height: {size.height}" }
+///         p { "Width: {size().width}" }
+///         p { "Height: {size().height}" }
 ///     }
 /// }
 /// ```
