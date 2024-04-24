@@ -17,8 +17,8 @@ fn app() -> Element {
             p { "Height: {initial_size().height}" }
 
             h3 { "Current Size" }
-            p { "Width: {window_size.width}" }
-            p { "Height: {window_size.height}" }
+            p { "Width: {window_size().width}" }
+            p { "Height: {window_size().height}" }
         }
     )
 }

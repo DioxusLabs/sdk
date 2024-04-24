@@ -3,8 +3,8 @@
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::{
     prelude::{
-        provide_context, try_consume_context, use_coroutine, use_hook, use_signal, Signal,
-        UnboundedReceiver,
+        provide_context, try_consume_context, use_coroutine, use_hook, use_signal, ReadOnlySignal,
+        Signal, UnboundedReceiver,
     },
     signals::{Readable, Writable},
 };
@@ -14,19 +14,10 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 /// Provides the latest geocoordinates. Good for navigation-type apps.
-pub fn use_geolocation() -> Result<Geocoordinates, Error> {
+pub fn use_geolocation() -> ReadOnlySignal<Result<Geocoordinates, Error>> {
     // Store the coords
     let mut coords: Signal<Result<Geocoordinates, Error>> =
         use_signal(|| Err(Error::NotInitialized));
-    let Some(geolocator) = try_consume_context::<Signal<Result<Geolocator, Error>>>() else {
-        return Err(Error::NotInitialized);
-    };
-    let geolocator = geolocator.read();
-
-    // Get geolocator
-    let Ok(geolocator) = geolocator.as_ref() else {
-        return Err(Error::NotInitialized);
-    };
 
     // Initialize the handler of events
     let listener = use_coroutine(|mut rx: UnboundedReceiver<Event>| async move {
@@ -43,13 +34,25 @@ pub fn use_geolocation() -> Result<Geocoordinates, Error> {
         }
     });
 
-    // Start listening
-    INIT.call_once(|| {
-        geolocator.listen(listener).ok();
-    });
+    // Try getting the geolocator and starting the listener.
+    match try_consume_context::<Signal<Result<Geolocator, Error>>>() {
+        Some(geo) => {
+            let geo = geo.read();
+            match geo.as_ref() {
+                Ok(geolocator) => {
+                    INIT.call_once(|| {
+                        geolocator.listen(listener).ok();
+                    });
+                }
+                Err(e) => coords.set(Err(e.clone())),
+            }
+        }
+        None => {
+            coords.set(Err(Error::NotInitialized));
+        }
+    }
 
-    // Get the result and return a clone
-    coords.read_unchecked().clone()
+    use_hook(|| ReadOnlySignal::new(coords))
 }
 
 /// Must be called before any use of the geolocation abstraction.

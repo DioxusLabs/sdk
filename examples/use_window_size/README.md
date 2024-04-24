@@ -2,6 +2,11 @@
 
 Learn how to use `use_window_size`.
 
-Run:
 
-```dioxus serve```
+### Run
+
+**Desktop**
+```dioxus serve --platform desktop```
+
+**Web**
+```dioxus serve --platform web```
