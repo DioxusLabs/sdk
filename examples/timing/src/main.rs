@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_sdk::utils::interval::use_interval;
+use dioxus_sdk::utils::timing::{use_debounce, use_interval};
 use std::time::Duration;
 
 fn main() {
@@ -17,5 +17,15 @@ fn app() -> Element {
         count += 1;
     });
 
-    rsx!( p { "{count}" } )
+    let mut debounce = use_debounce(Duration::from_millis(2000));
+
+    rsx! {
+        p { "{count}" },
+        button {
+            onclick: move |_| {
+                debounce.action(|| println!("debounce ran!"));
+            },
+            "Click!"
+        }
+    }
 }

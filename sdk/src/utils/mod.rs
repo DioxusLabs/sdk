@@ -13,7 +13,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "interval")] {
-        pub mod interval;
+    if #[cfg(feature = "timing")] {
+        pub mod timing;
     }
 }

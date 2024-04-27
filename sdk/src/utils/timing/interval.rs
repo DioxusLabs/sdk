@@ -1,5 +1,4 @@
 use std::time::Duration;
-
 use dioxus::prelude::{use_hook, Writable};
 
 #[derive(Clone, PartialEq, Copy)]

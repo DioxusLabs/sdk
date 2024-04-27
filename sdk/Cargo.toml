@@ -47,7 +47,7 @@ use_window_size = [
 
     # Desktop
     "dep:dioxus-desktop",
-    
+
     # Wasm
     "web-sys/Window",
     "dep:wasm-bindgen",
@@ -80,21 +80,25 @@ storage = [
     # Not WASM
     "dep:directories",
 ]
-interval = [
+timing = [
+    # Shared
+    "dep:futures",
+
     # Desktop
-    "dep:tokio", 
+    "dep:tokio",
     "tokio/time",
-    
+
     # Wasm
-    "dep:gloo-timers"
+    "dep:gloo-timers",
 ]
 
 # CI testing
 wasm-testing = [
-    "geolocation",
     "color_scheme",
+    "geolocation",
     "channel",
     "use_window_size",
+    "timing",
     "i18n",
 ]
 desktop-testing = [
@@ -104,6 +108,7 @@ desktop-testing = [
     "channel",
     "use_window_size",
     "i18n",
+    "timing",
 ]
 
 
