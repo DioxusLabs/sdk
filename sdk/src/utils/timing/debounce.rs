@@ -3,29 +3,27 @@ use futures::{
     channel::mpsc::{self, UnboundedSender as Sender},
     StreamExt,
 };
-use std::time::{Duration, Instant};
-
-type DebounceCallback = Box<dyn FnOnce()>;
+use std::time::Duration;
 
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
 #[derive(Clone, Copy, PartialEq)]
 pub struct UseDebounce {
-    sender: Signal<Sender<DebounceCallback>>,
+    sender: Signal<Sender<bool>>,
 }
 
 impl UseDebounce {
-    /// Will run the provided function if the debounce period has passed.
-    pub fn action(&mut self, cb: impl FnOnce() + 'static) {
-        self.sender.write().unbounded_send(Box::new(cb)).ok();
+    /// Will start the debounce countdown, resetting it if already started.
+    pub fn action(&mut self) {
+        self.sender.write().unbounded_send(true).ok();
     }
 }
 
 /// A hook for allowing a function to be called only after a provided [`Duration`] has passed.
 ///
-/// This hook only checks if the callback can be ran when the [`UseDebounce::action`] method is called.
-/// It will not queue function calls.
+/// Once the [`UseDebounce::action`] method is called, a timer will start counting down until
+/// the callback is ran. If the [`UseDebounce::action`] method is called again, the timer will restart.
 ///
 /// # Example
 ///
@@ -35,46 +33,42 @@ impl UseDebounce {
 /// use std::time::Duration;
 ///
 /// fn App() -> Element {
-///     let mut debounce = use_debounce(Duration::from_millis(2000));
+///     let mut debounce = use_debounce(Duration::from_millis(2000), || println!("ran"));
 ///     
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
-///                 debounce.action(|| println!("ran"));
+///                 debounce.action();
 ///             },
 ///             "Click!"
 ///         }
 ///     }
 /// }
 /// ```
-pub fn use_debounce(wait_period: Duration) -> UseDebounce {
+pub fn use_debounce(time: Duration, cb: impl FnOnce() + Copy + 'static) -> UseDebounce {
     use_hook(|| {
-        let (sender, mut receiver) = mpsc::unbounded::<DebounceCallback>();
+        let (sender, mut receiver) = mpsc::unbounded();
+        let debouncer = UseDebounce {
+            sender: Signal::new(sender),
+        };
 
         spawn(async move {
-            let mut last_called = None;
+            let mut current_task: Option<Task> = None;
 
             loop {
-                if let Some(cb) = receiver.next().await {
-                    let now = Instant::now();
-
-                    // Check if enough time has passed to run the callback.
-                    if let Some(last) = last_called {
-                        if now.duration_since(last) >= wait_period {
-                            last_called = Some(now);
-                            cb();
-                        }
-                    } else {
-                        // Callback hasn't been ran yet.
-                        last_called = Some(now);
-                        cb();
+                if let Some(_) = receiver.next().await {
+                    if let Some(task) = current_task {
+                        task.cancel();
                     }
+
+                    current_task = Some(spawn(async move {
+                        tokio::time::sleep(time).await;
+                        cb();
+                    }));
                 }
             }
         });
 
-        UseDebounce {
-            sender: Signal::new(sender),
-        }
+        debouncer
     })
 }
