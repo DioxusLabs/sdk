@@ -45,7 +45,10 @@ impl<T> UseDebounce<T> {
 ///     }
 /// }
 /// ```
-pub fn use_debounce<T: Copy>(time: Duration, cb: impl FnOnce(T) + Copy + 'static) -> UseDebounce<T> {
+pub fn use_debounce<T: Copy>(
+    time: Duration,
+    cb: impl FnOnce(T) + Copy + 'static,
+) -> UseDebounce<T> {
     use_hook(|| {
         let (sender, mut receiver) = mpsc::unbounded();
         let debouncer = UseDebounce {
