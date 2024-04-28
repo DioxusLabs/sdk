@@ -56,7 +56,7 @@ pub fn use_debounce(time: Duration, cb: impl FnOnce() + Copy + 'static) -> UseDe
             let mut current_task: Option<Task> = None;
 
             loop {
-                if let Some(_) = receiver.next().await {
+                if receiver.next().await.is_some() {
                     if let Some(task) = current_task {
                         task.cancel();
                     }
