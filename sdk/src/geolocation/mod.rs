@@ -7,6 +7,6 @@ cfg_if::cfg_if! {
         pub use self::use_geolocation::*;
     }
     else {
-        compile_error!("The geolocation module is not supported on this platform.");
+        compile_error!("the `geolocation` feature is only available on wasm and windows targets");
     }
 }
