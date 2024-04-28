@@ -9,14 +9,14 @@ use std::time::Duration;
 ///
 /// See [`use_debounce`] for more information.
 #[derive(Clone, Copy, PartialEq)]
-pub struct UseDebounce {
-    sender: Signal<Sender<bool>>,
+pub struct UseDebounce<T: 'static> {
+    sender: Signal<Sender<T>>,
 }
 
-impl UseDebounce {
+impl<T> UseDebounce<T> {
     /// Will start the debounce countdown, resetting it if already started.
-    pub fn action(&mut self) {
-        self.sender.write().unbounded_send(true).ok();
+    pub fn action(&mut self, data: T) {
+        self.sender.write().unbounded_send(data).ok();
     }
 }
 
@@ -33,19 +33,19 @@ impl UseDebounce {
 /// use std::time::Duration;
 ///
 /// fn App() -> Element {
-///     let mut debounce = use_debounce(Duration::from_millis(2000), || println!("ran"));
+///     let mut debounce = use_debounce(Duration::from_millis(2000), |_| println!("ran"));
 ///     
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
-///                 debounce.action();
+///                 debounce.action(());
 ///             },
 ///             "Click!"
 ///         }
 ///     }
 /// }
 /// ```
-pub fn use_debounce(time: Duration, cb: impl FnOnce() + Copy + 'static) -> UseDebounce {
+pub fn use_debounce<T: Copy>(time: Duration, cb: impl FnOnce(T) + Copy + 'static) -> UseDebounce<T> {
     use_hook(|| {
         let (sender, mut receiver) = mpsc::unbounded();
         let debouncer = UseDebounce {
@@ -56,14 +56,14 @@ pub fn use_debounce(time: Duration, cb: impl FnOnce() + Copy + 'static) -> UseDe
             let mut current_task: Option<Task> = None;
 
             loop {
-                if receiver.next().await.is_some() {
-                    if let Some(task) = current_task {
+                if let Some(data) = receiver.next().await {
+                    if let Some(task) = current_task.take() {
                         task.cancel();
                     }
 
                     current_task = Some(spawn(async move {
                         tokio::time::sleep(time).await;
-                        cb();
+                        cb(data);
                     }));
                 }
             }

@@ -17,14 +17,17 @@ fn app() -> Element {
         count += 1;
     });
 
-    let mut debounce = use_debounce(Duration::from_millis(2000), move || count.set(0));
+    let mut debounce = use_debounce(Duration::from_millis(2000), move |text| {
+        println!("{text}");
+        count.set(0);
+    });
 
     rsx! {
         p { "{count}" },
         button {
             onclick: move |_| {
                 // Reset the counter after 2 seconds pass since the last click.
-                debounce.action();
+                debounce.action("button was clicked");
             },
             "Reset the counter! (2 second debounce)"
         }
