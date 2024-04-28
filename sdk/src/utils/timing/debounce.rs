@@ -45,7 +45,7 @@ impl<T> UseDebounce<T> {
 ///     }
 /// }
 /// ```
-pub fn use_debounce<T: Copy>(
+pub fn use_debounce<T: Clone>(
     time: Duration,
     cb: impl FnOnce(T) + Copy + 'static,
 ) -> UseDebounce<T> {
