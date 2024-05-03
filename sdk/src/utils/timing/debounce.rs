@@ -8,7 +8,7 @@ use std::time::Duration;
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(PartialEq)]
 pub struct UseDebounce<T: 'static> {
     sender: Signal<Sender<T>>,
 }
@@ -19,6 +19,13 @@ impl<T> UseDebounce<T> {
         self.sender.write().unbounded_send(data).ok();
     }
 }
+
+impl<T> Clone for UseDebounce<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<T> Copy for UseDebounce<T> {}
 
 /// A hook for allowing a function to be called only after a provided [`Duration`] has passed.
 ///
@@ -45,10 +52,7 @@ impl<T> UseDebounce<T> {
 ///     }
 /// }
 /// ```
-pub fn use_debounce<T: Clone>(
-    time: Duration,
-    cb: impl FnOnce(T) + Copy + 'static,
-) -> UseDebounce<T> {
+pub fn use_debounce<T>(time: Duration, cb: impl FnOnce(T) + Copy + 'static) -> UseDebounce<T> {
     use_hook(|| {
         let (sender, mut receiver) = mpsc::unbounded();
         let debouncer = UseDebounce {
