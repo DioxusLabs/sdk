@@ -1,6 +1,5 @@
-use std::time::Duration;
-
 use dioxus::prelude::{use_hook, Writable};
+use std::time::Duration;
 
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {

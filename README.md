@@ -39,8 +39,8 @@
   - [x] use_channel
   - [x] use_window_size
   - [x] use_interval
+  - [x] use_debounce
   - [ ] use_timeout
-  - [ ] use_debouncer
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
