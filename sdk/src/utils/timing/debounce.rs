@@ -8,7 +8,6 @@ use std::time::Duration;
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
-#[derive(PartialEq)]
 pub struct UseDebounce<T: 'static> {
     sender: Signal<Sender<T>>,
 }
@@ -20,6 +19,8 @@ impl<T> UseDebounce<T> {
     }
 }
 
+// Manually implement Clone, Copy, and PartialEq as #[derive] thinks that T needs to implement these (it doesn't).
+
 impl<T> Clone for UseDebounce<T> {
     fn clone(&self) -> Self {
         *self
@@ -27,6 +28,12 @@ impl<T> Clone for UseDebounce<T> {
 }
 
 impl<T> Copy for UseDebounce<T> {}
+
+impl<T> PartialEq for UseDebounce<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.sender == other.sender
+    }
+}
 
 /// A hook for allowing a function to be called only after a provided [`Duration`] has passed.
 ///
