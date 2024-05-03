@@ -25,6 +25,7 @@ impl<T> Clone for UseDebounce<T> {
         *self
     }
 }
+
 impl<T> Copy for UseDebounce<T> {}
 
 /// A hook for allowing a function to be called only after a provided [`Duration`] has passed.
