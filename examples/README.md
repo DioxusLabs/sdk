@@ -1,7 +1,7 @@
 # Examples
 
-### [`color_scheme`](./color_scheme/)
-Learn how to use `use_preferred_color_scheme`.
+### [`system_theme`](./system_theme/)
+Learn how to use `use_system_theme`.
 
 ### [`geolocation`](./geolocation/)
 Learn how to use the `geolocation` abstraction.

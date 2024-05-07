@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["color_scheme"] }
-dioxus = { workspace = true, features = ["web"]}
+dioxus-sdk = { workspace = true, features = ["system_theme"] }
+dioxus = { workspace = true, features = ["desktop"]}
 
 log = "0.4.6"
 
