@@ -76,6 +76,7 @@ storage = [
     "dep:tokio",
     "tokio/sync",
     "dep:yazi",
+    "web-sys/Storage",
     "web-sys/StorageEvent",
     "dep:serde",
     "dep:futures-util",
@@ -205,6 +206,6 @@ dioxus-desktop = { workspace = true, optional = true }
 # # # # #
 
 [package.metadata.docs.rs]
-default-target = "x86_64-pc-windows-msvc"
+targets = ["x86_64-pc-windows-msvc", "wasm32-unknown-unknown"]
 no-default-features = true
 features = ["desktop-testing", "wasm-testing"]

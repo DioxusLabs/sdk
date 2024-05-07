@@ -36,9 +36,9 @@ pub enum NotificationTimeout {
     Milliseconds(u32),
 }
 
-impl Into<Timeout> for NotificationTimeout {
-    fn into(self) -> Timeout {
-        match self {
+impl From<NotificationTimeout> for Timeout {
+    fn from(value: NotificationTimeout) -> Self {
+        match value {
             NotificationTimeout::Default => Timeout::Default,
             NotificationTimeout::Never => Timeout::Never,
             NotificationTimeout::Milliseconds(ms) => Timeout::Milliseconds(ms),
@@ -104,6 +104,12 @@ impl Notification {
     pub fn timeout(&mut self, value: NotificationTimeout) -> &mut Self {
         self.timeout = value;
         self
+    }
+}
+
+impl Default for Notification {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

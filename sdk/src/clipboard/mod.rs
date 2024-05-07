@@ -1,3 +1,5 @@
+//! Interact with the clipboard.
+
 cfg_if::cfg_if! {
     if #[cfg(not(target_family = "wasm"))] {
         mod use_clipboard;

@@ -2,7 +2,7 @@
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "system_theme")] {
-        pub mod system_theme;
+        pub mod theme;
     }
 }
 
@@ -33,5 +33,11 @@ cfg_if::cfg_if! {
 cfg_if::cfg_if! {
     if #[cfg(feature = "storage")] {
         pub mod storage;
+    }
+}
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "notifications")] {
+        pub mod notification;
     }
 }

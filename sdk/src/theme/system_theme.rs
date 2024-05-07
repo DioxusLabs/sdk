@@ -5,13 +5,22 @@ use futures::StreamExt;
 use std::{error::Error, fmt::Display, sync::Once};
 
 /// Represents the system theme.
-/// 
+///
 /// For any themes other than `light` and `dark`, a [`ColorThemeError::UnknownTheme`] will be returned.
 /// We may be able to support custom themes in the future.
 #[derive(Debug, Clone, Copy)]
 pub enum ColorTheme {
     Light,
     Dark,
+}
+
+impl Display for ColorTheme {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Light => write!(f, "light"),
+            Self::Dark => write!(f, "dark"),
+        }
+    }
 }
 
 /// Represents an error with system theme utilities.
@@ -45,21 +54,21 @@ impl Display for ColorThemeError {
 type ResultColorTheme = Result<ColorTheme, ColorThemeError>;
 
 /// A hook for receiving the system theme.
-/// 
+///
 /// The initial theme will be returned and updated if the system theme changes.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_sdk::system_theme::use_system_theme;
-/// 
+/// use dioxus_sdk::theme::use_system_theme;
+///
 /// fn App() -> Element {
 ///     let theme = use_system_theme();
-/// 
+///
 ///     rsx! {
 ///         p {
-///             "the current theme is: {theme.unwrap()}"
+///             "the current theme is: {theme().unwrap()}"
 ///         }
 ///     }
 /// }
@@ -142,20 +151,20 @@ fn listen(tx: Coroutine<ResultColorTheme>) {
     });
 }
 
-/// Get the current system color theme.
+/// Get the current system theme.
 ///
 /// This function will try to get the current system theme.
 ///
 /// # Example
-/// 
+///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_sdk::color_theme::{ColorTheme, use_system_theme};
+/// use dioxus_sdk::theme::{ColorTheme, get_system_theme};
 ///
 /// fn App() -> Element {
 ///     let theme = use_signal(get_system_theme);
 ///
-///     let class_name = match theme.unwrap() {
+///     let class_name = match theme().unwrap() {
 ///         ColorTheme::Dark => "dark-theme",
 ///         ColorTheme::Light => "light-theme",
 ///     };
