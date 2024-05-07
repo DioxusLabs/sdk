@@ -7,7 +7,7 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "use_window_size")] {
+    if #[cfg(feature = "window_size")] {
         pub mod window;
     }
 }
