@@ -1,8 +1,16 @@
-# use_persistent (Desktop)
+# use_persistent
 
 
 Use persistent allows you to create data that will persist across sessions. This example will teach you how to use the `use_persistant` hook.
 
-Run:
+Desktop:
 
-```dioxus serve --platform desktop```
+```sh
+dioxus serve --platform desktop --features desktop
+```
+
+Web:
+
+```sh
+dioxus serve --features web
+```
