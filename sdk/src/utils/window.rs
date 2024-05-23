@@ -52,7 +52,7 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
 }
 
 // Listener for the web implementation.
-#[cfg(target_arch = "wasm32")]
+#[cfg(target_family = "wasm")]
 fn listen(tx: Coroutine<WindowSize>) {
     use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 
@@ -84,7 +84,7 @@ fn listen(tx: Coroutine<WindowSize>) {
 }
 
 // Listener for anything but the web implementation.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(target_family = "wasm"))]
 fn listen(tx: Coroutine<WindowSize>) {
     use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
 
@@ -124,7 +124,7 @@ pub fn get_window_size() -> WindowSize {
 }
 
 // Web implementation of size getter.
-#[cfg(target_arch = "wasm32")]
+#[cfg(target_family = "wasm")]
 fn get_window_size_platform() -> WindowSize {
     use wasm_bindgen::JsValue;
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
@@ -146,7 +146,7 @@ fn get_window_size_platform() -> WindowSize {
 }
 
 // Desktop implementation of size getter.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(target_family = "wasm"))]
 fn get_window_size_platform() -> WindowSize {
     let window = dioxus_desktop::window();
     let size = window.inner_size();
