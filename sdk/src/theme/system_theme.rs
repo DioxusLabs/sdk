@@ -7,7 +7,7 @@ use std::{error::Error, fmt::Display};
 ///
 /// For any themes other than `light` and `dark`, a [`SystemThemeError::UnknownTheme`] will be returned.
 /// We may be able to support custom themes in the future.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SystemTheme {
     Light,
     Dark,
