@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::*;
 use dioxus_sdk::storage::*;
 
 fn main() {
@@ -18,9 +17,9 @@ fn app() -> Element {
 enum Route {
     #[layout(Footer)]
         #[route("/")]
-        Page1 {},
-        #[route("/page2")]
-        Page2 {},
+        Home {},
+        #[route("/storage")]
+        Storage {},
 }
 
 #[component]
@@ -61,8 +60,8 @@ fn Footer() -> Element {
 
             nav {
                 ul {
-                    li { Link { to: Route::Page1 {}, "Page1" } }
-                    li { Link { to: Route::Page2 {}, "Page2" } }
+                    li { Link { to: Route::Home {}, "Home" } }
+                    li { Link { to: Route::Storage {}, "Storage" } }
                 }
             }
         }
@@ -70,12 +69,12 @@ fn Footer() -> Element {
 }
 
 #[component]
-fn Page1() -> Element {
+fn Home() -> Element {
     rsx!("Home")
 }
 
 #[component]
-fn Page2() -> Element {
+fn Storage() -> Element {
     let mut count_session = use_singleton_persistent(|| 0);
     let mut count_local = use_synced_storage::<LocalStorage, i32>("synced".to_string(), || 0);
 

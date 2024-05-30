@@ -14,3 +14,9 @@ Web:
 ```sh
 dioxus serve --features web
 ```
+
+Fullstack:
+
+```sh
+dioxus serve --platform fullstack --features fullstack
+```

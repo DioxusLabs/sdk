@@ -31,6 +31,8 @@ use futures_util::stream::StreamExt;
 pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
 };
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use dioxus::prelude::*;
 use postcard::to_allocvec;
@@ -68,7 +70,32 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    use_hook(|| new_storage::<S, T>(key, init))
+    let mut init = Some(init);
+    let storage = use_hook(|| new_storage::<S, T>(key, || init.take().unwrap()()));
+    use_hydrate_storage_hook::<S, T>(storage, init);
+    storage
+}
+
+#[allow(unused)]
+enum StorageMode {
+    Client,
+    HydrateClient,
+    Server,
+}
+
+impl StorageMode {
+    // Get the active mode
+    const fn current() -> Self {
+        server_only! {
+            return StorageMode::Server;
+        }
+
+        fullstack! {
+            return StorageMode::HydrateClient;
+        }
+
+        StorageMode::Client
+    }
 }
 
 /// Creates a Signal that can be used to store data that will persist across application reloads.
@@ -93,30 +120,18 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    let mut init = Some(init);
+    let mode = StorageMode::current();
 
-    if cfg!(feature = "ssr") {
+    match mode {
         // SSR does not support storage on the backend. We will just use a normal Signal to represent the initial state.
         // The client will hydrate this with a correct StorageEntry and maintain state.
-        Signal::new(init.take().unwrap()())
-    } else if cfg!(feature = "hydrate") {
-        let key_clone = key.clone();
-        let mut storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
-        if generation() == 0 {
-            // The first generation is rendered on the server side and so must be hydrated.
-            needs_update();
-        }
-        if generation() == 1 {
-            // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
-            storage_entry.set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
+        StorageMode::Server => Signal::new(init()),
+        _ => {
+            // Otherwise the client is rendered normally, so we can just use the storage entry.
+            let storage_entry = new_storage_entry::<S, T>(key, init);
             storage_entry.save_to_storage_on_change();
+            storage_entry.data
         }
-        storage_entry.data
-    } else {
-        // The client is rendered normally, so we can just use the storage entry.
-        let storage_entry = new_storage_entry::<S, T>(key, init.take().unwrap());
-        storage_entry.save_to_storage_on_change();
-        storage_entry.data
     }
 }
 
@@ -130,7 +145,10 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    use_hook(|| new_synced_storage::<S, T>(key, init))
+    let mut init = Some(init);
+    let storage = use_hook(|| new_synced_storage::<S, T>(key, || init.take().unwrap()()));
+    use_hydrate_storage_hook::<S, T>(storage, init);
+    storage
 }
 
 /// Create a signal that can be used to store data that will persist across application reloads and be synced across all app sessions for a given installation or browser.
@@ -143,34 +161,20 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    let mut init = Some(init);
     let signal = {
-        if cfg!(feature = "ssr") {
+        let mode = StorageMode::current();
+
+        match mode {
             // SSR does not support synced storage on the backend. We will just use a normal Signal to represent the initial state.
             // The client will hydrate this with a correct SyncedStorageEntry and maintain state.
-            Signal::new(init.take().unwrap()())
-        } else if cfg!(feature = "hydrate") {
-            let key_clone = key.clone();
-            let mut storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
-            if generation() == 0 {
-                // The first generation is rendered on the server side and so must be hydrated.
-                needs_update();
-            }
-            if generation() == 1 {
-                // The first time the vdom is hydrated, we set the correct value from storage and set up the subscription to storage events.
-                storage_entry
-                    .entry
-                    .set(get_from_storage::<S, T>(key_clone, init.take().unwrap()));
+            StorageMode::Server => Signal::new(init()),
+            _ => {
+                // The client is rendered normally, so we can just use the synced storage entry.
+                let storage_entry = new_synced_storage_entry::<S, T>(key, init);
                 storage_entry.save_to_storage_on_change();
                 storage_entry.subscribe_to_storage();
+                *storage_entry.data()
             }
-            *storage_entry.data()
-        } else {
-            // The client is rendered normally, so we can just use the synced storage entry.
-            let storage_entry = new_synced_storage_entry::<S, T>(key, init.take().unwrap());
-            storage_entry.save_to_storage_on_change();
-            storage_entry.subscribe_to_storage();
-            *storage_entry.data()
         }
     };
     signal
@@ -183,7 +187,10 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    use_hook(|| new_storage_entry::<S, T>(key, init))
+    let mut init = Some(init);
+    let signal = use_hook(|| new_storage_entry::<S, T>(key, || init.take().unwrap()()));
+    use_hydrate_storage_hook::<S, T>(*signal.data(), init);
+    signal
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist, and provides a channel to subscribe to updates to the underlying storage.
@@ -196,7 +203,10 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    use_hook(|| new_synced_storage_entry::<S, T>(key, init))
+    let mut init = Some(init);
+    let signal = use_hook(|| new_synced_storage_entry::<S, T>(key, || init.take().unwrap()()));
+    use_hydrate_storage_hook::<S, T>(*signal.data(), init);
+    signal
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -264,15 +274,16 @@ pub trait StorageEntryTrait<S: StorageBacking, T: PartialEq + Clone + 'static>:
         T: Serialize + DeserializeOwned + Clone + PartialEq + 'static,
     {
         let entry_clone = self.clone();
-        let old = Signal::new(self.data().cloned());
+        let old = RefCell::new(None);
         let data = *self.data();
         spawn(async move {
             loop {
                 let (rc, mut reactive_context) = ReactiveContext::new();
                 rc.run_in(|| {
-                    if *old.read() != *data.read() {
+                    if old.borrow().as_ref() != Some(&*data.read()) {
                         tracing::trace!("Saving to storage");
                         entry_clone.save();
+                        old.replace(Some(data()));
                     }
                 });
                 if reactive_context.next().await.is_none() {
@@ -574,8 +585,46 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
     match yazi::decompress(&bytes, yazi::Format::Zlib) {
         Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
             Ok(v) => Some(v),
-            Err(err) => None,
+            Err(_) => None,
         },
-        Err(err) => None,
+        Err(_) => None,
     }
+}
+
+// Take a signal and a storage key and hydrate the value if we are hydrating the client.
+pub(crate) fn use_hydrate_storage_hook<S, T>(
+    mut signal: Signal<T>,
+    init: Option<impl FnOnce() -> T>,
+) -> Signal<T>
+where
+    S: StorageBacking,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
+    S::Key: Clone,
+{
+    let mode = StorageMode::current();
+    // We read the value from storage and store it here if we are hydrating the client.
+    let original_storage_value: Rc<RefCell<Option<T>>> = use_hook(|| Rc::new(RefCell::new(None)));
+
+    // If we are not hydrating the client
+    if let StorageMode::HydrateClient = mode {
+        if generation() == 0 {
+            // We always use the default value for the first render.
+            if let Some(default_value) = init {
+                // Read the value from storage before we reset it for hydration
+                original_storage_value
+                    .borrow_mut()
+                    .replace(signal.peek().clone());
+                signal.set(default_value());
+            }
+            // And we trigger a new render for after hydration
+            needs_update();
+        }
+        if generation() == 1 {
+            // After we hydrate, set the original value from storage
+            if let Some(original_storage_value) = original_storage_value.borrow_mut().take() {
+                signal.set(original_storage_value);
+            }
+        }
+    }
+    signal
 }

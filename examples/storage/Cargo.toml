@@ -4,9 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["storage"] }
-dioxus = { workspace = true, features = ["router"] }
+dioxus-sdk = { path = "../../sdk", features = ["storage"] }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "v0.5", features = ["router"] }
 
 [features]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
+fullstack = ["dioxus/fullstack"]
+server = ["dioxus/axum"]
+
+# # Fullstack support requires a patch from 0.5.2
+# [patch.crates-io]
+# dioxus = { git = "https://github.com/dioxuslabs/dioxus", branch = "v0.5" }
+# dioxus-core = { git = "https://github.com/dioxuslabs/dioxus", branch = "v0.5" }
+# dioxus-hooks = { git = "https://github.com/dioxuslabs/dioxus", branch = "v0.5" }
+# dioxus-signals = { git = "https://github.com/dioxuslabs/dioxus", branch = "v0.5" }

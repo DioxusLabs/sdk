@@ -1,5 +1,5 @@
-use crate::storage::new_storage_entry;
 use crate::storage::SessionStorage;
+use crate::storage::{new_storage_entry, use_hydrate_storage_hook};
 use dioxus::prelude::*;
 use dioxus_signals::Signal;
 use serde::de::DeserializeOwned;
@@ -10,20 +10,21 @@ use super::StorageEntryTrait;
 /// A persistent storage hook that can be used to store data across application reloads.
 ///
 /// Depending on the platform this uses either local storage or a file storage
-#[allow(clippy::needless_return)]
 pub fn use_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    use_hook(|| new_persistent(key, init))
+    let mut init = Some(init);
+    let storage = use_hook(|| new_persistent(key.to_string(), || init.take().unwrap()()));
+    use_hydrate_storage_hook::<SessionStorage, T>(storage, init);
+    storage
 }
 
 /// Creates a persistent storage signal that can be used to store data across application reloads.
 ///
 /// Depending on the platform this uses either local storage or a file storage
-#[allow(clippy::needless_return)]
 pub fn new_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
@@ -39,14 +40,16 @@ pub fn new_persistent<
 /// The state will be the same for every call to this hook from the same line of code.
 ///
 /// Depending on the platform this uses either local storage or a file storage
-#[allow(clippy::needless_return)]
 #[track_caller]
 pub fn use_singleton_persistent<
     T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
 >(
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    use_hook(|| new_singleton_persistent(init))
+    let mut init = Some(init);
+    let signal = use_hook(|| new_singleton_persistent(|| init.take().unwrap()()));
+    use_hydrate_storage_hook::<SessionStorage, T>(signal, init);
+    signal
 }
 
 /// Create a persistent storage signal that can be used to store data across application reloads.
