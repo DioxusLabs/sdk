@@ -77,7 +77,12 @@ pub fn use_debounce<T>(time: Duration, cb: impl FnOnce(T) + Copy + 'static) -> U
                     }
 
                     current_task = Some(spawn(async move {
+                        #[cfg(not(target_family = "wasm"))]
                         tokio::time::sleep(time).await;
+
+                        #[cfg(target_family = "wasm")]
+                        gloo_timers::future::sleep(time).await;
+
                         cb(data);
                     }));
                 }

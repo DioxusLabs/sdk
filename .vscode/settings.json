@@ -1,9 +1,6 @@
 {
     "rust-analyzer.cargo.features": [
-        "desktop-testing"
+        "wasm-testing"
     ],
-    "rust-analyzer.cargo.extraArgs": [
-        "--exclude=color_scheme"
-    ],
-    //"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+    "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 }
