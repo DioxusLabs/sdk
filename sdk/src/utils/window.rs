@@ -1,7 +1,6 @@
 //! Utilities for the window.
 
 use dioxus::prelude::*;
-use futures_util::stream::StreamExt;
 use std::sync::Once;
 
 #[allow(dead_code)]
@@ -37,23 +36,22 @@ pub struct WindowSize {
 /// }
 /// ```
 pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
-    let mut window_size = use_signal(get_window_size);
-
-    // Initialize the handler
-    let tx = use_coroutine(|mut rx: UnboundedReceiver<WindowSize>| async move {
-        while let Some(data) = rx.next().await {
-            window_size.set(data);
+    let window_size = match try_use_context::<Signal<WindowSize>>() {
+        Some(w) => w,
+        // This should only run once.
+        None => {
+            let size = provide_root_context(Signal::new(get_window_size()));
+            listen(size);
+            size
         }
-    });
-
-    listen(tx);
+    };
 
     use_hook(|| ReadOnlySignal::new(window_size))
 }
 
 // Listener for the web implementation.
 #[cfg(target_family = "wasm")]
-fn listen(tx: Coroutine<WindowSize>) {
+fn listen(mut window_size: Signal<WindowSize>) {
     use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 
     INIT.call_once(|| {
@@ -74,7 +72,7 @@ fn listen(tx: Coroutine<WindowSize>) {
                 .as_f64()
                 .unwrap_or(0.0) as u32;
 
-            tx.send(WindowSize { width, height });
+            window_size.set(WindowSize { width, height });
         }) as Box<dyn FnMut()>);
 
         let on_resize_cb = on_resize.as_ref().clone();
@@ -85,7 +83,7 @@ fn listen(tx: Coroutine<WindowSize>) {
 
 // Listener for anything but the web implementation.
 #[cfg(not(target_family = "wasm"))]
-fn listen(tx: Coroutine<WindowSize>) {
+fn listen(mut window_size: Signal<WindowSize>) {
     use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
 
     use_wry_event_handler(move |event, _| {
@@ -94,7 +92,7 @@ fn listen(tx: Coroutine<WindowSize>) {
             ..
         } = event
         {
-            tx.send(WindowSize {
+            window_size.set(WindowSize {
                 width: size.width,
                 height: size.height,
             });

@@ -2,15 +2,17 @@ use dioxus::prelude::*;
 use dioxus_sdk::utils::window::{get_window_size, use_window_size};
 
 fn main() {
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     let initial_size = use_signal(get_window_size);
     let window_size = use_window_size();
 
     rsx!(
-        div { style: "text-align: center;",
+        div {
+            style: "text-align: center;",
             h1 { "↕️ Window Size Utilities ↔️" }
             h3 { "Initial Size" }
             p { "Width: {initial_size().width}" }
