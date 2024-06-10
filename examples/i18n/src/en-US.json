@@ -1,5 +1,6 @@
 {
     "id": "en-US",
+    "name": "English",
     "texts": {
         "messages": {
             "hello_world": "Hello World!"

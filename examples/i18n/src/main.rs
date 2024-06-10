@@ -14,26 +14,39 @@ fn main() {
 static EN_US: &str = include_str!("./en-US.json");
 static ES_ES: &str = include_str!("./es-ES.json");
 
+fn change_language_btn() -> Element {
+    let mut i18 = use_i18();
+    rsx! {{
+        (i18.language_list().iter()).map(|(id, name)| {
+            let id = id.clone();
+            rsx! { button {
+                    onclick: move |_| { i18.set_language(id.clone()); },
+                    "{name}"
+            }}
+        })
+    }}
+}
+
+fn change_language_dropdown() -> Element {
+    let mut i18 = use_i18();
+    rsx! {
+        select {
+            oninput: move |ev| {
+                i18.set_language(ev.value().parse().unwrap())
+            },
+            {(i18.language_list().iter()).map(|(id, name)| {
+                rsx! { option { value: id.to_string(), "{name}" }}
+            })}
+        }
+    }
+}
+
 #[allow(non_snake_case)]
 fn Body() -> Element {
     let mut i18 = use_i18();
-
-    let change_to_english = move |_| i18.set_language("en-US".parse().unwrap());
-    let change_to_spanish = move |_| i18.set_language("es-ES".parse().unwrap());
-
     rsx!(
-        button {
-            onclick: change_to_english,
-            label {
-                "English"
-            }
-        }
-        button {
-            onclick: change_to_spanish,
-            label {
-                "Spanish"
-            }
-        }
+        change_language_dropdown{}
+        change_language_btn{}
         p { {translate!(i18, "messages.hello_world")} }
         p { {translate!(i18, "messages.hello", name: "Dioxus")}  }
     )

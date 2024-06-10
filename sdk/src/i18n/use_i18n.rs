@@ -8,6 +8,7 @@ use super::use_init_i18n::UseInitI18Data;
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Language {
     id: LanguageIdentifier,
+    name: String,
     texts: Text,
 }
 
@@ -108,6 +109,14 @@ impl UseI18 {
 
     pub fn set_language(&mut self, id: LanguageIdentifier) {
         *self.selected_language.write() = id;
+    }
+
+    pub fn language_list(&mut self) -> Vec<(LanguageIdentifier, String)> {
+        let mut languages = Vec::new();
+        for language in self.data.read().languages.iter() {
+            languages.push((language.id.clone(), language.name.clone()));
+        }
+        languages
     }
 }
 
