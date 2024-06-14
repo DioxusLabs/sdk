@@ -77,7 +77,8 @@ pub fn use_system_theme() -> ReadOnlySignal<SystemThemeResult> {
         Some(s) => s,
         // This should only run once.
         None => {
-            let theme = provide_root_context(Signal::new(get_system_theme()));
+            let signal = Signal::new_in_scope(get_system_theme(), ScopeId::ROOT);
+            let theme = provide_root_context(signal);
             listen(theme);
             theme
         }

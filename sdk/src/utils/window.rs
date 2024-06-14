@@ -40,8 +40,10 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
         Some(w) => w,
         // This should only run once.
         None => {
-            let size = provide_root_context(Signal::new(get_window_size()));
+            let signal = Signal::new_in_scope(get_window_size(), ScopeId::ROOT);
+            let size = provide_root_context(signal);
             listen(size);
+
             size
         }
     };
@@ -84,9 +86,10 @@ fn listen(mut window_size: Signal<WindowSize>) {
 // Listener for anything but the web implementation.
 #[cfg(not(target_family = "wasm"))]
 fn listen(mut window_size: Signal<WindowSize>) {
-    use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
+    use dioxus_desktop::{tao::event::Event, window, WindowEvent};
 
-    use_wry_event_handler(move |event, _| {
+    let window = window();
+    window.create_wry_event_handler(move |event, _| {
         if let Event::WindowEvent {
             event: WindowEvent::Resized(size),
             ..
