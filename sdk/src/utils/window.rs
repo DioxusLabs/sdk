@@ -8,7 +8,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 /// Stores the width and height of a window, screen, or viewport.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct WindowSize {
     /// The horizontal size in pixels.
     pub width: u32,
@@ -49,6 +49,48 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
     listen(tx);
 
     use_hook(|| ReadOnlySignal::new(window_size))
+}
+
+/// Stores whether or not a resize event has occurred, along with the most recent WindowSize
+#[derive(Debug, Clone)]
+pub enum WindowSizeWithStatus {
+    // The window size has not changed since the last update.
+    NoChange(WindowSize),
+    // The window size has changed since the last update.
+    Resized(WindowSize),
+}
+
+/// A wrapper over use_window_size for helping your component respond to a resize event.
+///
+/// returns the last known size of the window along with whether or not a resize event has occurred.
+/// # Example
+///
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_sdk::utils::window::use_window_resize_status;
+///
+/// fn App() -> Element {
+///     let resize_status = use_window_resize_status();
+///
+///     match resize_status {
+///         NoChange(size) => (),
+///         Resized(size) => tracing::info!("time to respond")
+///     };
+///
+///     rsx!{...}
+/// }
+/// ```
+pub fn use_window_resize_status() -> WindowSizeWithStatus {
+    let mut previous_size = use_signal(get_window_size);
+    let current_size = use_window_size().read().clone();
+    let size_has_changed = current_size != previous_size.read().clone();
+    match size_has_changed {
+        true => {
+            previous_size.set(current_size);
+            WindowSizeWithStatus::Resized(current_size)
+        }
+        false => WindowSizeWithStatus::NoChange(current_size),
+    }
 }
 
 // Listener for the web implementation.
