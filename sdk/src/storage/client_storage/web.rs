@@ -3,7 +3,6 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use dioxus::prelude::*;
 use once_cell::sync::Lazy;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::watch::{channel, Receiver};

@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::*;
 use dioxus_sdk::storage::*;
 
 fn main() {

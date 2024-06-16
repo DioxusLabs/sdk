@@ -42,7 +42,7 @@ impl UseClipboard {
 ///
 /// # Examples
 ///
-/// ```ignore
+/// ```rust,ignore
 /// use dioxus_sdk::clipboard::use_clipboard;
 ///
 /// // Get a handle to the clipboard
