@@ -6,11 +6,11 @@ Use persistent allows you to create data that will persist across sessions. This
 Desktop:
 
 ```sh
-dioxus serve --platform desktop --features desktop
+dx serve --platform desktop --features desktop
 ```
 
 Web:
 
 ```sh
-dioxus serve --features web
+dx serve --features web
 ```
