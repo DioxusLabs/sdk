@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["sdk", "examples/*"]
-# We exclude the storage example from the workspace so that the dioxus features for other renderers are not enabled
-exclude = ["examples/storage"]
 
 
 [workspace.dependencies]
