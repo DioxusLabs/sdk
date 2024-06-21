@@ -1,7 +1,6 @@
 //! Utilities for the window.
 
 use dioxus::prelude::*;
-use futures_util::stream::StreamExt;
 use std::sync::Once;
 
 #[allow(dead_code)]
@@ -37,23 +36,24 @@ pub struct WindowSize {
 /// }
 /// ```
 pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
-    let mut window_size = use_signal(get_window_size);
+    let window_size = match try_use_context::<Signal<WindowSize>>() {
+        Some(w) => w,
+        // This should only run once.
+        None => {
+            let signal = Signal::new_in_scope(get_window_size(), ScopeId::ROOT);
+            let size = provide_root_context(signal);
+            listen(size);
 
-    // Initialize the handler
-    let tx = use_coroutine(|mut rx: UnboundedReceiver<WindowSize>| async move {
-        while let Some(data) = rx.next().await {
-            window_size.set(data);
+            size
         }
-    });
-
-    listen(tx);
+    };
 
     use_hook(|| ReadOnlySignal::new(window_size))
 }
 
 // Listener for the web implementation.
-#[cfg(target_arch = "wasm32")]
-fn listen(tx: Coroutine<WindowSize>) {
+#[cfg(target_family = "wasm")]
+fn listen(mut window_size: Signal<WindowSize>) {
     use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 
     INIT.call_once(|| {
@@ -74,7 +74,7 @@ fn listen(tx: Coroutine<WindowSize>) {
                 .as_f64()
                 .unwrap_or(0.0) as u32;
 
-            tx.send(WindowSize { width, height });
+            window_size.set(WindowSize { width, height });
         }) as Box<dyn FnMut()>);
 
         let on_resize_cb = on_resize.as_ref().clone();
@@ -84,17 +84,18 @@ fn listen(tx: Coroutine<WindowSize>) {
 }
 
 // Listener for anything but the web implementation.
-#[cfg(not(target_arch = "wasm32"))]
-fn listen(tx: Coroutine<WindowSize>) {
-    use dioxus_desktop::{tao::event::Event, use_wry_event_handler, WindowEvent};
+#[cfg(not(target_family = "wasm"))]
+fn listen(mut window_size: Signal<WindowSize>) {
+    use dioxus_desktop::{tao::event::Event, window, WindowEvent};
 
-    use_wry_event_handler(move |event, _| {
+    let window = window();
+    window.create_wry_event_handler(move |event, _| {
         if let Event::WindowEvent {
             event: WindowEvent::Resized(size),
             ..
         } = event
         {
-            tx.send(WindowSize {
+            window_size.set(WindowSize {
                 width: size.width,
                 height: size.height,
             });
@@ -124,7 +125,7 @@ pub fn get_window_size() -> WindowSize {
 }
 
 // Web implementation of size getter.
-#[cfg(target_arch = "wasm32")]
+#[cfg(target_family = "wasm")]
 fn get_window_size_platform() -> WindowSize {
     use wasm_bindgen::JsValue;
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
@@ -146,7 +147,7 @@ fn get_window_size_platform() -> WindowSize {
 }
 
 // Desktop implementation of size getter.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(target_family = "wasm"))]
 fn get_window_size_platform() -> WindowSize {
     let window = dioxus_desktop::window();
     let size = window.inner_size();

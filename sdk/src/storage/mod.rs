@@ -1,12 +1,14 @@
-//! # dioxus-storage
-//! A library for handling local storage ergonomically in Dioxus
+//! Local and persistent storage.
+//!
+//! Handle local storage ergonomically.
+//!
 //! ## Usage
 //! ```rust
 //! use dioxus_sdk::storage::use_persistent;
 //! use dioxus::prelude::*;
 //!
 //! fn app() -> Element {
-//!     let num = use_persistent("count", || 0);
+//!     let mut num = use_persistent("count", || 0);
 //!     rsx! {
 //!         div {
 //!             button {

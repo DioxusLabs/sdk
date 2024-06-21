@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["use_window_size"] }
+dioxus-sdk = { workspace = true, features = ["window_size"] }
 dioxus = { workspace = true }
 
 [features]
