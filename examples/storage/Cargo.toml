@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { path = "../../sdk", features = ["storage"] }
-dioxus = { version = "0.5", features = ["router"] }
+dioxus-sdk = { workspace = true, features = ["storage"] }
+dioxus = { workspace = true, features = ["router"] }
 
 [features]
 web = ["dioxus/web"]
