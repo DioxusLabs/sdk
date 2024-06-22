@@ -74,7 +74,7 @@ where
 {
     let mut init = Some(init);
     let storage = use_hook(|| new_storage::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage_hook::<S, T>(storage, init);
+    use_hydrate_storage::<S, T>(storage, init);
     storage
 }
 
@@ -149,7 +149,7 @@ where
 {
     let mut init = Some(init);
     let storage = use_hook(|| new_synced_storage::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage_hook::<S, T>(storage, init);
+    use_hydrate_storage::<S, T>(storage, init);
     storage
 }
 
@@ -191,7 +191,7 @@ where
 {
     let mut init = Some(init);
     let signal = use_hook(|| new_storage_entry::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage_hook::<S, T>(*signal.data(), init);
+    use_hydrate_storage::<S, T>(*signal.data(), init);
     signal
 }
 
@@ -207,7 +207,7 @@ where
 {
     let mut init = Some(init);
     let signal = use_hook(|| new_synced_storage_entry::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage_hook::<S, T>(*signal.data(), init);
+    use_hydrate_storage::<S, T>(*signal.data(), init);
     signal
 }
 
@@ -594,7 +594,7 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
 }
 
 // Take a signal and a storage key and hydrate the value if we are hydrating the client.
-pub(crate) fn use_hydrate_storage_hook<S, T>(
+pub(crate) fn use_hydrate_storage<S, T>(
     mut signal: Signal<T>,
     init: Option<impl FnOnce() -> T>,
 ) -> Signal<T>

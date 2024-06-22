@@ -1,5 +1,5 @@
 use crate::storage::SessionStorage;
-use crate::storage::{new_storage_entry, use_hydrate_storage_hook};
+use crate::storage::{new_storage_entry, use_hydrate_storage};
 use dioxus::prelude::*;
 use dioxus_signals::Signal;
 use serde::de::DeserializeOwned;
@@ -18,7 +18,7 @@ pub fn use_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let storage = use_hook(|| new_persistent(key.to_string(), || init.take().unwrap()()));
-    use_hydrate_storage_hook::<SessionStorage, T>(storage, init);
+    use_hydrate_storage::<SessionStorage, T>(storage, init);
     storage
 }
 
@@ -48,7 +48,7 @@ pub fn use_singleton_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let signal = use_hook(|| new_singleton_persistent(|| init.take().unwrap()()));
-    use_hydrate_storage_hook::<SessionStorage, T>(signal, init);
+    use_hydrate_storage::<SessionStorage, T>(signal, init);
     signal
 }
 
