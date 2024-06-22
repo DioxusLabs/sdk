@@ -12,7 +12,7 @@ dioxus serve --platform desktop --features desktop
 Web:
 
 ```sh
-dioxus serve --features web
+dx serve --features web
 ```
 
 Fullstack:
