@@ -18,5 +18,5 @@ dx serve --features web
 Fullstack:
 
 ```sh
-dioxus serve --platform fullstack --features fullstack
+dx serve --platform fullstack --features fullstack
 ```
