@@ -14,3 +14,9 @@ Web:
 ```sh
 dx serve --features web
 ```
+
+Fullstack:
+
+```sh
+dx serve --platform fullstack --features fullstack
+```
