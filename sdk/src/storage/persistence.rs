@@ -12,7 +12,7 @@ use super::StorageEntryTrait;
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 pub fn use_persistent<
-    T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 >(
     key: impl ToString,
     init: impl FnOnce() -> T,
@@ -25,7 +25,7 @@ pub fn use_persistent<
 /// Depending on the platform this uses either local storage or a file storage
 #[allow(clippy::needless_return)]
 pub fn new_persistent<
-    T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 >(
     key: impl ToString,
     init: impl FnOnce() -> T,
@@ -42,7 +42,7 @@ pub fn new_persistent<
 #[allow(clippy::needless_return)]
 #[track_caller]
 pub fn use_singleton_persistent<
-    T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 >(
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
@@ -56,7 +56,7 @@ pub fn use_singleton_persistent<
 #[allow(clippy::needless_return)]
 #[track_caller]
 pub fn new_singleton_persistent<
-    T: Serialize + DeserializeOwned + Default + Clone + Send + Sync + PartialEq + 'static,
+    T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 >(
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
