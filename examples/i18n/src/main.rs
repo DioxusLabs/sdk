@@ -47,8 +47,9 @@ fn Body() -> Element {
     rsx!(
         change_language_dropdown{}
         change_language_btn{}
-        p { {translate!(i18, "messages.hello_world")} }
-        p { {translate!(i18, "messages.hello", name: "Dioxus")}  }
+        p { "Translated in selected language: " {translate!(i18, "messages.hello_world")} }
+        p { "Fallback due to missing translation: " {translate!(i18, "messages.hello", name: "Dioxus")}  }
+        p { "Missing translation and missing in fallback: " {translate!(i18, "unkown_id")}  }
     )
 }
 

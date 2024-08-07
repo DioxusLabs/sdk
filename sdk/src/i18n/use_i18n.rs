@@ -7,7 +7,7 @@ use super::use_init_i18n::UseInitI18Data;
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Language {
-    id: LanguageIdentifier,
+    pub(crate) id: LanguageIdentifier,
     name: String,
     texts: Text,
 }
@@ -63,16 +63,28 @@ impl FromStr for Language {
 }
 
 impl Language {
-    pub fn get_text(&self, path: &str, params: HashMap<&str, String>) -> Option<String> {
+
+    pub fn get_text(&self, path: &str) -> Option<String> {
         let mut steps = path.split('.').collect::<Vec<&str>>();
 
-        let mut text = self.texts.query(&mut steps).unwrap_or_default();
+        self.texts.query(&mut steps)
+    }
+
+    pub fn get_text_with_params(&self, path: &str, params: &HashMap<&str, String>) -> Option<String> {
+        let mut steps = path.split('.').collect::<Vec<&str>>();
+
+        let mut text = match self.texts.query(&mut steps) {
+            Some(text) => text,
+            None => return None, // Return None if query results in None
+        };
 
         for (name, value) in params {
             text = text.replacen(&format!("{{{name}}}"), &value.to_string(), 1);
         }
+
         Some(text)
     }
+
 }
 
 #[derive(Clone, PartialEq, Copy)]
@@ -85,18 +97,14 @@ impl UseI18 {
     pub fn translate_with_params(&self, id: &str, params: HashMap<&str, String>) -> String {
         let i18n_data = self.data.read();
 
-        // Try searching in the selected language
-        for language in i18n_data.languages.iter() {
-            if language.id == *self.selected_language.read() {
-                return language.get_text(id, params).unwrap_or_default();
-            }
+        // Try getting id from current language 
+        if let Some(text) = i18n_data.languages.get(&*self.selected_language.read()).unwrap().get_text_with_params(id, &params) {
+            return text;
         }
-
-        // Otherwise find in the fallback language
-        for language in i18n_data.languages.iter() {
-            if language.id == i18n_data.fallback_language {
-                return language.get_text(id, params).unwrap_or_default();
-            }
+            
+        // Try getting id from fallback language 
+        if let Some(text) = i18n_data.languages.get(&i18n_data.fallback_language).unwrap().get_text_with_params(id, &params) {
+            return text;
         }
 
         // Return the ID as there is no alternative
@@ -104,7 +112,20 @@ impl UseI18 {
     }
 
     pub fn translate(&self, id: &str) -> String {
-        self.translate_with_params(id, HashMap::default())
+        let i18n_data = self.data.read();
+
+        // Try getting id from current language 
+        if let Some(text) = i18n_data.languages.get(&*self.selected_language.read()).unwrap().get_text(id) {
+            return text;
+        }
+            
+        // Try getting id from fallback language 
+        if let Some(text) = i18n_data.languages.get(&i18n_data.fallback_language).unwrap().get_text(id) {
+            return text;
+        }
+
+        // Return the ID as there is no alternative
+        id.to_string()
     }
 
     pub fn set_language(&mut self, id: LanguageIdentifier) {
@@ -113,7 +134,7 @@ impl UseI18 {
 
     pub fn language_list(&mut self) -> Vec<(LanguageIdentifier, String)> {
         let mut languages = Vec::new();
-        for language in self.data.read().languages.iter() {
+        for language in self.data.read().languages.values() {
             languages.push((language.id.clone(), language.name.clone()));
         }
         languages
