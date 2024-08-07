@@ -1,3 +1,5 @@
+//! Interact with location services.
+
 cfg_if::cfg_if! {
     if #[cfg(any(windows, target_family = "wasm"))] {
         pub mod core;
