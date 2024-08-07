@@ -54,7 +54,7 @@ fn Body() -> Element {
 }
 
 fn app() -> Element {
-    use_init_i18n("en-US".parse().unwrap(), "en-US".parse().unwrap(), || {
+    use_init_i18n("en-US".parse().unwrap(), FallbackLanguage::Single("en-US".parse().unwrap()), || {
         let en_us = Language::from_str(EN_US).unwrap();
         let es_es = Language::from_str(ES_ES).unwrap();
         vec![en_us, es_es]
