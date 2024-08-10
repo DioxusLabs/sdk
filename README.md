@@ -82,7 +82,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-sdk` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-sdk = { version = "0.5", features = [] }
+dioxus-sdk = { version = "0.6", features = [] }
 ```
 
 ## License
