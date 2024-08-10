@@ -61,8 +61,8 @@ pub fn use_clipboard() -> UseClipboard {
     let clipboard = match try_consume_context() {
         Some(rt) => rt,
         None => {
-            let clipboard = ScopeId::ROOT.in_runtime(|| ClipboardContext::new().ok());
-            let clipboard_signal = Signal::new_in_scope(clipboard, ScopeId::ROOT);
+            let clipboard_signal =
+                Signal::new_in_scope(ClipboardContext::new().ok(), ScopeId::ROOT);
             provide_root_context(clipboard_signal)
         }
     };
