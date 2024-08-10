@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Jonathan Kelley", "Dioxus Labs", "ealmloff", "DogeDark", "marc2332"]
 edition = "2021"
 description = "Platform agnostic library for supercharging your productivity with Dioxus"
