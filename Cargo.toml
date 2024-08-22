@@ -7,3 +7,4 @@ members = ["sdk", "examples/*"]
 dioxus-sdk = { path = "./sdk" }
 dioxus = { version = "0.6.0-alpha.2" }
 dioxus-desktop = { version = "0.6.0-alpha.2" }
+dioxus-signals = { version = "0.6.0-alpha.2" }
