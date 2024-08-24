@@ -1,0 +1,10 @@
+{
+    "id": "it-IT",
+    "name": "Italiano",
+    "texts": {
+        "messages": {
+            "hello_world": "Ciao Mondo!"
+        },
+        "messages.hello": "Ciao {name}"
+    }
+}

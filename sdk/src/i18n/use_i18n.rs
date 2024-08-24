@@ -104,28 +104,28 @@ impl UseI18 {
                 }
             }, 
             FallbackLanguage::Map(fallback) => {
-                
-                let lang = match fallback.map.get(&*self.selected_language.read()){
-                    Some(list) => {
-                        let mut result = &fallback.default;
-                        for language in list.iter(){
-                            if i18n_data.languages.contains_key(language) { 
-                                result = language;
-                                break;
-                            }
-                        }
-                        result
-                    },
-                    None => &fallback.default,
-                };
 
-                if let Some(text) = i18n_data.languages.get(lang).unwrap().get_text(id) {
+                let key = &*self.selected_language.read();
+                // matches either full identifier or just the language
+                if let Some(list) = fallback.map.get(key).or_else(|| fallback.map.get(&LanguageIdentifier::from_parts(key.language, None, None, &[])))
+                {
+                    for language in list.iter(){   
+                        if i18n_data.languages.contains_key(language) { 
+                            if let Some(text) = i18n_data.languages.get(language).unwrap().get_text(id) {
+                                return text;
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                if let Some(text) = i18n_data.languages.get(&fallback.default).unwrap().get_text(id) {
                     return text;
                 }
+                
             }
         }
         
-
         // Return the ID as there is no alternative
         id.to_string()
     }
