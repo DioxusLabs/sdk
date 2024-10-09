@@ -78,6 +78,10 @@ pub struct UseI18 {
 }
 
 impl UseI18 {
+    pub fn selected(&self) -> LanguageIdentifier {
+        self.selected_language.read()
+    }
+    
     pub fn translate_with_params(&self, id: &str, params: HashMap<&str, String>) -> String {
         let mut text = self.translate(id);
 

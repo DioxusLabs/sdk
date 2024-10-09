@@ -37,7 +37,11 @@ fn change_language_dropdown() -> Element {
                 i18.set_language(ev.value().parse().unwrap())
             },
             {(i18.language_list().iter()).map(|(id, name)| {
-                rsx! { option { value: id.to_string(), "{name}" }}
+                rsx! { option { 
+                    value: id.to_string(), 
+                    selected: if i18.selected().eq(id) {"true"} else {"false"},
+                    "{name}" 
+                }}
             })}
         }
     }
