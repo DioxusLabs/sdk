@@ -19,7 +19,7 @@ static IT_IT: &str = include_str!("./it-IT.json");
 fn change_language_btn() -> Element {
     let mut i18 = use_i18();
     rsx! {{
-        (i18.language_list().iter()).map(|(id, name)| {
+        (i18.language_list().iter()).map(|(id, name, img)| {
             let id = id.clone();
             rsx! { button {
                     onclick: move |_| { i18.set_language(id.clone()); },
@@ -36,10 +36,10 @@ fn change_language_dropdown() -> Element {
             oninput: move |ev| {
                 i18.set_language(ev.value().parse().unwrap())
             },
-            {(i18.language_list().iter()).map(|(id, name)| {
+            {(i18.language_list().iter()).map(|(id, name, img)| {
                 rsx! { option { 
                     value: id.to_string(), 
-                    selected: if i18.selected().eq(id) {"true"} else {"false"},
+                    selected: i18.is_selected(id),
                     "{name}" 
                 }}
             })}

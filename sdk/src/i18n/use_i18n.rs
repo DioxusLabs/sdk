@@ -8,7 +8,8 @@ use super::use_init_i18n::{UseInitI18Data, FallbackLanguage};
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Language {
     pub(crate) id: LanguageIdentifier,
-    name: String,
+    name: Option<String>, // better way to add localized language name
+    img: Option<String>,  // better way to connect e.g. flag image with the language
     texts: Text,
 }
 
@@ -78,10 +79,10 @@ pub struct UseI18 {
 }
 
 impl UseI18 {
-    pub fn selected(&self) -> LanguageIdentifier {
-        self.selected_language.read()
+    pub fn is_selected(&self, lang: &LanguageIdentifier) -> &str {
+        if self.selected_language.read().eq(lang) {"true"} else {"false"}
     }
-    
+
     pub fn translate_with_params(&self, id: &str, params: HashMap<&str, String>) -> String {
         let mut text = self.translate(id);
 
@@ -138,10 +139,10 @@ impl UseI18 {
         *self.selected_language.write() = id;
     }
 
-    pub fn language_list(&mut self) -> Vec<(LanguageIdentifier, String)> {
+    pub fn language_list(&mut self) -> Vec<(LanguageIdentifier, String, String)> {
         let mut languages = Vec::new();
         for language in self.data.read().languages.values() {
-            languages.push((language.id.clone(), language.name.clone()));
+            languages.push((language.id.clone(), language.name.clone().unwrap_or(language.id.to_string()), language.img.clone().unwrap_or("".to_owned())));
         }
         languages
     }
