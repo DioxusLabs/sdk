@@ -1,7 +1,7 @@
-# use_i18n
+# i18n
 
-Learn how to use `use_i18n`.
+i18n for web or single window on desktop.
 
 Run:
 
-```dioxus serve```
+```dx serve --bin i18n```

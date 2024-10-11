@@ -1,3 +1,12 @@
+/// macro to translate from id
+/// 
+/// Example 
+/// ```
+/// translate!(i18, "id")
+/// 
+/// translate!(i18, "id", param: "value")
+/// 
+/// ```
 #[macro_export]
 macro_rules! translate {
     ( $i18:expr, $id:expr, $( $name:ident : $value:expr ),* ) => {

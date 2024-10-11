@@ -1,0 +1,9 @@
+{
+    "id": "es-ES",
+    "name": "Español",
+    "texts": {
+        "messages": {
+            "hello_world": "Hola Mundo!"
+        }
+    }
+}

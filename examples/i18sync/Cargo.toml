@@ -1,0 +1,16 @@
+[package]
+name = "i18sync"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { workspace = true, features = ["desktop"] }
+dioxus-sdk = { workspace = true, features = ["i18n"] }
+
+log = "0.4.6"
+
+
+
+
+
+
