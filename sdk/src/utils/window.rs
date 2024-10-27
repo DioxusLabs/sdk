@@ -1,7 +1,8 @@
 //! Utilities for the window.
 
-use dioxus::prelude::warnings::{
-    signal_read_and_write_in_reactive_scope, signal_write_in_component_body,
+use dioxus::prelude::{
+    provide_root_context, try_use_context, use_hook, warnings::signal_write_in_component_body,
+    ReadOnlySignal, ScopeId, Signal, Writable,
 };
 use std::sync::Once;
 use warnings::Warning as _;
@@ -78,9 +79,7 @@ fn listen(mut window_size: Signal<WindowSize>) {
                 .unwrap_or(0.0) as u32;
 
             signal_write_in_component_body::allow(move || {
-                signal_read_and_write_in_reactive_scope::allow(move || {
-                    window_size.set(WindowSize { width, height });
-                });
+                window_size.set(WindowSize { width, height });
             });
         }) as Box<dyn FnMut()>);
 
@@ -103,11 +102,9 @@ fn listen(mut window_size: Signal<WindowSize>) {
         } = event
         {
             signal_write_in_component_body::allow(move || {
-                signal_read_and_write_in_reactive_scope::allow(move || {
-                    window_size.set(WindowSize {
-                        width: size.width,
-                        height: size.height,
-                    });
+                window_size.set(WindowSize {
+                    width: size.width,
+                    height: size.height,
                 });
             });
         }

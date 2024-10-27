@@ -7,6 +7,7 @@ edition = "2021"
 dioxus-sdk = { workspace = true, features = ["timing"] }
 dioxus = { workspace = true }
 dioxus-logger = "0.5.1"
+warnings = "0.2.0"
 
 [features]
 web = ["dioxus/web"]

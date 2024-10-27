@@ -1,7 +1,8 @@
-use dioxus::prelude::*;
+use ::warnings::Warning;
+use dioxus::prelude::{warnings::signal_write_in_component_body, *};
 use dioxus_logger::tracing::{info, Level};
 use dioxus_sdk::utils::timing::{use_debounce, use_interval};
-use std::time::Duration;
+use std::{any::TypeId, time::Duration};
 
 fn main() {
     dioxus_logger::init(Level::INFO).expect("logger failed to init");
@@ -12,7 +13,7 @@ fn app() -> Element {
     let mut count = use_signal(|| 0);
 
     // using `use_interval`, we increment the count by 1 every 100 milliseconds.
-    use_interval(Duration::from_millis(100), move || {
+    use_interval(Duration::from_millis(1000), move || {
         count += 1;
     });
 
