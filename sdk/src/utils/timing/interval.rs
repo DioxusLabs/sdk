@@ -1,6 +1,5 @@
-use dioxus::prelude::{use_hook, warnings::signal_write_in_component_body, Callback, Writable};
+use dioxus::prelude::{use_hook, Callback, Writable};
 use std::time::Duration;
-use warnings::Warning;
 
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {
@@ -11,7 +10,6 @@ struct InnerUseInterval {
     pub(crate) interval: Option<dioxus::prelude::Task>,
 }
 
-#[cfg(target_family = "wasm")]
 impl Drop for InnerUseInterval {
     fn drop(&mut self) {
         if let Some(interval) = self.interval.take() {
@@ -35,17 +33,6 @@ pub fn use_interval(period: Duration, mut action: impl FnMut() + 'static) -> Use
         let callback = Callback::new(move |()| {
             action();
         });
-
-        // #[cfg(target_family = "wasm")]
-        // return dioxus::prelude::Signal::new(InnerUseInterval {
-        //     interval: Some(gloo_timers::callback::Interval::new(
-        //         period.as_millis() as u32,
-        //         move || {
-        //             callback.call(());
-        //             //action();
-        //         },
-        //     )),
-        // });
 
         dioxus::prelude::Signal::new(InnerUseInterval {
             interval: Some(dioxus::prelude::spawn(async move {

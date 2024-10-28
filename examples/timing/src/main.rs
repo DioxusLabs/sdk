@@ -1,8 +1,7 @@
-use ::warnings::Warning;
-use dioxus::prelude::{warnings::signal_write_in_component_body, *};
+use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use dioxus_sdk::utils::timing::{use_debounce, use_interval};
-use std::{any::TypeId, time::Duration};
+use std::time::Duration;
 
 fn main() {
     dioxus_logger::init(Level::INFO).expect("logger failed to init");
