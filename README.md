@@ -86,8 +86,6 @@ dioxus-sdk = { version = "0.5", features = [] }
 ```
 
 ## License
-This project is licensed under the [MIT license].
+This project is dual licensed under the [MIT](./LICENSE-MIT) and [Apache 2.0](./LICENSE-APACHE) licenses.
 
-[mit license]: ./LICENSE
-
-Every contribution intentionally submitted for inclusion in `dioxus-sdk` by you, shall be licensed as MIT, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `dioxus-sdk` by you, shall be licensed as MIT or Apache 2.0, without any additional terms or conditions.
