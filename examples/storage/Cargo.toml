@@ -11,4 +11,4 @@ dioxus = { workspace = true, features = ["router"] }
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
-server = ["dioxus/axum"]
+server = ["dioxus/server"]
