@@ -59,14 +59,6 @@ window_size = [
     "dep:wasm-bindgen",
 ]
 channel = ["dep:async-broadcast", "uuid/v4"]
-i18n = [
-    # Shared
-    "dep:serde",
-    "dep:serde_json",
-
-    # Non Shared
-    "dep:unic-langid",
-]
 storage = [
     # Shared
     "dep:rustc-hash",
@@ -106,7 +98,6 @@ wasm-testing = [
     "channel",
     "window_size",
     "timing",
-    "i18n",
     "storage",
 ]
 desktop-testing = [
@@ -116,7 +107,6 @@ desktop-testing = [
     "geolocation",
     "channel",
     "window_size",
-    "i18n",
     "timing",
     "storage",
 ]
@@ -146,11 +136,6 @@ async-broadcast = { version = "0.5.1", optional = true }
 futures = { version = "0.3.28", features = ["std"], optional = true }
 futures-util = { version = "0.3.28", optional = true }
 
-# Used by: i18n
-serde = { version = "1.0.163", optional = true }
-serde_json = { version = "1.0.96", optional = true }
-unic-langid = { version = "0.9.1", features = ["serde"], optional = true }
-
 # Used by: storage
 rustc-hash = { version = "1.1.0", optional = true }
 postcard = { version = "1.0.2", features = ["use-std"], optional = true }
@@ -158,6 +143,7 @@ once_cell = { version = "1.17.0", optional = true }
 dioxus-signals = { workspace = true, features = [
     "serialize",
 ], optional = true }
+serde = { version = "1.0.163", optional = true }
 
 yazi = { version = "0.1.4", optional = true }
 tracing = "0.1.40"

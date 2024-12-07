@@ -34,7 +34,6 @@
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
 - [x] Color Scheme - (Web)
-- [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
   - [x] use_window_size
