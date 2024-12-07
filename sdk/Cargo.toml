@@ -29,6 +29,7 @@ geolocation = [
     "windows/Devices_Geolocation",
 
     # Wasm
+    "web-sys/Window",
     "web-sys/Navigator",
     "web-sys/Geolocation",
     "web-sys/PositionOptions",

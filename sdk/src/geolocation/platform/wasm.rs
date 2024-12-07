@@ -184,10 +184,12 @@ pub fn listen(
 
 /// Set the device's power mode.
 pub fn set_power_mode(geolocator: &mut Geolocator, power_mode: PowerMode) -> Result<(), Error> {
-    match power_mode {
-        PowerMode::High => geolocator.options.enable_high_accuracy(true),
-        PowerMode::Low => geolocator.options.enable_high_accuracy(false),
+    let value = match power_mode {
+        PowerMode::High => true,
+        PowerMode::Low => false,
     };
+
+    geolocator.options.set_enable_high_accuracy(value);
 
     Ok(())
 }
