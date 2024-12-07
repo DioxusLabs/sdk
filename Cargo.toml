@@ -2,8 +2,8 @@
 resolver = "2"
 members = ["sdk", "examples/*"]
 
-
 [workspace.dependencies]
 dioxus-sdk = { path = "./sdk" }
-dioxus = { version = "0.5" }
-dioxus-desktop = { version = "0.5" }
+dioxus = { version = "0.6.0" }
+dioxus-desktop = { version = "0.6.0" }
+dioxus-signals = { version = "0.6.0" }

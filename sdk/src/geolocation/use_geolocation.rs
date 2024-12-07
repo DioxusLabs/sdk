@@ -20,7 +20,7 @@ pub fn use_geolocation() -> ReadOnlySignal<Result<Geocoordinates, Error>> {
         use_signal(|| Err(Error::NotInitialized));
 
     // Initialize the handler of events
-    let listener = use_coroutine(|mut rx: UnboundedReceiver<Event>| async move {
+    let listener = use_coroutine(move |mut rx: UnboundedReceiver<Event>| async move {
         while let Some(event) = rx.next().await {
             match event {
                 Event::NewGeocoordinates(new_coords) => {

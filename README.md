@@ -34,7 +34,6 @@
 - [x] Clipboard - (Desktop)
 - [x] Notifications - (Desktop)
 - [x] Color Scheme - (Web)
-- [x] i18n
 - [x] Utility Hooks 
   - [x] use_channel
   - [x] use_window_size
@@ -82,7 +81,7 @@ sudo apt-get install xorg-dev
 You can add `dioxus-sdk` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-sdk = { version = "0.5", features = [] }
+dioxus-sdk = { version = "0.6", features = [] }
 ```
 
 ## License

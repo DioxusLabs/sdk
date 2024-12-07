@@ -19,12 +19,6 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "i18n")] {
-        pub mod i18n;
-    }
-}
-
-cfg_if::cfg_if! {
     if #[cfg(feature = "clipboard")] {
         pub mod clipboard;
     }

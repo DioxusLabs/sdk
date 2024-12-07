@@ -10,5 +10,3 @@ dioxus = { workspace = true }
 [features]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
-
-

@@ -5,10 +5,9 @@ edition = "2021"
 
 [dependencies]
 dioxus-sdk = { workspace = true, features = ["timing"] }
-dioxus = { workspace = true, features = ["desktop"] }
+dioxus = { workspace = true }
+dioxus-logger = "0.5.1"
 
-log = "0.4.6"
-
-# WebAssembly Debug
-wasm-logger = "0.2.0"
-console_error_panic_hook = "0.1.7"
+[features]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
