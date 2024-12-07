@@ -2,9 +2,19 @@ name: Rust
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - main
+    paths:
+      - sdk/**
+      - examples/**
+      
   pull_request:
-    branches: [ "master" ]
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - sdk/**
+      - examples/**
 
 env:
   CARGO_TERM_COLOR: always
