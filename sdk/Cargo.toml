@@ -63,7 +63,7 @@ channel = ["dep:async-broadcast", "uuid/v4"]
 storage = [
     # Shared
     "dep:rustc-hash",
-    "dep:postcard",
+    "dep:ciborium",
     "dep:once_cell",
     "dep:dioxus-signals",
     "dep:tokio",
@@ -139,7 +139,7 @@ futures-util = { version = "0.3.28", optional = true }
 
 # Used by: storage
 rustc-hash = { version = "1.1.0", optional = true }
-postcard = { version = "1.0.2", features = ["use-std"], optional = true }
+ciborium = { version = "0.2.2", optional = true }
 once_cell = { version = "1.17.0", optional = true }
 dioxus-signals = { workspace = true, features = [
     "serialize",

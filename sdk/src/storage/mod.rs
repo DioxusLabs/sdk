@@ -37,7 +37,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
-use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
 use std::any::Any;
 use std::fmt::{Debug, Display};
@@ -548,7 +547,8 @@ impl Default for StorageChannelPayload {
 
 /// Serializes a value to a string and compresses it.
 pub(crate) fn serde_to_string<T: Serialize>(value: &T) -> String {
-    let serialized = to_allocvec(value).unwrap();
+    let mut serialized = Vec::new();
+    ciborium::into_writer(value, &mut serialized).unwrap();
     let compressed = yazi::compress(
         &serialized,
         yazi::Format::Zlib,
@@ -584,13 +584,9 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
         let n2 = c2.to_digit(16)?;
         bytes.push((n1 * 16 + n2) as u8);
     }
-    match yazi::decompress(&bytes, yazi::Format::Zlib) {
-        Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        },
-        Err(_) => None,
-    }
+
+    let (decompressed, _) = yazi::decompress(&bytes, yazi::Format::Zlib).unwrap();
+    ciborium::from_reader(std::io::Cursor::new(decompressed)).unwrap()
 }
 
 // Take a signal and a storage key and hydrate the value if we are hydrating the client.
