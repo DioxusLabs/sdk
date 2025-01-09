@@ -37,8 +37,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
-use postcard::to_allocvec;
 use serde::{de::DeserializeOwned, Serialize};
+use serde_cbor;
 use std::any::Any;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};
@@ -548,7 +548,7 @@ impl Default for StorageChannelPayload {
 
 /// Serializes a value to a string and compresses it.
 pub(crate) fn serde_to_string<T: Serialize>(value: &T) -> String {
-    let serialized = to_allocvec(value).unwrap();
+    let serialized = serde_cbor::to_vec(&value).unwrap();
     let compressed = yazi::compress(
         &serialized,
         yazi::Format::Zlib,
@@ -585,7 +585,7 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
         bytes.push((n1 * 16 + n2) as u8);
     }
     match yazi::decompress(&bytes, yazi::Format::Zlib) {
-        Ok((decompressed, _)) => match postcard::from_bytes(&decompressed) {
+        Ok((decompressed, _)) => match serde_cbor::from_slice(&decompressed) {
             Ok(v) => Some(v),
             Err(_) => None,
         },
