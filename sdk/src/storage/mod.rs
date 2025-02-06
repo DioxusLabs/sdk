@@ -585,8 +585,13 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
         bytes.push((n1 * 16 + n2) as u8);
     }
 
-    let (decompressed, _) = yazi::decompress(&bytes, yazi::Format::Zlib).unwrap();
-    ciborium::from_reader(std::io::Cursor::new(decompressed)).unwrap()
+    match yazi::decompress(&bytes, yazi::Format::Zlib) {
+        Ok((decompressed, _)) => match ciborium::from_reader(std::io::Cursor::new(decompressed)) {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    }
 }
 
 // Take a signal and a storage key and hydrate the value if we are hydrating the client.
