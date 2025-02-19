@@ -10,7 +10,7 @@ futures-util = { workspace = true }
 cfg-if ={ workspace = true }
 
 rustc-hash = "1.1.0"
-postcard = { version = "1.0.2", features = ["use-std"] }
+ciborium = "0.2.2"
 once_cell = "1.17.0"
 dioxus-signals = { workspace = true, features = ["serialize"] }
 serde = "1.0.163"
