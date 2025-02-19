@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_sdk::utils::window::{get_window_size, use_window_size};
+use dioxus_window::size::{get_window_size, use_window_size};
 
 fn main() {
     launch(App);

@@ -3,10 +3,11 @@ use dioxus_storage::*;
 
 fn main() {
     dioxus_storage::set_dir!();
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     rsx! {
         Router::<Route> {}
     }
@@ -32,7 +33,7 @@ fn Footer() -> Element {
                 div {
                     button {
                         onclick: move |_| {
-                            let dom = VirtualDom::new(app);
+                            let dom = VirtualDom::new(App);
                             window.new_window(dom, Default::default());
                         },
                         "New Window"

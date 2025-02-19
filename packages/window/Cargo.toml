@@ -1,8 +1,8 @@
 [package]
-name = "dioxus-time"
+name = "dioxus-window"
 version = "0.1.0"
 
-description = "Timing utilities and hooks for Dioxus."
+description = "Window utilities and hooks for Dioxus."
 readme = "./README.md"
 keywords = ["gui", "dioxus", "hooks"]
 categories = ["gui", "wasm"]
@@ -15,10 +15,10 @@ repository.workspace = true
 
 [dependencies]
 dioxus = { workspace = true }
-futures = { workspace = true }
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-tokio = { workspace = true, features = ["time"]}
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-gloo-timers = { version = "0.3.0", features = ["futures"] }
+web-sys = { workspace = true, features = ["Window", "MediaQueryList"] }
+wasm-bindgen = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+dioxus-desktop = { workspace = true }

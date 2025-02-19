@@ -1,7 +1,7 @@
-# use_interval
+# dioxus-time example
 
-Learn how to use `use_interval`.
+Learn how to use the `use_interval` and `use_debounce` hooks in `dioxus-time`.
 
 Run:
 
-```dioxus serve```
+```dx serve```

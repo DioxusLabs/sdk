@@ -1,5 +1,12 @@
 # Dioxus Notification
-Send desktop notifications.
+Send notifications from your Dioxus apps.
+
+### Supports
+- [x] Windows
+- [x] Mac
+- [x] Linux
+- [ ] Android
+- [ ] iOs
 
 ## Usage
 Add `dioxus-notification` to your `Cargo.toml`:

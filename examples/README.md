@@ -1,16 +1,16 @@
 # Examples
 
 ### [`system_theme`](./system_theme/)
-Learn how to use `use_system_theme`.
+Learn how to use `use_theme` from `dioxus-window`.
 
 ### [`geolocation`](./geolocation/)
-Learn how to use the `geolocation` abstraction.
+Learn how to use `dioxus-geolocation`.
 
 ### [`channel`](./channel/)
-Learn how to use the `channel` abstraction.
+Learn how to use the `use_channel` hook in `dioxus-sync`.
 
 ### [`storage`](./storage/)
-Learn how to use the `storage` abstraction.
+Learn how to use `dioxus-storage`.
 
 ### [`clipboard`](./clipboard/)
-Learn how to use the `clipboard` abstraction.
+Learn how to use `dioxus-clipboard`.

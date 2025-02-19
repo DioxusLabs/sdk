@@ -2,10 +2,11 @@ use dioxus::prelude::*;
 use dioxus_geolocation::{init_geolocator, use_geolocation, PowerMode};
 
 fn main() {
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     let geolocator = init_geolocator(PowerMode::High);
     let initial_coords = use_resource(move || async move {
         geolocator

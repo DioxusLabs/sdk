@@ -1,28 +1,17 @@
-# Dioxus Clipboard
-Access the device clipboard from your Dioxus apps.
+# Dioxus Window
+Window utilities for Dioxus.
+
+### Features:
+- [x] Theme
+- [x] Window Size
 
 ## Usage
-Add `dioxus-clipboard` to your `Cargo.toml`:
+Add `dioxus-window` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-clipboard = "0.1"
+dioxus-window = "0.1"
 ```
 
-Example:
-```rs
-use dioxus_clipboard::use_clipboard;
-
-// Get a handle to the clipboard
-let mut clipboard = use_clipboard();
-
-// Read the clipboard content
-if let Ok(content) = clipboard.get() {
-    println!("{}", content);
-}
-
-// Write to the clipboard
-clipboard.set("Hello, Dioxus!".to_string());
-```
 
 ### Dioxus Compatibility
 This table represents the compatibility between this crate and Dioxus versions.

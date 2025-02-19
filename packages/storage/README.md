@@ -2,8 +2,8 @@
 Local and persistent storage utilities for Dioxus.
 
 ### Features:
-- [x] `use_interval`
-- [x] `use_debounce`
+- [x] Local Storage
+- [x] Persistent Storage
 
 ## Usage
 Add `dioxus-storage` to your `Cargo.toml`:

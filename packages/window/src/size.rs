@@ -1,16 +1,16 @@
-//! Utilities for the window.
+//! Window Size
 
 use dioxus::prelude::{
     provide_root_context, try_use_context, use_hook, warnings::signal_write_in_component_body,
     ReadOnlySignal, ScopeId, Signal, Writable,
 };
+use dioxus::warnings::Warning as _;
 use std::sync::Once;
-use warnings::Warning as _;
 
 #[allow(dead_code)]
 static INIT: Once = Once::new();
 
-/// Stores the width and height of a window, screen, or viewport.
+/// Stores the width and height of a window.
 #[derive(Clone, Copy, Debug)]
 pub struct WindowSize {
     /// The horizontal size in pixels.
@@ -19,7 +19,7 @@ pub struct WindowSize {
     pub height: u32,
 }
 
-/// A hook for receiving the size of the Window.
+/// A hook for receiving the window size.
 ///
 /// The initial window size will be returned with this hook and
 /// updated continously as the window is resized.
@@ -28,7 +28,7 @@ pub struct WindowSize {
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_sdk::utils::window::use_window_size;
+/// use dioxus_window::size::use_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
@@ -117,7 +117,7 @@ fn listen(mut window_size: Signal<WindowSize>) {
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_sdk::utils::window::get_window_size;
+/// use dioxus_window::size::get_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_signal(get_window_size);
@@ -129,12 +129,12 @@ fn listen(mut window_size: Signal<WindowSize>) {
 /// }
 /// ```
 pub fn get_window_size() -> WindowSize {
-    get_window_size_platform()
+    get_size_platform()
 }
 
 // Web implementation of size getter.
 #[cfg(target_family = "wasm")]
-fn get_window_size_platform() -> WindowSize {
+fn get_size_platform() -> WindowSize {
     use wasm_bindgen::JsValue;
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
 
@@ -156,7 +156,7 @@ fn get_window_size_platform() -> WindowSize {
 
 // Desktop implementation of size getter.
 #[cfg(not(target_family = "wasm"))]
-fn get_window_size_platform() -> WindowSize {
+fn get_size_platform() -> WindowSize {
     let window = dioxus_desktop::window();
     let size = window.inner_size();
     WindowSize {

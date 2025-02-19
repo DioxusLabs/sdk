@@ -2,6 +2,12 @@
 resolver = "2"
 members = ["packages/*", "examples/*"]
 
+package.authors = ["Dioxus Labs", "Jonathan Kelley", "DogeDark", "marc2332", "ealmloff"]
+package.edition = "2021"
+package.license = "MIT OR Apache-2.0"
+package.homepage = "https://dioxuslabs.com"
+package.repository = "https://github.com/DioxusLabs/sdk/"
+
 [workspace.dependencies]
 # Workspace
 dioxus-time = { path = "packages/time" }
@@ -9,10 +15,12 @@ dioxus-storage = { path = "packages/storage" }
 dioxus-clipboard = { path = "packages/clipboard" }
 dioxus-geolocation = { path = "packages/geolocation" }
 dioxus-sync = { path = "packages/sync" }
+dioxus-window = { path = "packages/window" }
 
 # Dioxus
 dioxus = "0.6.0"
 dioxus-signals = "0.6.0"
+dioxus-desktop = "0.6.0"
 
 # Deps
 cfg-if = "1.0.0"
@@ -24,9 +32,7 @@ wasm-bindgen = "0.2.100"
 web-sys = "0.3.77"
 js-sys = "0.3.77"
 
-dioxus-sdk = { path = "./sdk" }
-dioxus-desktop = { version = "0.6.0" }
-
+# DX Profiles
 [profile]
 
 [profile.wasm-dev]

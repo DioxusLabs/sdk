@@ -2,10 +2,11 @@ use dioxus::prelude::*;
 use dioxus_clipboard::use_clipboard;
 
 fn main() {
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     let mut clipboard = use_clipboard();
     let mut text = use_signal(String::new);
 

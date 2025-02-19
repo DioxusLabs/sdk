@@ -29,7 +29,6 @@ macro_rules! set_dir {
     };
 }
 
-
 cfg_if::cfg_if! {
     if #[cfg(target_family = "wasm")] {
         pub mod web;

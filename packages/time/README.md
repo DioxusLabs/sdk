@@ -2,8 +2,9 @@
 Timing utilities and hooks for Dioxus.
 
 ### Features:
-- [x] `use_interval`
-- [x] `use_debounce`
+- [x] Intervals
+- [x] Debounces
+- [ ] Timeouts
 
 ## Usage
 Add `dioxus-time` to your `Cargo.toml`:

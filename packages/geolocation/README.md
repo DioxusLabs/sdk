@@ -1,5 +1,5 @@
 # Dioxus Geolocation
-Geolocation utilities for Dioxus.
+Geolocation utilities and hooks for Dioxus.
 
 ### Supports
 - [x] Web
