@@ -1,0 +1,14 @@
+[package]
+name = "dioxus-time"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { workspace = true }
+futures = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["time"]}
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+gloo-timers = { version = "0.3.0", features = ["futures"] }

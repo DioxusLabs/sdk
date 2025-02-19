@@ -1,0 +1,23 @@
+[package]
+name = "dioxus-storage"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+futures-util = { workspace = true }
+cfg-if ={ workspace = true }
+
+rustc-hash = "1.1.0"
+postcard = { version = "1.0.2", features = ["use-std"] }
+once_cell = "1.17.0"
+dioxus-signals = { workspace = true, features = ["serialize"] }
+serde = "1.0.163"
+yazi = "0.1.4"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+directories = "4.0.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = { workspace = true }

@@ -1,9 +1,40 @@
 [workspace]
 resolver = "2"
-members = ["sdk", "examples/*"]
+members = ["packages/*", "examples/*"]
 
 [workspace.dependencies]
+# Workspace
+dioxus-time = { path = "packages/time" }
+dioxus-storage = { path = "packages/storage" }
+dioxus-clipboard = { path = "packages/clipboard" }
+dioxus-geolocation = { path = "packages/geolocation" }
+dioxus-sync = { path = "packages/sync" }
+
+# Dioxus
+dioxus = "0.6.0"
+dioxus-signals = "0.6.0"
+
+# Deps
+cfg-if = "1.0.0"
+tokio = "1.43.0"
+futures = "0.3.31"
+futures-util = "0.3.31"
+
+wasm-bindgen = "0.2.100"
+web-sys = "0.3.77"
+js-sys = "0.3.77"
+
 dioxus-sdk = { path = "./sdk" }
-dioxus = { version = "0.6.0" }
 dioxus-desktop = { version = "0.6.0" }
-dioxus-signals = { version = "0.6.0" }
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

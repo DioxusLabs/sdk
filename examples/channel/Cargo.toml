@@ -4,12 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["channel"] }
-dioxus = { workspace = true, features = ["web"] }
+dioxus = { workspace = true }
+dioxus-sync = { workspace = true }
 
-
-log = "0.4.6"
-
-# WebAssembly Debug
-wasm-logger = "0.2.0"
-console_error_panic_hook = "0.1.7"
+[features]
+default = ["desktop"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]

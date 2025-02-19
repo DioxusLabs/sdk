@@ -1,21 +1,18 @@
-use dioxus::prelude::*;
-use dioxus_sdk::utils::channel::{use_channel, use_listen_channel};
+use dioxus::{logger::tracing::info, prelude::*};
+use dioxus_sync::channel::{use_channel, use_listen_channel};
 
 fn main() {
-    // init debug tool for WebAssembly
-    wasm_logger::init(wasm_logger::Config::default());
-    console_error_panic_hook::set_once();
-
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     let channel = use_channel::<String>(5);
 
     use_listen_channel(&channel, |message| async {
         match message {
-            Ok(value) => log::info!("Incoming message: {value}"),
-            Err(err) => log::info!("Error: {err:?}"),
+            Ok(value) => info!("Incoming message: {value}"),
+            Err(err) => info!("Error: {err:?}"),
         }
     });
 

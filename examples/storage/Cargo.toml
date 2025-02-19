@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["storage"] }
 dioxus = { workspace = true, features = ["router"] }
+dioxus-storage = { workspace = true }
 
 [features]
+default = ["desktop"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]

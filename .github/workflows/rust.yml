@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - sdk/**
+      - packages/**
       - examples/**
       
   pull_request:
@@ -13,7 +13,7 @@ on:
     branches:
       - main
     paths:
-      - sdk/**
+      - packages/**
       - examples/**
 
 env:

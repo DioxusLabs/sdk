@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["geolocation"] }
-# You can change from 'desktop' to 'web' as well
-dioxus = { workspace = true, features = ["desktop"] } 
+dioxus = { workspace = true } 
+dioxus-geolocation = { workspace = true }
+
+[features]
+default = ["desktop"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
 

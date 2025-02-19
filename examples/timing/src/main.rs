@@ -1,14 +1,13 @@
-use dioxus::prelude::*;
-use dioxus_logger::tracing::{info, Level};
-use dioxus_sdk::utils::timing::{use_debounce, use_interval};
+use dioxus::{logger::tracing::info, prelude::*};
+use dioxus_time::{use_debounce, use_interval};
 use std::time::Duration;
 
 fn main() {
-    dioxus_logger::init(Level::INFO).expect("logger failed to init");
-    launch(app);
+    launch(App);
 }
 
-fn app() -> Element {
+#[component]
+fn App() -> Element {
     let mut count = use_signal(|| 0);
 
     // using `use_interval`, we increment the count by 1 every second.

@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["timing"] }
 dioxus = { workspace = true }
-dioxus-logger = "0.5.1"
+dioxus-time = { workspace = true }
 
 [features]
+default = ["desktop"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
