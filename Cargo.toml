@@ -12,7 +12,6 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 # Workspace
 dioxus-time = { path = "packages/time" }
 dioxus-storage = { path = "packages/storage" }
-dioxus-clipboard = { path = "packages/clipboard" }
 dioxus-geolocation = { path = "packages/geolocation" }
 dioxus-sync = { path = "packages/sync" }
 dioxus-window = { path = "packages/window" }
@@ -21,6 +20,7 @@ dioxus-window = { path = "packages/window" }
 dioxus = "0.6.0"
 dioxus-signals = "0.6.0"
 dioxus-desktop = "0.6.0"
+dioxus-config-macro = "0.6.0"
 
 # Deps
 cfg-if = "1.0.0"

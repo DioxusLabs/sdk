@@ -15,6 +15,7 @@ repository.workspace = true
 
 [dependencies]
 dioxus = { workspace = true }
+dioxus-config-macro = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 web-sys = { workspace = true, features = ["Window", "MediaQueryList"] }

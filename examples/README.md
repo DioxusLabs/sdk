@@ -11,6 +11,3 @@ Learn how to use the `use_channel` hook in `dioxus-sync`.
 
 ### [`storage`](./storage/)
 Learn how to use `dioxus-storage`.
-
-### [`clipboard`](./clipboard/)
-Learn how to use `dioxus-clipboard`.

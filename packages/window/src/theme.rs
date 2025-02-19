@@ -1,13 +1,14 @@
-//! Window Theme
+//! Window theme utilities.
 
 use dioxus::prelude::*;
 use std::{error::Error, fmt::Display};
 
-/// Represents the system theme.
+/// A color theme.
 ///
 /// For any themes other than `light` and `dark`, a [`ThemeError::UnknownTheme`] will be returned.
 /// We may be able to support custom themes in the future.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum Theme {
     Light,
     Dark,
@@ -22,10 +23,10 @@ impl Display for Theme {
     }
 }
 
-/// Represents an error with system theme utilities.
+/// Possible theme errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ThemeError {
-    /// Theme is not supported on this platform.
+    /// Not supported on this platform.
     NotSupported,
     /// Failed to get the system theme.
     CheckFailed,
@@ -54,9 +55,10 @@ type ThemeResult = Result<Theme, ThemeError>;
 
 /// A hook for receiving the system theme.
 ///
-/// The initial theme will be returned and updated if the system theme changes.
+/// On first run, the result will be [`Theme::Light`]. This is so hydration and the client start with the same value.
+/// After the client runs, the theme will be tracked and may update to be a different theme or an error.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;
@@ -73,16 +75,20 @@ type ThemeResult = Result<Theme, ThemeError>;
 /// }
 /// ```
 pub fn use_theme() -> ReadOnlySignal<ThemeResult> {
-    let system_theme = match try_use_context::<Signal<ThemeResult>>() {
+    let mut system_theme = match try_use_context::<Signal<ThemeResult>>() {
         Some(s) => s,
         // This should only run once.
         None => {
-            let signal = Signal::new_in_scope(get_theme(), ScopeId::ROOT);
-            let theme = provide_root_context(signal);
-            listen(theme);
-            theme
+            let signal = Signal::new_in_scope(Ok(Theme::Light), ScopeId::ROOT);
+            provide_root_context(signal)
         }
     };
+
+    // Only start the listener on the client.
+    use_effect(move || {
+        system_theme.set(get_theme());
+        listen(system_theme);
+    });
 
     use_hook(|| ReadOnlySignal::new(system_theme))
 }
@@ -152,9 +158,12 @@ fn listen(mut theme: Signal<ThemeResult>) {
 
 /// Get the current theme.
 ///
-/// This function will try to get the current theme.
 ///
-/// # Example
+/// **Note**
+///
+/// This function will cause hydration to fail if not used inside an effect, task, or event handler.
+///
+/// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;

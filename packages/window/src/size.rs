@@ -1,17 +1,14 @@
-//! Window Size
+//! Window size utilities.
 
+use dioxus::hooks::use_effect;
 use dioxus::prelude::{
     provide_root_context, try_use_context, use_hook, warnings::signal_write_in_component_body,
     ReadOnlySignal, ScopeId, Signal, Writable,
 };
 use dioxus::warnings::Warning as _;
-use std::sync::Once;
 
-#[allow(dead_code)]
-static INIT: Once = Once::new();
-
-/// Stores the width and height of a window.
-#[derive(Clone, Copy, Debug)]
+/// The width and height of a window.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct WindowSize {
     /// The horizontal size in pixels.
     pub width: u32,
@@ -24,7 +21,7 @@ pub struct WindowSize {
 /// The initial window size will be returned with this hook and
 /// updated continously as the window is resized.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;
@@ -40,17 +37,20 @@ pub struct WindowSize {
 /// }
 /// ```
 pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
-    let window_size = match try_use_context::<Signal<WindowSize>>() {
+    let mut window_size = match try_use_context::<Signal<WindowSize>>() {
         Some(w) => w,
         // This should only run once.
         None => {
-            let signal = Signal::new_in_scope(get_window_size(), ScopeId::ROOT);
-            let size = provide_root_context(signal);
-            listen(size);
-
-            size
+            let signal = Signal::new_in_scope(WindowSize::default(), ScopeId::ROOT);
+            provide_root_context(signal)
         }
     };
+
+    // Only start the listener on the client.
+    use_effect(move || {
+        window_size.set(get_window_size());
+        listen(window_size);
+    });
 
     use_hook(|| ReadOnlySignal::new(window_size))
 }
@@ -59,6 +59,9 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
 #[cfg(target_family = "wasm")]
 fn listen(mut window_size: Signal<WindowSize>) {
     use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+    use std::sync::Once;
+    
+    static INIT: Once = Once::new();
 
     INIT.call_once(|| {
         let window = web_sys::window().expect("no wasm window found; are you in wasm?");
@@ -111,9 +114,13 @@ fn listen(mut window_size: Signal<WindowSize>) {
     });
 }
 
-/// Get the size of the current window.
+/// Get the current window size.
 ///
-/// This function will return the current size of the window.
+/// **Note**
+///
+/// This function will cause hydration to fail if not used inside an effect, task, or event handler.
+///
+/// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;
