@@ -87,6 +87,7 @@ enum StorageMode {
 
 impl StorageMode {
     // Get the active mode
+    #[allow(unreachable_code)]
     const fn current() -> Self {
         server_only! {
             return StorageMode::Server;

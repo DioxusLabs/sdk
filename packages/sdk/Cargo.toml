@@ -1,0 +1,33 @@
+[package]
+name = "dioxus-sdk"
+version = "0.7.0"
+
+description = "A platform agnostic library for supercharging your productivity with Dioxus."
+readme = "../../README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus-geolocation = { workspace = true, optional = true }
+dioxus-notification = { workspace = true, optional = true }
+dioxus-storage = { workspace = true, optional = true }
+dioxus-sync = { workspace = true, optional = true }
+dioxus-time = { workspace = true, optional = true }
+dioxus-window = { workspace = true, optional = true }
+
+[features]
+geolocation = ["dep:dioxus-geolocation"]
+notification = ["dep:dioxus-notification"]
+storage = ["dep:dioxus-storage"]
+sync = ["dep:dioxus-sync"]
+time = ["dep:dioxus-time"]
+window = ["dep:dioxus-window"]
+
+[package.metadata.docs.rs]
+all-features = true

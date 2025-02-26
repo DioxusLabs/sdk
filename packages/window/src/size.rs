@@ -1,12 +1,12 @@
 //! Window size utilities.
-//! 
+//!
 //! Acces the window size directly in your Dioxus app.
-//! 
+//!
 //! #### Platform Support
 //! Window size is available on every platform.
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```rust
 //! use dioxus::prelude::*;
 //! use dioxus_window::size::use_window_size;
@@ -44,7 +44,7 @@ pub struct WindowSize {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WindowSizeError {
     /// Window size is not supported on this platform.
-    /// 
+    ///
     /// This error only exists for proper SSR hydration.
     Unsupported,
     /// Failed to get the window size.

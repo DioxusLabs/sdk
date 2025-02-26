@@ -13,6 +13,7 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 dioxus-time = { path = "packages/time" }
 dioxus-storage = { path = "packages/storage" }
 dioxus-geolocation = { path = "packages/geolocation" }
+dioxus-notification = { path = "packages/notification" }
 dioxus-sync = { path = "packages/sync" }
 dioxus-window = { path = "packages/window" }
 
