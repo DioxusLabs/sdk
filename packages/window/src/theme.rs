@@ -1,5 +1,37 @@
-//! Window theme utilities.
-
+//! Theme utilities.
+//!
+//! Access the system's theme to use for common tasks such as automatically setting your app styling.
+//! 
+//! Most apps will need to choose a default theme in the event of an error. 
+//! We recommend using either [`Result::unwrap_or`] or  [`Result::unwrap_or_default`] to do this.
+//!
+//! #### Platform Support
+//! Theme is available for Web, Windows, & Mac. Linux, Android, and iOS are not yet supported.
+//!
+//! # Examples
+//! An example of using the theme to determine which class to use.
+//! ```rust
+//! use dioxus::prelude::*;
+//! use dioxus_window::theme::{use_theme, Theme};
+//!
+//! #[component]
+//! fn App() -> Element {
+//!     let theme = use_theme();
+//!     
+//!     // Default to a light theme in the event of an error.
+//!     let class = match theme().unwrap_or(Theme::Light) {
+//!         Theme::Light => "bg-light",
+//!         Theme::Dark => "bg-dark",
+//!     };
+//!
+//!     rsx! {
+//!         div {
+//!             class: "{class}",
+//!             "the current theme is: {theme().unwrap_or(Theme::Light)}"
+//!         }
+//!     }
+//! }
+//! ```
 use dioxus::prelude::*;
 use std::{error::Error, fmt::Display};
 
@@ -7,9 +39,9 @@ use std::{error::Error, fmt::Display};
 ///
 /// For any themes other than `light` and `dark`, a [`ThemeError::UnknownTheme`] will be returned.
 /// We may be able to support custom themes in the future.
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Theme {
+    #[default]
     Light,
     Dark,
 }
@@ -24,10 +56,10 @@ impl Display for Theme {
 }
 
 /// Possible theme errors.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ThemeError {
-    /// Not supported on this platform.
-    NotSupported,
+    /// Theme is not supported on this platform.
+    Unsupported,
     /// Failed to get the system theme.
     CheckFailed,
     /// System returned an unknown theme.
@@ -38,7 +70,7 @@ impl Error for ThemeError {}
 impl Display for ThemeError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Self::NotSupported => write!(f, "the current platform is not supported"),
+            Self::Unsupported => write!(f, "the current platform is not supported"),
             Self::CheckFailed => write!(
                 f,
                 "the system returned an error while checking the color theme"
@@ -53,23 +85,24 @@ impl Display for ThemeError {
 
 type ThemeResult = Result<Theme, ThemeError>;
 
-/// A hook for receiving the system theme.
+/// A hook for subscribing to the system theme.
 ///
-/// On first run, the result will be [`Theme::Light`]. This is so hydration and the client start with the same value.
-/// After the client runs, the theme will be tracked and may update to be a different theme or an error.
+/// On first run, the result will be [`ThemeError::Unsupported`]. This is so hydration and the client start with the same value.
+/// After the client runs, the theme will be tracked and will update to be a theme or a different error.
 ///
 /// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::theme::use_theme;
+/// use dioxus_window::theme::{use_theme, Theme};
 ///
+/// #[component]
 /// fn App() -> Element {
 ///     let theme = use_theme();
 ///
 ///     rsx! {
 ///         p {
-///             "the current theme is: {theme().unwrap()}"
+///             "the current theme is: {theme().unwrap_or(Theme::Light)}"
 ///         }
 ///     }
 /// }
@@ -79,7 +112,7 @@ pub fn use_theme() -> ReadOnlySignal<ThemeResult> {
         Some(s) => s,
         // This should only run once.
         None => {
-            let signal = Signal::new_in_scope(Ok(Theme::Light), ScopeId::ROOT);
+            let signal = Signal::new_in_scope(Err(ThemeError::Unsupported), ScopeId::ROOT);
             provide_root_context(signal)
         }
     };
@@ -93,15 +126,15 @@ pub fn use_theme() -> ReadOnlySignal<ThemeResult> {
     use_hook(|| ReadOnlySignal::new(system_theme))
 }
 
-/// The listener implementation for wasm targets.
-/// This should only be called once.
+// The listener implementation for wasm targets.
+// This should only be called once.
 #[cfg(target_family = "wasm")]
 fn listen(mut theme: Signal<ThemeResult>) {
     use wasm_bindgen::{closure::Closure, JsCast};
     use web_sys::MediaQueryList;
 
     let Some(window) = web_sys::window() else {
-        theme.set(Err(ThemeError::NotSupported));
+        theme.set(Err(ThemeError::Unsupported));
         return;
     };
 
@@ -130,8 +163,8 @@ fn listen(mut theme: Signal<ThemeResult>) {
     query.set_onchange(Some(cb.unchecked_ref()));
 }
 
-/// The listener implementation for desktop targets. (not linux)
-/// This should only be called once.
+// The listener implementation for desktop targets. (not linux)
+// This should only be called once.
 #[cfg(not(target_family = "wasm"))]
 fn listen(mut theme: Signal<ThemeResult>) {
     use dioxus_desktop::{
@@ -156,6 +189,12 @@ fn listen(mut theme: Signal<ThemeResult>) {
     });
 }
 
+// The listener implementation for unsupported targets.
+#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos")))]
+fn listen(mut theme: Signal<ThemeResult>) {
+    theme.set(Err(ThemeError::Unsupported));
+}
+
 /// Get the current theme.
 ///
 ///
@@ -169,10 +208,11 @@ fn listen(mut theme: Signal<ThemeResult>) {
 /// use dioxus::prelude::*;
 /// use dioxus_window::theme::{Theme, get_theme};
 ///
+/// #[component]
 /// fn App() -> Element {
 ///     let theme = use_signal(get_theme);
 ///
-///     let class_name = match theme().unwrap() {
+///     let class_name = match theme().unwrap_or(Theme::Light) {
 ///         Theme::Dark => "dark-theme",
 ///         Theme::Light => "light-theme",
 ///     };
@@ -189,11 +229,11 @@ pub fn get_theme() -> ThemeResult {
     get_theme_platform()
 }
 
-/// The wasm implementation to get the system theme.
+// The wasm implementation to get the system theme.
 #[cfg(target_family = "wasm")]
 fn get_theme_platform() -> ThemeResult {
     let Some(window) = web_sys::window() else {
-        return Err(ThemeError::NotSupported);
+        return Err(ThemeError::Unsupported);
     };
 
     // Check the color theme with a media query
@@ -210,7 +250,7 @@ fn get_theme_platform() -> ThemeResult {
     }
 }
 
-/// The desktop (except linux) implementation to get the system theme.
+// The desktop (except linux) implementation to get the system theme.
 #[cfg(not(target_family = "wasm"))]
 fn get_theme_platform() -> ThemeResult {
     use dioxus_desktop::tao::window::Theme as TaoTheme;
@@ -218,7 +258,7 @@ fn get_theme_platform() -> ThemeResult {
 
     // Get window context and theme
     let Some(window) = try_consume_context::<DesktopContext>() else {
-        return Err(ThemeError::NotSupported);
+        return Err(ThemeError::Unsupported);
     };
     let theme = window.theme();
 
@@ -227,4 +267,10 @@ fn get_theme_platform() -> ThemeResult {
         TaoTheme::Dark => Ok(Theme::Dark),
         _ => Err(ThemeError::UnknownTheme),
     }
+}
+
+// Implementation for unsupported platforms.
+#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos")))]
+fn get_theme_platform() -> ThemeResult {
+    Err(ThemeError::Unsupported)
 }

@@ -16,10 +16,19 @@ pub struct WindowSize {
     pub height: u32,
 }
 
-/// A hook for receiving the window size.
+#[derive(Debug, Clone, PartialEq)]
+pub enum WindowSizeError {
+    /// Window size is not supported on this platform.
+    Unsupported,
+    /// Failed to get the window size.
+    CheckFailed,
+}
+
+type WindowSizeResult = Result<WindowSize, WindowSizeError>;
+
+/// A hook for subscribing to the window size.
 ///
-/// The initial window size will be returned with this hook and
-/// updated continously as the window is resized.
+/// The initial window size will be returned with this hook and updated continously as the window is resized.
 ///
 /// # Examples
 ///
@@ -36,12 +45,12 @@ pub struct WindowSize {
 ///     }
 /// }
 /// ```
-pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
-    let mut window_size = match try_use_context::<Signal<WindowSize>>() {
+pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
+    let mut window_size = match try_use_context::<Signal<WindowSizeResult>>() {
         Some(w) => w,
         // This should only run once.
         None => {
-            let signal = Signal::new_in_scope(WindowSize::default(), ScopeId::ROOT);
+            let signal = Signal::new_in_scope(Err(WindowSizeError::Unsupported), ScopeId::ROOT);
             provide_root_context(signal)
         }
     };
@@ -57,17 +66,17 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSize> {
 
 // Listener for the web implementation.
 #[cfg(target_family = "wasm")]
-fn listen(mut window_size: Signal<WindowSize>) {
-    use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+fn listen(mut window_size: Signal<WindowSizeResult>) {
     use std::sync::Once;
-    
+    use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+
     static INIT: Once = Once::new();
 
     INIT.call_once(|| {
         let window = web_sys::window().expect("no wasm window found; are you in wasm?");
         let window2 = window.clone();
 
-        // We will fail silently for conversion errors.
+        // Todo: Actually handle errors here.
         let on_resize = Closure::wrap(Box::new(move || {
             let height = window2
                 .inner_height()
@@ -82,7 +91,7 @@ fn listen(mut window_size: Signal<WindowSize>) {
                 .unwrap_or(0.0) as u32;
 
             signal_write_in_component_body::allow(move || {
-                window_size.set(WindowSize { width, height });
+                window_size.set(Ok(WindowSize { width, height }));
             });
         }) as Box<dyn FnMut()>);
 
@@ -94,7 +103,7 @@ fn listen(mut window_size: Signal<WindowSize>) {
 
 // Listener for anything but the web implementation.
 #[cfg(not(target_family = "wasm"))]
-fn listen(mut window_size: Signal<WindowSize>) {
+fn listen(mut window_size: Signal<WindowSizeResult>) {
     use dioxus_desktop::{tao::event::Event, window, WindowEvent};
 
     let window = window();
@@ -105,10 +114,10 @@ fn listen(mut window_size: Signal<WindowSize>) {
         } = event
         {
             signal_write_in_component_body::allow(move || {
-                window_size.set(WindowSize {
+                window_size.set(Ok(WindowSize {
                     width: size.width,
                     height: size.height,
-                });
+                }));
             });
         }
     });
@@ -135,39 +144,38 @@ fn listen(mut window_size: Signal<WindowSize>) {
 ///     }
 /// }
 /// ```
-pub fn get_window_size() -> WindowSize {
+pub fn get_window_size() -> WindowSizeResult {
     get_size_platform()
 }
 
 // Web implementation of size getter.
 #[cfg(target_family = "wasm")]
-fn get_size_platform() -> WindowSize {
-    use wasm_bindgen::JsValue;
-    let window = web_sys::window().expect("no wasm window found; are you in wasm?");
+fn get_size_platform() -> WindowSizeResult {
+    let window = web_sys::window().ok_or(WindowSizeError::CheckFailed)?;
 
     // We will fail silently for conversion errors.
     let height = window
         .inner_height()
-        .unwrap_or(JsValue::from_f64(0.0))
-        .as_f64()
-        .unwrap_or(0.0) as u32;
+        .ok()
+        .and_then(|x| x.as_f64())
+        .ok_or(WindowSizeError::CheckFailed)? as u32;
 
     let width = window
         .inner_width()
-        .unwrap_or(JsValue::from_f64(0.0))
-        .as_f64()
-        .unwrap_or(0.0) as u32;
+        .ok()
+        .and_then(|x| x.as_f64())
+        .ok_or(WindowSizeError::CheckFailed)? as u32;
 
-    WindowSize { width, height }
+    Ok(WindowSize { width, height })
 }
 
 // Desktop implementation of size getter.
 #[cfg(not(target_family = "wasm"))]
-fn get_size_platform() -> WindowSize {
+fn get_size_platform() -> WindowSizeResult {
     let window = dioxus_desktop::window();
     let size = window.inner_size();
-    WindowSize {
+    Ok(WindowSize {
         width: size.width,
         height: size.height,
-    }
+    })
 }
