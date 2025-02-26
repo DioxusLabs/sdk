@@ -1,11 +1,35 @@
 //! Window size utilities.
-
+//! 
+//! Acces the window size directly in your Dioxus app.
+//! 
+//! #### Platform Support
+//! Window size is available on every platform.
+//! 
+//! # Examples
+//! 
+//! ```rust
+//! use dioxus::prelude::*;
+//! use dioxus_window::size::use_window_size;
+//!
+//! fn App() -> Element {
+//!     let size = use_window_size();
+//!     let size = size().unwrap();    
+//!
+//!     rsx! {
+//!         p { "Width: {size.width}" }
+//!         p { "Height: {size.height}" }
+//!     }
+//! }
+//! ```
 use dioxus::hooks::use_effect;
 use dioxus::prelude::{
     provide_root_context, try_use_context, use_hook, warnings::signal_write_in_component_body,
     ReadOnlySignal, ScopeId, Signal, Writable,
 };
+use dioxus::signals::Readable;
 use dioxus::warnings::Warning as _;
+use std::error::Error;
+use std::fmt::Display;
 
 /// The width and height of a window.
 #[derive(Clone, Copy, Debug, Default)]
@@ -16,19 +40,77 @@ pub struct WindowSize {
     pub height: u32,
 }
 
+/// Possible window size errors.
 #[derive(Debug, Clone, PartialEq)]
 pub enum WindowSizeError {
     /// Window size is not supported on this platform.
+    /// 
+    /// This error only exists for proper SSR hydration.
     Unsupported,
     /// Failed to get the window size.
     CheckFailed,
 }
 
+impl Error for WindowSizeError {}
+impl Display for WindowSizeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unsupported => write!(f, "the current platform is not supported"),
+            Self::CheckFailed => write!(f, "failed to get the current window size"),
+        }
+    }
+}
+
 type WindowSizeResult = Result<WindowSize, WindowSizeError>;
 
-/// A hook for subscribing to the window size.
+/// A trait for accessing the inner values of [`WindowSize`].
 ///
-/// The initial window size will be returned with this hook and updated continously as the window is resized.
+/// These methods can be convenient if you need access to one of the values but not the other.
+///
+/// # Examples
+///
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_window::size::{use_window_size, ReadableWindowSizeExt};
+///
+/// fn App() -> Element {
+///     let size = use_window_size();
+///     
+///     let half_of_width = use_memo(move || {
+///         let width = size.width().unwrap();
+///         width / 2
+///     });
+///
+///     rsx! {
+///         div {
+///             style: "width: {half_of_width};",
+///             "hi"
+///         }
+///     }
+/// }
+/// ```
+pub trait ReadableWindowSizeExt: Readable<Target = WindowSizeResult> {
+    /// Read the width, subscribing to it.
+    #[track_caller]
+    fn width(&self) -> Result<u32, WindowSizeError> {
+        let value = self.read().clone();
+        value.map(|x| x.width)
+    }
+
+    /// Read the height, subscribing to it.
+    #[track_caller]
+    fn height(&self) -> Result<u32, WindowSizeError> {
+        let value = self.read().clone();
+        value.map(|x| x.height)
+    }
+}
+
+impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult> {}
+
+/// Get a signal to the window size.
+///
+/// On first run, the result will be [`WindowSizeError::Unsupported`]. This is to prevent hydration from failing.
+/// After the client runs, the window size will be tracked and updated with accurate values.
 ///
 /// # Examples
 ///
@@ -38,10 +120,11 @@ type WindowSizeResult = Result<WindowSize, WindowSizeError>;
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
+///     let size = size().unwrap();    
 ///
 ///     rsx! {
-///         p { "Width: {size().width}" }
-///         p { "Height: {size().height}" }
+///         p { "Width: {size.width}" }
+///         p { "Height: {size.height}" }
 ///     }
 /// }
 /// ```
@@ -70,35 +153,39 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
     use std::sync::Once;
     use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 
-    static INIT: Once = Once::new();
+    let window = web_sys::window().expect("no wasm window found; are you in wasm?");
+    let window2 = window.clone();
 
-    INIT.call_once(|| {
-        let window = web_sys::window().expect("no wasm window found; are you in wasm?");
-        let window2 = window.clone();
+    let on_resize = Closure::wrap(Box::new(move || {
+        let width = window2
+            .inner_width()
+            .ok()
+            .and_then(|x| x.as_f64())
+            .ok_or(WindowSizeError::CheckFailed);
 
-        // Todo: Actually handle errors here.
-        let on_resize = Closure::wrap(Box::new(move || {
-            let height = window2
-                .inner_height()
-                .unwrap_or(JsValue::from_f64(0.0))
-                .as_f64()
-                .unwrap_or(0.0) as u32;
+        let height = window2
+            .inner_height()
+            .ok()
+            .and_then(|x| x.as_f64())
+            .ok_or(WindowSizeError::CheckFailed);
 
-            let width = window2
-                .inner_width()
-                .unwrap_or(JsValue::from_f64(0.0))
-                .as_f64()
-                .unwrap_or(0.0) as u32;
+        let size = (width, height);
+        let value = match size {
+            (Ok(width), Ok(height)) => Ok(WindowSize {
+                width: width as u32,
+                height: height as u32,
+            }),
+            _ => Err(WindowSizeError::CheckFailed),
+        };
 
-            signal_write_in_component_body::allow(move || {
-                window_size.set(Ok(WindowSize { width, height }));
-            });
-        }) as Box<dyn FnMut()>);
+        signal_write_in_component_body::allow(move || {
+            window_size.set(value);
+        });
+    }) as Box<dyn FnMut()>);
 
-        let on_resize_cb = on_resize.as_ref().clone();
-        on_resize.forget();
-        window.set_onresize(Some(on_resize_cb.unchecked_ref()));
-    });
+    let on_resize_cb = on_resize.as_ref().clone();
+    on_resize.forget();
+    window.set_onresize(Some(on_resize_cb.unchecked_ref()));
 }
 
 // Listener for anything but the web implementation.
@@ -137,10 +224,11 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
 ///
 /// fn App() -> Element {
 ///     let size = use_signal(get_window_size);
+///     let size = size().unwrap();    
 ///
 ///     rsx! {
-///         p { "Width: {size().width}" }
-///         p { "Height: {size().height}" }
+///         p { "Width: {size.width}" }
+///         p { "Height: {size.height}" }
 ///     }
 /// }
 /// ```

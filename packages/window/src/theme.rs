@@ -1,12 +1,12 @@
 //! Theme utilities.
 //!
 //! Access the system's theme to use for common tasks such as automatically setting your app styling.
-//! 
-//! Most apps will need to choose a default theme in the event of an error. 
+//!
+//! Most apps will need to choose a default theme in the event of an error.
 //! We recommend using either [`Result::unwrap_or`] or  [`Result::unwrap_or_default`] to do this.
 //!
 //! #### Platform Support
-//! Theme is available for Web, Windows, & Mac. Linux, Android, and iOS are not yet supported.
+//! Theme is available for Web, Windows, & Mac. Linux is unsupported and Android/iOS has not been tested.
 //!
 //! # Examples
 //! An example of using the theme to determine which class to use.
@@ -41,8 +41,10 @@ use std::{error::Error, fmt::Display};
 /// We may be able to support custom themes in the future.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Theme {
+    /// A light theme, better in direct sunlight.
     #[default]
     Light,
+    /// A dark theme, better for the night owls.
     Dark,
 }
 
@@ -85,10 +87,10 @@ impl Display for ThemeError {
 
 type ThemeResult = Result<Theme, ThemeError>;
 
-/// A hook for subscribing to the system theme.
+/// Get a signal to the system theme.
 ///
-/// On first run, the result will be [`ThemeError::Unsupported`]. This is so hydration and the client start with the same value.
-/// After the client runs, the theme will be tracked and will update to be a theme or a different error.
+/// On first run, the result will be [`ThemeError::Unsupported`]. This is to prevent hydration from failing.
+/// After the client runs, the theme will be tracked and updated with accurate values.
 ///
 /// # Examples
 ///
@@ -127,7 +129,6 @@ pub fn use_theme() -> ReadOnlySignal<ThemeResult> {
 }
 
 // The listener implementation for wasm targets.
-// This should only be called once.
 #[cfg(target_family = "wasm")]
 fn listen(mut theme: Signal<ThemeResult>) {
     use wasm_bindgen::{closure::Closure, JsCast};
@@ -190,7 +191,7 @@ fn listen(mut theme: Signal<ThemeResult>) {
 }
 
 // The listener implementation for unsupported targets.
-#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos")))]
+#[cfg(target_os = "linux")]
 fn listen(mut theme: Signal<ThemeResult>) {
     theme.set(Err(ThemeError::Unsupported));
 }
