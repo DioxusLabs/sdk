@@ -1,6 +1,9 @@
 use dioxus::prelude::{use_hook, Callback, Writable};
 use std::time::Duration;
 
+/// A handle to an interval.
+/// 
+/// This handle allows you to cancel an interval.
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {
     inner: dioxus::prelude::Signal<InnerUseInterval>,
@@ -28,6 +31,25 @@ impl UseInterval {
 }
 
 /// Repeatedly call a function at a specific interval.
+/// 
+/// Intervals are cancelable with the [`UseInterval::cancel`] method.
+/// 
+/// # Examples
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_time::use_interval;
+/// use std::time::Duration;
+///
+/// #[component]
+/// fn App() -> Element {
+///     let mut time_elapsed = use_signal(|| 0);
+///      use_interval(Duration::from_secs(1), move || *time_elapsed.write() += 1);
+///     
+///     rsx! {
+///         "It has been {time_elapsed} since the app started."
+///     }
+/// }
+/// ```
 pub fn use_interval(period: Duration, mut action: impl FnMut() + 'static) -> UseInterval {
     let inner = use_hook(|| {
         let callback = Callback::new(move |()| {

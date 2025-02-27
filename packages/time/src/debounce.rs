@@ -39,15 +39,16 @@ impl<T> PartialEq for UseDebounce<T> {
 /// Once the [`UseDebounce::action`] method is called, a timer will start counting down until
 /// the callback is ran. If the [`UseDebounce::action`] method is called again, the timer will restart.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```rust
 /// use dioxus::prelude::*;
 /// use dioxus_time::use_debounce;
 /// use std::time::Duration;
 ///
+/// #[component]
 /// fn App() -> Element {
-///     let mut debounce = use_debounce(Duration::from_millis(2000), |_| println!("ran"));
+///     let mut debounce = use_debounce(Duration::from_secs(2), |_| println!("ran"));
 ///     
 ///     rsx! {
 ///         button {
