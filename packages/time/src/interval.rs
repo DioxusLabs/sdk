@@ -2,7 +2,7 @@ use dioxus::prelude::{use_hook, Callback, Writable};
 use std::time::Duration;
 
 /// A handle to an interval.
-/// 
+///
 /// This handle allows you to cancel an interval.
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {
@@ -31,9 +31,9 @@ impl UseInterval {
 }
 
 /// Repeatedly call a function at a specific interval.
-/// 
+///
 /// Intervals are cancelable with the [`UseInterval::cancel`] method.
-/// 
+///
 /// # Examples
 /// ```rust
 /// use dioxus::prelude::*;

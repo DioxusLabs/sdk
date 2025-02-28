@@ -14,4 +14,7 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-notify-rust = "4.8.0"
+cfg-if.workspace = true
+
+[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+notify-rust = "4.11.5"
