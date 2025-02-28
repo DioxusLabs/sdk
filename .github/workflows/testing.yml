@@ -39,5 +39,5 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: Swatinem/rust-cache@v2
-    - run: cargo build --package dioxus-sdk --verbose --no-default-features --features desktop-testing
-    - run: cargo test --package dioxus-sdk --verbose --no-default-features --features desktop-testing
+    - run: cargo build --all-targets --workspace --verbose --all-features
+    - run: cargo test --all-targets --workspace --verbose --all-features --doc

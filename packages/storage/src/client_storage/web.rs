@@ -3,6 +3,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use dioxus::logger::tracing::{error, trace};
 use once_cell::sync::Lazy;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::watch::{channel, Receiver};
@@ -10,7 +11,7 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::{window, Storage};
 
-use crate::storage::{
+use crate::{
     serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
     StorageSubscriber, StorageSubscription,
 };
@@ -65,20 +66,20 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = Lazy::new(|| {
     // Create a closure that will be called when a storage event occurs.
     let closure = Closure::wrap(Box::new(move |e: web_sys::StorageEvent| {
-        tracing::trace!("Storage event: {:?}", e);
+        trace!("Storage event: {:?}", e);
         let key: String = e.key().unwrap();
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         if let Some(subscription) = read_binding.get(&key) {
             if subscription.tx.is_closed() {
-                tracing::trace!("Channel is closed, removing subscription for \"{}\"", key);
+                trace!("Channel is closed, removing subscription for \"{}\"", key);
                 drop(read_binding);
                 SUBSCRIPTIONS.write().unwrap().remove(&key);
                 return;
             }
             // Call the getter for the given entry and send the value to said entry's channel.
             match subscription.get_and_send() {
-                Ok(_) => tracing::trace!("Sent storage event"),
-                Err(err) => tracing::error!("Error sending storage event: {:?}", err.to_string()),
+                Ok(_) => trace!("Sent storage event"),
+                Err(err) => error!("Error sending storage event: {:?}", err.to_string()),
             }
         }
     }) as Box<dyn FnMut(web_sys::StorageEvent)>);

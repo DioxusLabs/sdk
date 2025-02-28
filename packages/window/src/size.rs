@@ -150,8 +150,7 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
 // Listener for the web implementation.
 #[cfg(target_family = "wasm")]
 fn listen(mut window_size: Signal<WindowSizeResult>) {
-    use std::sync::Once;
-    use wasm_bindgen::{closure::Closure, JsCast, JsValue};
+    use wasm_bindgen::{closure::Closure, JsCast};
 
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
     let window2 = window.clone();
