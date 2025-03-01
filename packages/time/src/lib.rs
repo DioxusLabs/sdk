@@ -3,6 +3,7 @@
 //! Cross-platform timing utilities for your Dioxus apps.
 //!
 //! We currently offer:
+//! - [`use_timeout`]
 //! - [`use_debounce`]
 //! - [`use_interval`]
 //! - and [`sleep`]
@@ -15,6 +16,9 @@ pub use interval::{use_interval, UseInterval};
 
 mod debounce;
 pub use debounce::{use_debounce, UseDebounce};
+
+mod timeout;
+pub use timeout::{use_timeout, UseTimeout, TimeoutHandle};
 
 /// Pause the current task for the specified duration.
 ///

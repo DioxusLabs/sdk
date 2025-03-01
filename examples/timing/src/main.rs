@@ -1,5 +1,5 @@
 use dioxus::{logger::tracing::info, prelude::*};
-use dioxus_time::{use_debounce, use_interval};
+use dioxus_time::{use_debounce, use_interval, use_timeout};
 use std::time::Duration;
 
 fn main() {
@@ -16,9 +16,15 @@ fn App() -> Element {
     });
 
     // using `use_debounce`, we reset the counter after 2 seconds since the last button click.
-    let mut debounce = use_debounce(Duration::from_millis(2000), move |text| {
+    let mut debounce = use_debounce(Duration::from_secs(2), move |text| {
         info!("{text}");
         count.set(0);
+    });
+
+    // using `use_timeout`, we increase a the counter 2 seconds after every trigger.
+    let mut timeout_count = use_signal(|| 0);
+    let timeout = use_timeout(Duration::from_secs(2), move |()| {
+        timeout_count += 1;
     });
 
     rsx! {
@@ -29,6 +35,13 @@ fn App() -> Element {
                 debounce.action("button was clicked");
             },
             "Reset the counter! (2 second debounce)"
+        }
+        button {
+            onclick: move |_| { 
+                let handle = timeout.trigger(()); 
+                handle.cancel();
+            },
+            "Trigger Timeout: {timeout_count}",
         }
     }
 }
