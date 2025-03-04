@@ -11,7 +11,7 @@ fn App() -> Element {
     let mut count = use_signal(|| 0);
 
     // using `use_interval`, we increment the count by 1 every second.
-    use_interval(Duration::from_secs(1), move || {
+    use_interval(Duration::from_secs(1), move |()| {
         count += 1;
     });
 

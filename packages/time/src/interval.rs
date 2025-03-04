@@ -1,16 +1,21 @@
-use dioxus::prelude::{use_hook, Callback, Writable};
+use dioxus::{
+    dioxus_core::SpawnIfAsync,
+    prelude::{spawn, use_hook, Callback, Task, Writable},
+    signals::Signal,
+};
 use std::time::Duration;
 
 /// The interface to a debounce.
 ///
-/// This handle allows you to cancel an interval.
+/// You can cancel an interval with [`UseInterval::cancel`].
+/// See [`use_interval`] for more information.
 #[derive(Clone, PartialEq, Copy)]
 pub struct UseInterval {
-    inner: dioxus::prelude::Signal<InnerUseInterval>,
+    inner: Signal<InnerUseInterval>,
 }
 
 struct InnerUseInterval {
-    pub(crate) interval: Option<dioxus::prelude::Task>,
+    pub(crate) interval: Option<Task>,
 }
 
 impl Drop for InnerUseInterval {
@@ -35,6 +40,8 @@ impl UseInterval {
 /// Intervals are cancelable with the [`UseInterval::cancel`] method.
 ///
 /// # Examples
+///
+/// Example of using an interval:
 /// ```rust
 /// use dioxus::prelude::*;
 /// use dioxus_time::use_interval;
@@ -43,34 +50,87 @@ impl UseInterval {
 /// #[component]
 /// fn App() -> Element {
 ///     let mut time_elapsed = use_signal(|| 0);
-///      use_interval(Duration::from_secs(1), move || *time_elapsed.write() += 1);
+///     // Create an interval that increases the time elapsed signal by one every second.
+///     use_interval(Duration::from_secs(1), move |()| time_elapsed += 1);
 ///     
 ///     rsx! {
 ///         "It has been {time_elapsed} since the app started."
 ///     }
 /// }
 /// ```
-pub fn use_interval(period: Duration, mut action: impl FnMut() + 'static) -> UseInterval {
+///
+/// #### Cancelling Intervals
+/// Example of cancelling an interval:
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_time::use_interval;
+/// use std::time::Duration;
+///
+/// #[component]
+/// fn App() -> Element {
+///     let mut time_elapsed = use_signal(|| 0);
+///     let mut interval = use_interval(Duration::from_secs(1), move |()| time_elapsed += 1);
+///     
+///     rsx! {
+///         "It has been {time_elapsed} since the app started."
+///         button {
+///             // Cancel the interval when the button is clicked.
+///             onclick: move |_| interval.cancel(),
+///             "Cancel Interval"
+///         }
+///     }
+/// }
+/// ```
+///
+/// #### Async Intervals
+/// Intervals can accept an async callback:
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_time::use_interval;
+/// use std::time::Duration;
+///
+/// #[component]
+/// fn App() -> Element {
+///     let mut time_elapsed = use_signal(|| 0);
+///     // Create an interval that increases the time elapsed signal by one every second.
+///     use_interval(Duration::from_secs(1), move |()| async move {
+///         time_elapsed += 1;
+///         // Pretend we're doing some async work.
+///         tokio::time::sleep(Duration::from_secs(1)).await;
+///         println!("Done!");
+///     });
+///     
+///     rsx! {
+///         "It has been {time_elapsed} since the app started."
+///     }
+/// }
+/// ```
+pub fn use_interval<MaybeAsync: SpawnIfAsync<Marker>, Marker>(
+    period: Duration,
+    callback: impl FnMut(()) -> MaybeAsync + 'static,
+) -> UseInterval {
     let inner = use_hook(|| {
-        let callback = Callback::new(move |()| {
-            action();
+        let callback = Callback::new(callback);
+
+        let task = spawn(async move {
+            #[cfg(not(target_family = "wasm"))]
+            let mut interval = tokio::time::interval(period);
+
+            loop {
+                #[cfg(not(target_family = "wasm"))]
+                interval.tick().await;
+
+                #[cfg(target_family = "wasm")]
+                {
+                    gloo_timers::future::sleep(period).await;
+                }
+
+                callback.call(());
+            }
         });
 
-        dioxus::prelude::Signal::new(InnerUseInterval {
-            interval: Some(dioxus::prelude::spawn(async move {
-                #[cfg(not(target_family = "wasm"))]
-                let mut interval = tokio::time::interval(period);
-
-                loop {
-                    #[cfg(not(target_family = "wasm"))]
-                    interval.tick().await;
-
-                    #[cfg(target_family = "wasm")]
-                    gloo_timers::future::sleep(period).await;
-
-                    callback.call(());
-                }
-            })),
+        Signal::new(InnerUseInterval {
+            interval: Some(task),
         })
     });
 
