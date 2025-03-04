@@ -1,36 +1,32 @@
-use dioxus::prelude::*;
-use futures::{
-    channel::mpsc::{self, UnboundedSender as Sender},
-    StreamExt,
+use crate::{use_timeout, TimeoutHandle, UseTimeout};
+use dioxus::{
+    dioxus_core::SpawnIfAsync,
+    hooks::use_signal,
+    signals::{Signal, Writable},
 };
 use std::time::Duration;
 
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
-pub struct UseDebounce<T: 'static> {
-    sender: Signal<Sender<T>>,
+#[derive(Clone, Copy, PartialEq)]
+pub struct UseDebounce<Args: 'static> {
+    current_handle: Signal<Option<TimeoutHandle>>,
+    timeout: UseTimeout<Args>,
 }
 
-impl<T> UseDebounce<T> {
+impl<Args> UseDebounce<Args> {
     /// Start the debounce countdown, resetting it if already started.
-    pub fn action(&mut self, data: T) {
-        self.sender.write().unbounded_send(data).ok();
+    pub fn action(&mut self, args: Args) {
+        self.cancel();
+        self.current_handle.set(Some(self.timeout.action(args)));
     }
-}
 
-// Manually implement Clone, Copy, and PartialEq as #[derive] thinks that T needs to implement these (it doesn't).
-impl<T> Clone for UseDebounce<T> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<T> Copy for UseDebounce<T> {}
-
-impl<T> PartialEq for UseDebounce<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.sender == other.sender
+    /// Cancel the debounce action.
+    pub fn cancel(&mut self) {
+        if let Some(handle) = self.current_handle.take() {
+            handle.cancel();
+        }
     }
 }
 
@@ -41,6 +37,7 @@ impl<T> PartialEq for UseDebounce<T> {
 ///
 /// # Examples
 ///
+/// Example of using a debounce:
 /// ```rust
 /// use dioxus::prelude::*;
 /// use dioxus_time::use_debounce;
@@ -48,11 +45,14 @@ impl<T> PartialEq for UseDebounce<T> {
 ///
 /// #[component]
 /// fn App() -> Element {
+///     // Create a two second debounce.
+///     // This will print "ran" after two seconds since the last action call.
 ///     let mut debounce = use_debounce(Duration::from_secs(2), |_| println!("ran"));
 ///     
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
+///                 // Call the debounce.
 ///                 debounce.action(());
 ///             },
 ///             "Click!"
@@ -60,35 +60,69 @@ impl<T> PartialEq for UseDebounce<T> {
 ///     }
 /// }
 /// ```
-pub fn use_debounce<T>(time: Duration, cb: impl FnOnce(T) + Copy + 'static) -> UseDebounce<T> {
-    use_hook(|| {
-        let (sender, mut receiver) = mpsc::unbounded();
-        let debouncer = UseDebounce {
-            sender: Signal::new(sender),
-        };
+///
+/// #### Cancelling A Debounce
+/// If you need to cancel the currently active debounce, you can call [`UseDebounce::cancel`]:
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_time::use_debounce;
+/// use std::time::Duration;
+///
+/// #[component]
+/// fn App() -> Element {
+///     let mut debounce = use_debounce(Duration::from_secs(5), |_| println!("ran"));
+///     
+///     rsx! {
+///         button {
+///             // Start the debounce on click.
+///             onclick: move |_| debounce.action(()),
+///             "Action!"
+///         }
+///         button {
+///             // Cancel the debounce on click.
+///             onclick: move |_| debounce.cancel(),
+///             "Cancel!"
+///         }
+///     }
+/// }
+/// ```
+///
+/// ### Async Debounce
+/// Debounces can accept an async callback:
+/// ```rust
+/// use dioxus::prelude::*;
+/// use dioxus_time::use_debounce;
+/// use std::time::Duration;
+///
+/// #[component]
+/// fn App() -> Element {
+///     // Create a two second debounce that uses some async/await.
+///     let mut debounce = use_debounce(Duration::from_secs(2), |_| async {
+///         println!("debounce called!");
+///         tokio::time::sleep(Duration::from_secs(2)).await;
+///         println!("after async");
+///     });
+///     
+///     rsx! {
+///         button {
+///             onclick: move |_| {
+///                 // Call the debounce.
+///                 debounce.action(());
+///             },
+///             "Click!"
+///         }
+///     }
+/// }
+/// ```
+pub fn use_debounce<Args: 'static, MaybeAsync: SpawnIfAsync<Marker>, Marker>(
+    duration: Duration,
+    callback: impl FnMut(Args) -> MaybeAsync + 'static,
+) -> UseDebounce<Args> {
+    let timeout = use_timeout(duration, callback);
+    let current_handle = use_signal(|| None);
 
-        spawn(async move {
-            let mut current_task: Option<Task> = None;
-
-            loop {
-                if let Some(data) = receiver.next().await {
-                    if let Some(task) = current_task.take() {
-                        task.cancel();
-                    }
-
-                    current_task = Some(spawn(async move {
-                        #[cfg(not(target_family = "wasm"))]
-                        tokio::time::sleep(time).await;
-
-                        #[cfg(target_family = "wasm")]
-                        gloo_timers::future::sleep(time).await;
-
-                        cb(data);
-                    }));
-                }
-            }
-        });
-
-        debouncer
-    })
+    UseDebounce {
+        timeout,
+        current_handle,
+    }
 }

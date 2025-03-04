@@ -1,7 +1,7 @@
 use dioxus::prelude::{use_hook, Callback, Writable};
 use std::time::Duration;
 
-/// A handle to an interval.
+/// The interface to a debounce.
 ///
 /// This handle allows you to cancel an interval.
 #[derive(Clone, PartialEq, Copy)]

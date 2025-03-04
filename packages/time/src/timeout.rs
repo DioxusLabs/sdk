@@ -58,7 +58,7 @@ impl<Args> PartialEq for UseTimeout<Args> {
 /// This handle allows you to cancel the timeout from triggering with [`TimeoutHandle::cancel`]
 ///
 /// See [`use_timeout`] for more information.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TimeoutHandle {
     handle: Task,
 }
