@@ -37,10 +37,7 @@ fn App() -> Element {
             "Reset the counter! (2 second debounce)"
         }
         button {
-            onclick: move |_| { 
-                let handle = timeout.trigger(()); 
-                handle.cancel();
-            },
+            onclick: move |_| { timeout.action(()); },
             "Trigger Timeout: {timeout_count}",
         }
     }
