@@ -7,9 +7,9 @@ use futures::{channel::mpsc, SinkExt, StreamExt};
 use std::time::Duration;
 
 /// The interface to a timeout.
-/// 
+///
 /// This is used to trigger the timeout with [`UseTimeout::action`].
-/// 
+///
 /// See [`use_timeout`] for more information.
 pub struct UseTimeout<Args: 'static> {
     duration: Duration,
@@ -18,12 +18,12 @@ pub struct UseTimeout<Args: 'static> {
 
 impl<Args> UseTimeout<Args> {
     /// Trigger the timeout.
-    /// 
+    ///
     /// If no arguments are desired, use the [`unit`] type.
     /// See [`use_timeout`] for more information.
     pub fn action(&self, args: Args) -> TimeoutHandle {
         let mut sender = (self.sender)();
-        let duration = self.duration.clone();
+        let duration = self.duration;
 
         let handle = spawn(async move {
             #[cfg(not(target_family = "wasm"))]
@@ -42,24 +42,21 @@ impl<Args> UseTimeout<Args> {
 
 impl<Args> Clone for UseTimeout<Args> {
     fn clone(&self) -> Self {
-        Self {
-            duration: self.duration.clone(),
-            sender: self.sender.clone(),
-        }
+        *self
     }
 }
 impl<Args> Copy for UseTimeout<Args> {}
 impl<Args> PartialEq for UseTimeout<Args> {
     fn eq(&self, other: &Self) -> bool {
-        self.duration == other.duration && self.sender == self.sender
+        self.duration == other.duration && self.sender == other.sender
     }
 }
 
 /// A handle to a pending timeout.
-/// 
-/// A handle to a running timeout triggered with [`UseTimeout::action`]. 
+///
+/// A handle to a running timeout triggered with [`UseTimeout::action`].
 /// This handle allows you to cancel the timeout from triggering with [`TimeoutHandle::cancel`]
-/// 
+///
 /// See [`use_timeout`] for more information.
 #[derive(Clone, Copy, PartialEq)]
 pub struct TimeoutHandle {
@@ -74,13 +71,13 @@ impl TimeoutHandle {
 }
 
 /// A hook to run a callback after a period of time.
-/// 
+///
 /// Timeouts allow you to trigger a callback that occurs after a period of time. Unlike a debounce, a timeout will not
-/// reset it's timer when triggered again. Instead, calling a timeout while it is already running will start another instance 
+/// reset it's timer when triggered again. Instead, calling a timeout while it is already running will start another instance
 /// to run the callback after the provided period.
-/// 
+///
 /// This hook is similar to the web [setTimeout()](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout) API.
-/// 
+///
 /// # Examples
 ///
 /// Example of using a timeout:
@@ -91,14 +88,14 @@ impl TimeoutHandle {
 ///
 /// #[component]
 /// fn App() -> Element {
-///     // Create a timeout for two seconds. 
+///     // Create a timeout for two seconds.
 ///     // Once triggered, this timeout will print "timeout called" after two seconds.
 ///     let timeout = use_timeout(Duration::from_secs(2), |()| println!("timeout called"));
 ///     
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
-///                 // Trigger the timeout. 
+///                 // Trigger the timeout.
 ///                 timeout.action(());
 ///             },
 ///             "Click!"
@@ -106,7 +103,7 @@ impl TimeoutHandle {
 ///     }
 /// }
 /// ```
-/// 
+///
 /// #### Cancelling Timeouts
 /// Example of cancelling a timeout. This is the equivalent of a debounce.
 /// ```rust
@@ -129,7 +126,7 @@ impl TimeoutHandle {
 ///                 if let Some(handle) = *current_timeout.read() {
 ///                     handle.cancel();
 ///                 }
-/// 
+///
 ///                 // Trigger the timeout.
 ///                 let handle = timeout.action(());
 ///                 current_timeout.set(Some(handle));
@@ -139,7 +136,7 @@ impl TimeoutHandle {
 ///     }
 /// }
 /// ```
-/// 
+///
 /// #### Async Timeouts
 /// Timeouts can accept an async callback:
 /// ```rust
@@ -149,7 +146,7 @@ impl TimeoutHandle {
 ///
 /// #[component]
 /// fn App() -> Element {
-///     // Create a timeout for two seconds. 
+///     // Create a timeout for two seconds.
 ///     // We use an async sleep to wait an even longer duration after the timeout is called.
 ///     let timeout = use_timeout(Duration::from_secs(2), |()| async {
 ///         println!("Timeout after two total seconds.");
@@ -160,7 +157,7 @@ impl TimeoutHandle {
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
-///                 // Trigger the timeout. 
+///                 // Trigger the timeout.
 ///                 timeout.action(());
 ///             },
 ///             "Click!"

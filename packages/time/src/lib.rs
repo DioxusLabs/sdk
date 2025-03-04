@@ -18,7 +18,7 @@ mod debounce;
 pub use debounce::{use_debounce, UseDebounce};
 
 mod timeout;
-pub use timeout::{use_timeout, UseTimeout, TimeoutHandle};
+pub use timeout::{use_timeout, TimeoutHandle, UseTimeout};
 
 /// Pause the current task for the specified duration.
 ///
