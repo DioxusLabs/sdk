@@ -8,7 +8,7 @@ Synchronization primitives for your Dioxus app.
 Add `dioxus-sync` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-scyn = "0.1"
+dioxus-sync = "0.1"
 ```
 
 ### Dioxus Compatibility
