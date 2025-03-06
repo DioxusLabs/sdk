@@ -12,11 +12,11 @@
 //! An example of using the theme to determine which class to use.
 //! ```rust
 //! use dioxus::prelude::*;
-//! use dioxus_window::theme::{use_theme, Theme};
+//! use dioxus_window::theme::{use_system_theme, Theme};
 //!
 //! #[component]
 //! fn App() -> Element {
-//!     let theme = use_theme();
+//!     let theme = use_system_theme();
 //!     
 //!     // Default to a light theme in the event of an error.
 //!     let class = match theme().unwrap_or(Theme::Light) {
@@ -96,11 +96,11 @@ type ThemeResult = Result<Theme, ThemeError>;
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::theme::{use_theme, Theme};
+/// use dioxus_window::theme::{use_system_theme, Theme};
 ///
 /// #[component]
 /// fn App() -> Element {
-///     let theme = use_theme();
+///     let theme = use_system_theme();
 ///
 ///     rsx! {
 ///         p {
@@ -109,7 +109,7 @@ type ThemeResult = Result<Theme, ThemeError>;
 ///     }
 /// }
 /// ```
-pub fn use_theme() -> ReadOnlySignal<ThemeResult> {
+pub fn use_system_theme() -> ReadOnlySignal<ThemeResult> {
     let mut system_theme = match try_use_context::<Signal<ThemeResult>>() {
         Some(s) => s,
         // This should only run once.

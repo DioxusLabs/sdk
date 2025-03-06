@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_window::theme::use_theme;
+use dioxus_window::theme::use_system_theme;
 
 fn main() {
     launch(App);
@@ -7,7 +7,7 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let theme = use_theme();
+    let theme = use_system_theme();
 
     let theme_text = match theme() {
         Ok(theme) => rsx! { h3 { "Your system theme is {theme}." } },
@@ -27,7 +27,7 @@ fn App() -> Element {
 
 #[component]
 fn Other() -> Element {
-    let theme = use_theme();
+    let theme = use_system_theme();
 
     let theme_text = match theme() {
         Ok(theme) => rsx! { h3 { "Your system theme x2 is {theme}." } },
