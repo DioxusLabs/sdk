@@ -23,7 +23,7 @@
 
 -----
 
-<p align="center"><i>This library is still under development. Expect breaking changes!</i></p>
+<p align="center"><i>These crates are still under development. Expect breaking changes!</i></p>
 <br/>
 
 `dioxus-sdk` is a development kit for Dioxus that provides cross-platform APIs for your Dioxus app. SDK is organized into many different crates accessible through the `dioxus-sdk` crate with the corresponding feature flags.
@@ -39,7 +39,7 @@
   - [x] Sleep
   - [x] Intervals
   - [x] Debounce
-  - [ ] Timeouts
+  - [x] Timeouts
 - `dioxus-sync`
  - [x] Channels
 - [ ] Camera
@@ -78,7 +78,7 @@ fn App() -> Element {
 You can add `dioxus-sdk` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-sdk = { version = "0.6", features = [] }
+dioxus-sdk = { version = "0.7", features = [] }
 ```
 
 ## License
