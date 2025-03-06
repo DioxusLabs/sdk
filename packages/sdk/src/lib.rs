@@ -20,12 +20,12 @@
 //! | [`dioxus-notification`]   | Send notifications.                   | `notification`    |
 //! | [`dioxus-sync`]           | Synchronization primities for Dioxus. | `sync`            |
 //!
-//! [`dioxus-geolocation`]: https://dioxuslabs.com
-//! [`dioxus-storage`]: https://dioxuslabs.com
-//! [`dioxus-time`]: https://dioxuslabs.com
-//! [`dioxus-window`]: https://dioxuslabs.com
-//! [`dioxus-notification`]: https://dioxuslabs.com
-//! [`dioxus-sync`]: https://dioxuslabs.com
+//! [`dioxus-geolocation`]: https://crates.io/crates/dioxus-geolocation
+//! [`dioxus-storage`]: https://crates.io/crates/dioxus-storage
+//! [`dioxus-time`]: https://crates.io/crates/dioxus-time
+//! [`dioxus-window`]: https://crates.io/crates/dioxus-window
+//! [`dioxus-notification`]: https://crates.io/crates/dioxus-notification
+//! [`dioxus-sync`]: https://crates.io/crates/dioxus-sync
 
 #[cfg(feature = "geolocation")]
 pub use dioxus_geolocation;
