@@ -48,6 +48,9 @@ system_theme = [
     "dep:wasm-bindgen",
     "dep:wasm-bindgen-futures",
 ]
+scroll = [
+    "dep:serde",
+]
 window_size = [
     # Shared
     "dep:futures-util",
