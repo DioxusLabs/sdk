@@ -1,4 +1,4 @@
-# use_window_size
+# use_scroll
 
 Learn how to use `use_root_scroll`.
 

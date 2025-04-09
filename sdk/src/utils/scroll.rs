@@ -9,9 +9,9 @@ pub struct ScrollMetrics {
     /// Current scroll position from left: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
     pub scroll_left: f64,
 
-    /// Viewport height: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
+    /// Viewport height: https://developer.mozilla.org/en-US/docs/Web/API/Element/clientHeight
     pub client_height: f64,
-    /// Viewport width: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollWidth
+    /// Viewport width: https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth
     pub client_width: f64,
 
     /// Content height: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
