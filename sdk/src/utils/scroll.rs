@@ -66,13 +66,13 @@ pub fn use_root_scroll() -> Signal<ScrollMetrics> {
         scroll_width: 0.0,
     });
 
-    let future_callback_name = callback_name.clone();
-    use_future(move || {
-        let future_callback_name = future_callback_name.clone();
-        async move {
-            let callback_name = future_callback_name;
-            let js_code = format!(
-                r#"
+    use_future({
+        to_owned![callback_name];
+        move || {
+            to_owned![callback_name];
+            async move {
+                let js_code = format!(
+                    r#"
                 function {callback_name}() {{
                     const doc = document.documentElement;
                     const scrollTop = window.scrollY || doc.scrollTop;
@@ -98,20 +98,21 @@ pub fn use_root_scroll() -> Signal<ScrollMetrics> {
                 window.addEventListener('scroll', window['{callback_name}']);
                 window.addEventListener('resize', window['{callback_name}']);
                 "#,
-            );
+                );
 
-            let mut eval = document::eval(&js_code);
+                let mut eval = document::eval(&js_code);
 
-            loop {
-                match eval.recv::<ScrollMetrics>().await {
-                    Ok(metrics) => {
-                        dioxus::logger::tracing::trace!("Got scroll metrics {:?}", metrics);
-                        scroll_metrics.set(metrics);
+                loop {
+                    match eval.recv::<ScrollMetrics>().await {
+                        Ok(metrics) => {
+                            dioxus::logger::tracing::trace!("Got scroll metrics {:?}", metrics);
+                            scroll_metrics.set(metrics);
+                        }
+                        Err(error) => dioxus::logger::tracing::error!(
+                            "Error receiving scroll metrics: {:?}",
+                            error
+                        ),
                     }
-                    Err(error) => dioxus::logger::tracing::error!(
-                        "Error receiving scroll metrics: {:?}",
-                        error
-                    ),
                 }
             }
         }
