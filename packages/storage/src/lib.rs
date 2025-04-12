@@ -588,10 +588,7 @@ pub(crate) fn try_serde_from_string<T: DeserializeOwned>(value: &str) -> Option<
     }
 
     match yazi::decompress(&bytes, yazi::Format::Zlib) {
-        Ok((decompressed, _)) => match ciborium::from_reader(std::io::Cursor::new(decompressed)) {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        },
+        Ok((decompressed, _)) => ciborium::from_reader(std::io::Cursor::new(decompressed)).ok(),
         Err(_) => None,
     }
 }

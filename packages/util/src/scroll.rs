@@ -26,12 +26,7 @@ static SCROLL_TRACKER_COUNTER: AtomicUsize = AtomicUsize::new(0);
 /// Creates a signal that tracks root scrolling.
 /// ```rust
 /// use dioxus::{logger::tracing::{info, Level}, prelude::*};
-/// use dioxus_sdk::utils::scroll::use_root_scroll;
-///
-/// fn main() {
-///     dioxus::logger::init(Level::TRACE).unwrap();
-///     launch(App);
-/// }
+/// use dioxus_util::scroll::use_root_scroll;
 ///
 /// #[component]
 /// fn App() -> Element {
