@@ -15,4 +15,4 @@ repository.workspace = true
 
 [dependencies]
 dioxus = { workspace = true }
-
+serde.workspace = true

@@ -42,6 +42,8 @@
   - [x] Timeouts
 - `dioxus-sync`
  - [x] Channels
+- `dioxus-util`
+ - [x] `use_root_scroll`
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
@@ -49,9 +51,9 @@
 Geolocation example:
 
 ```rust
-// dioxus-sdk = { version = "*", features = ["geolocation"] }
+// dioxus-geolocation= { version = "*" }
 use dioxus::prelude::*;
-use dioxus_sdk::geolocation::{
+use dioxus_geolocation::{
     init_geolocator, use_geolocation, PowerMode
 };
 

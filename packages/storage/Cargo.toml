@@ -23,7 +23,7 @@ rustc-hash = "1.1.0"
 ciborium = "0.2.2"
 once_cell = "1.17.0"
 dioxus-signals = { workspace = true, features = ["serialize"] }
-serde = "1.0.163"
+serde.workspace = true
 yazi = "0.1.4"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
