@@ -13,6 +13,12 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
+    if #[cfg(feature = "scroll")] {
+        pub mod scroll;
+    }
+}
+
+cfg_if::cfg_if! {
     if #[cfg(feature = "timing")] {
         pub mod timing;
     }
