@@ -91,7 +91,7 @@ E.g. if crate version `0.1` supported Dioxus `0.6` and crate version `0.4` suppo
 
 | Crate Version | Dioxus Version |
 | ------------- | -------------- |
-| 0.6           | 0.6            |
+| 0.7           | 0.6            |
 | 0.5           | 0.5            |
 
 ## License

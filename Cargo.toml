@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["packages/*", "examples/*"]
 
 package.authors = [
@@ -9,13 +9,14 @@ package.authors = [
     "marc2332",
     "ealmloff",
 ]
-package.edition = "2021"
+package.edition = "2024"
 package.license = "MIT OR Apache-2.0"
 package.homepage = "https://dioxuslabs.com"
 package.repository = "https://github.com/DioxusLabs/sdk/"
 
 [workspace.dependencies]
 # Workspace
+dioxus-sdk = { path = "packages/sdk" }
 dioxus-time = { path = "packages/time" }
 dioxus-storage = { path = "packages/storage" }
 dioxus-geolocation = { path = "packages/geolocation" }
