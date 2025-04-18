@@ -1,13 +1,14 @@
 [package]
-name = "timing"
+name = "timing-example"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["timing"] }
 dioxus = { workspace = true }
-dioxus-logger = "0.5.1"
+dioxus-time = { workspace = true }
+gloo-timers = { version = "0.3", features = ["futures"] }
 
 [features]
+default = ["desktop"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]

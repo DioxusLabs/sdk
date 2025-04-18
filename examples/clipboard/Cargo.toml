@@ -1,8 +1,0 @@
-[package]
-name = "clipboard"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-dioxus-sdk = { workspace = true, features = ["clipboard"] }
-dioxus = { workspace = true, features = ["desktop"] }

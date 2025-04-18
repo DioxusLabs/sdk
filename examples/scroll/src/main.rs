@@ -2,7 +2,7 @@ use dioxus::{
     logger::tracing::{info, Level},
     prelude::*,
 };
-use dioxus_sdk::utils::scroll::use_root_scroll;
+use dioxus_util::scroll::use_root_scroll;
 
 fn main() {
     dioxus::logger::init(Level::TRACE).unwrap();

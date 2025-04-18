@@ -6,4 +6,9 @@ Learn how to use `use_root_scroll`.
 ### Run
 
 **Web**
-```dioxus serve --platform web```
+
+```dx serve --platform web```
+
+**Desktop**
+
+```dx serve --platform desktop```

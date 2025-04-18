@@ -1,0 +1,20 @@
+[package]
+name = "dioxus-notification"
+version = "0.1.0-alpha.1"
+
+description = "Send notifications from your Dioxus apps."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+cfg-if.workspace = true
+
+[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+notify-rust = "4.11.5"

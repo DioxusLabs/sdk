@@ -1,0 +1,36 @@
+[package]
+name = "dioxus-geolocation"
+version = "0.1.0-alpha.1"
+
+description = "Geolocation utilities and hooks for Dioxus."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+cfg-if = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+web-sys = { workspace = true, features = [
+    "Window",
+    "Navigator",
+    "Geolocation",
+    "PositionOptions",
+] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.48.0", features = [
+    "Foundation",
+    "Devices_Geolocation",
+] }

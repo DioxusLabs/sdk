@@ -1,0 +1,24 @@
+[package]
+name = "dioxus-time"
+version = "0.1.0-alpha.1"
+
+description = "Timing utilities and hooks for Dioxus."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+futures = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["time"]}
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+gloo-timers = { version = "0.3.0", features = ["futures"] }

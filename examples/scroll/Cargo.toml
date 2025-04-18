@@ -1,11 +1,13 @@
 [package]
-name = "use_scroll"
+name = "use-scroll-example"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-sdk = { workspace = true, features = ["scroll"] }
-dioxus = { workspace = true }
+dioxus-util.workspace = true
+dioxus.workspace = true
 
 [features]
+default = ["desktop"]
 web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]

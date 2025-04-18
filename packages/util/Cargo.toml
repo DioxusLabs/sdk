@@ -1,0 +1,18 @@
+[package]
+name = "dioxus-util"
+version = "0.1.0-alpha.1"
+
+description = "General utilities for Dioxus apps."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+serde.workspace = true

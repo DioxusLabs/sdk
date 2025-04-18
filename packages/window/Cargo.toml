@@ -1,0 +1,25 @@
+[package]
+name = "dioxus-window"
+version = "0.1.0-alpha.1"
+
+description = "Window utilities and hooks for Dioxus."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+dioxus-config-macro = { workspace = true }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+web-sys = { workspace = true, features = ["Window", "MediaQueryList"] }
+wasm-bindgen = { workspace = true }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+dioxus-desktop = { workspace = true }

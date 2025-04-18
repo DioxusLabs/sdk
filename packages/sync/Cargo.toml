@@ -1,0 +1,23 @@
+[package]
+name = "dioxus-sync"
+version = "0.1.0-alpha.1"
+
+description = "Synchronization primitives for your Dioxus app."
+readme = "./README.md"
+keywords = ["gui", "dioxus", "hooks"]
+categories = ["gui", "wasm"]
+
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+dioxus = { workspace = true }
+
+uuid = { version = "1.3.2", features = ["v4"] }
+async-broadcast = "0.5.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+uuid = { version = "1.3.2", features = ["v4", "js"] }
