@@ -41,9 +41,9 @@
   - [x] Debounce
   - [x] Timeouts
 - `dioxus-sync`
- - [x] Channels
+  - [x] Channels
 - `dioxus-util`
- - [x] `use_root_scroll`
+  - [x] `use_root_scroll`
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
