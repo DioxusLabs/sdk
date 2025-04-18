@@ -1,7 +1,7 @@
 use futures::channel::mpsc;
 use futures_util::StreamExt;
 use std::sync::Arc;
-use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use wasm_bindgen::{JsCast, JsValue, prelude::Closure};
 use web_sys::PositionOptions;
 
 use crate::{Error, Event, Geocoordinates, PowerMode};

@@ -1,13 +1,13 @@
 use crate::{StorageChannelPayload, StorageSubscription};
 use dioxus::logger::tracing::trace;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::{OnceLock, RwLock};
-use tokio::sync::watch::{channel, Receiver};
+use tokio::sync::watch::{Receiver, channel};
 
-use crate::{serde_to_string, try_serde_from_string, StorageBacking, StorageSubscriber};
+use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
 
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.

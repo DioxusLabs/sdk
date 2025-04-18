@@ -23,8 +23,8 @@
 //! ```
 use dioxus::hooks::use_effect;
 use dioxus::prelude::{
-    provide_root_context, try_use_context, use_hook, warnings::signal_write_in_component_body,
-    ReadOnlySignal, ScopeId, Signal, Writable,
+    ReadOnlySignal, ScopeId, Signal, Writable, provide_root_context, try_use_context, use_hook,
+    warnings::signal_write_in_component_body,
 };
 use dioxus::signals::Readable;
 use dioxus::warnings::Warning as _;
@@ -150,7 +150,7 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
 // Listener for the web implementation.
 #[cfg(target_family = "wasm")]
 fn listen(mut window_size: Signal<WindowSizeResult>) {
-    use wasm_bindgen::{closure::Closure, JsCast};
+    use wasm_bindgen::{JsCast, closure::Closure};
 
     let window = web_sys::window().expect("no wasm window found; are you in wasm?");
     let window2 = window.clone();
@@ -190,7 +190,7 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
 // Listener for anything but the web implementation.
 #[cfg(not(target_family = "wasm"))]
 fn listen(mut window_size: Signal<WindowSizeResult>) {
-    use dioxus_desktop::{tao::event::Event, window, WindowEvent};
+    use dioxus_desktop::{WindowEvent, tao::event::Event, window};
 
     let window = window();
     window.create_wry_event_handler(move |event, _| {

@@ -1,9 +1,9 @@
 use dioxus::{
     dioxus_core::SpawnIfAsync,
-    prelude::{spawn, use_hook, Callback, Task},
+    prelude::{Callback, Task, spawn, use_hook},
     signals::Signal,
 };
-use futures::{channel::mpsc, SinkExt, StreamExt};
+use futures::{SinkExt, StreamExt, channel::mpsc};
 use std::time::Duration;
 
 /// The interface to a timeout.

@@ -12,13 +12,13 @@
 use std::time::Duration;
 
 mod interval;
-pub use interval::{use_interval, UseInterval};
+pub use interval::{UseInterval, use_interval};
 
 mod debounce;
-pub use debounce::{use_debounce, UseDebounce};
+pub use debounce::{UseDebounce, use_debounce};
 
 mod timeout;
-pub use timeout::{use_timeout, TimeoutHandle, UseTimeout};
+pub use timeout::{TimeoutHandle, UseTimeout, use_timeout};
 
 /// Pause the current task for the specified duration.
 ///

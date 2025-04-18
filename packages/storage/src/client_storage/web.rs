@@ -5,15 +5,15 @@ use std::{
 
 use dioxus::logger::tracing::{error, trace};
 use once_cell::sync::Lazy;
-use serde::{de::DeserializeOwned, Serialize};
-use tokio::sync::watch::{channel, Receiver};
-use wasm_bindgen::prelude::Closure;
+use serde::{Serialize, de::DeserializeOwned};
+use tokio::sync::watch::{Receiver, channel};
 use wasm_bindgen::JsCast;
-use web_sys::{window, Storage};
+use wasm_bindgen::prelude::Closure;
+use web_sys::{Storage, window};
 
 use crate::{
-    serde_to_string, try_serde_from_string, StorageBacking, StorageChannelPayload,
-    StorageSubscriber, StorageSubscription,
+    StorageBacking, StorageChannelPayload, StorageSubscriber, StorageSubscription, serde_to_string,
+    try_serde_from_string,
 };
 
 #[derive(Clone)]

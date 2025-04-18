@@ -39,7 +39,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::any::Any;
 use std::fmt::{Debug, Display};
 use std::ops::{Deref, DerefMut};

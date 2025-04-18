@@ -1,4 +1,4 @@
-use crate::{use_timeout, TimeoutHandle, UseTimeout};
+use crate::{TimeoutHandle, UseTimeout, use_timeout};
 use dioxus::{
     dioxus_core::SpawnIfAsync,
     hooks::use_signal,

@@ -3,8 +3,8 @@
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::{
     prelude::{
-        provide_context, try_consume_context, use_coroutine, use_hook, use_signal, ReadOnlySignal,
-        Signal, UnboundedReceiver,
+        ReadOnlySignal, Signal, UnboundedReceiver, provide_context, try_consume_context,
+        use_coroutine, use_hook, use_signal,
     },
     signals::{Readable, Writable},
 };

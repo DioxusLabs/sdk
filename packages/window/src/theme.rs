@@ -131,7 +131,7 @@ pub fn use_system_theme() -> ReadOnlySignal<ThemeResult> {
 // The listener implementation for wasm targets.
 #[cfg(target_family = "wasm")]
 fn listen(mut theme: Signal<ThemeResult>) {
-    use wasm_bindgen::{closure::Closure, JsCast};
+    use wasm_bindgen::{JsCast, closure::Closure};
     use web_sys::MediaQueryList;
 
     let Some(window) = web_sys::window() else {
@@ -169,8 +169,9 @@ fn listen(mut theme: Signal<ThemeResult>) {
 #[cfg(not(target_family = "wasm"))]
 fn listen(mut theme: Signal<ThemeResult>) {
     use dioxus_desktop::{
+        WindowEvent,
         tao::{event::Event, window::Theme as TaoTheme},
-        window, WindowEvent,
+        window,
     };
 
     let window = window();
@@ -254,8 +255,8 @@ fn get_theme_platform() -> ThemeResult {
 // The desktop (except linux) implementation to get the system theme.
 #[cfg(not(target_family = "wasm"))]
 fn get_theme_platform() -> ThemeResult {
-    use dioxus_desktop::tao::window::Theme as TaoTheme;
     use dioxus_desktop::DesktopContext;
+    use dioxus_desktop::tao::window::Theme as TaoTheme;
 
     // Get window context and theme
     let Some(window) = try_consume_context::<DesktopContext>() else {

@@ -2,8 +2,8 @@ use crate::SessionStorage;
 use crate::{new_storage_entry, use_hydrate_storage};
 use dioxus::prelude::*;
 use dioxus_signals::Signal;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use super::StorageEntryTrait;
 
