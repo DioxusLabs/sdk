@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk"
-version = "0.7.0"
+version = "0.7.0-alpha.1"
 
 description = "A platform agnostic library for supercharging your productivity with Dioxus."
 readme = "../../README.md"
@@ -19,6 +19,7 @@ dioxus-notification = { workspace = true, optional = true }
 dioxus-storage = { workspace = true, optional = true }
 dioxus-sync = { workspace = true, optional = true }
 dioxus-time = { workspace = true, optional = true }
+dioxus-util = { workspace = true, optional = true }
 dioxus-window = { workspace = true, optional = true }
 
 [features]
@@ -27,6 +28,7 @@ notification = ["dep:dioxus-notification"]
 storage = ["dep:dioxus-storage"]
 sync = ["dep:dioxus-sync"]
 time = ["dep:dioxus-time"]
+util = ["dep:dioxus-util"]
 window = ["dep:dioxus-window"]
 
 [package.metadata.docs.rs]

@@ -22,7 +22,7 @@ use dioxus_notification::Notification;
 Notification::new()
     .app_name("dioxus test".to_string())
     .summary("hi, this is dioxus test".to_string())
-    .body("lorem ipsum??".to_string())
+    .body("lorem ipsum".to_string())
     .show()
     .unwrap();
 ```
