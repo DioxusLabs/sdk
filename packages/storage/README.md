@@ -9,7 +9,7 @@ Local and persistent storage utilities for Dioxus.
 Add `dioxus-storage` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-storage = "0.1"
+dioxus_storage = "0.1"
 ```
 
 Example:
