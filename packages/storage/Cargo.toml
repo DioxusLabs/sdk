@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-storage"
+name = "dioxus_storage"
 version = "0.1.0-alpha.1"
 
 description = "Local and persistent storage utilities for Dioxus."

@@ -18,7 +18,7 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 # Workspace
 dioxus-sdk = { path = "packages/sdk" }
 dioxus-time = { path = "packages/time" }
-dioxus-storage = { path = "packages/storage" }
+dioxus_storage = { path = "packages/storage" }
 dioxus-geolocation = { path = "packages/geolocation" }
 dioxus-notification = { path = "packages/notification" }
 dioxus-sync = { path = "packages/sync" }

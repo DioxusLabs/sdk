@@ -16,7 +16,7 @@ repository.workspace = true
 [dependencies]
 dioxus-geolocation = { workspace = true, optional = true }
 dioxus-notification = { workspace = true, optional = true }
-dioxus-storage = { workspace = true, optional = true }
+dioxus_storage = { workspace = true, optional = true }
 dioxus-sync = { workspace = true, optional = true }
 dioxus-time = { workspace = true, optional = true }
 dioxus-util = { workspace = true, optional = true }
@@ -25,7 +25,7 @@ dioxus-window = { workspace = true, optional = true }
 [features]
 geolocation = ["dep:dioxus-geolocation"]
 notification = ["dep:dioxus-notification"]
-storage = ["dep:dioxus-storage"]
+storage = ["dep:dioxus_storage"]
 sync = ["dep:dioxus-sync"]
 time = ["dep:dioxus-time"]
 util = ["dep:dioxus-util"]
