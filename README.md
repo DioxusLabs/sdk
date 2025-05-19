@@ -80,7 +80,7 @@ fn App() -> Element {
 You can add `dioxus-sdk` to your application by adding it to your dependencies.
 ```toml
 [dependencies]
-dioxus-sdk = { version = "0.7", features = [] }
+dioxus-sdk = { version = "0.6", features = [] }
 ```
 
 ### Dioxus Compatibility
@@ -90,8 +90,8 @@ The crate version supports a Dioxus version up until the next crate version in t
 E.g. if crate version `0.1` supported Dioxus `0.6` and crate version `0.4` supported Dioxus `0.7`, crate versions `0.1`, `0.2`, and `0.3` would support Dioxus `0.6`.
 
 | Crate Version | Dioxus Version |
-| ------------- | -------------- |
-| 0.7           | 0.6            |
+|---------------| -------------- |
+| 0.6           | 0.6            |
 | 0.5           | 0.5            |
 
 ## License
