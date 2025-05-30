@@ -26,10 +26,10 @@ dioxus-util = { path = "packages/util", version = "0.1.0-alpha.1" }
 dioxus-window = { path = "packages/window", version = "0.1.0-alpha.1" }
 
 # Dioxus
-dioxus = "0.6.0"
-dioxus-signals = "0.6.0"
-dioxus-desktop = "0.6.0"
-dioxus-config-macro = "0.6.0"
+dioxus = "0.7.0-alpha.0"
+dioxus-signals = "0.7.0-alpha.0"
+dioxus-desktop = "0.7.0-alpha.0"
+dioxus-config-macro = "0.7.0-alpha.0"
 
 # Deps
 cfg-if = "1.0.0"
