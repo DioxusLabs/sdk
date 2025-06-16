@@ -1,5 +1,6 @@
 use crate::{StorageChannelPayload, StorageSubscription};
 use dioxus::logger::tracing::trace;
+use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::io::Write;
@@ -92,8 +93,8 @@ impl StoragePersistence for LocalStorage {
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
 impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        key: &<LocalStorage as StorageBacking>::Key,
+    fn subscribe<T: DeserializeOwned + Serialize + Send + Sync + Clone + 'static>(
+        key: &<LocalStorage as StorageBacking<T>>::Key,
     ) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
         let subscriptions = SUBSCRIPTIONS.get_or_init(|| RwLock::new(HashMap::new()));
