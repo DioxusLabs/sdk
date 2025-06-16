@@ -5,29 +5,28 @@ use std::{
 
 use dioxus::logger::tracing::{error, trace};
 use once_cell::sync::Lazy;
-use serde::{Serialize, de::DeserializeOwned};
+use serde::de::DeserializeOwned;
 use tokio::sync::watch::{Receiver, channel};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::Closure;
 use web_sys::{Storage, window};
 
-use crate::{
-    StorageBacking, StorageChannelPayload, StorageSubscriber, StorageSubscription, serde_to_string,
-    try_serde_from_string,
-};
+use crate::{StorageChannelPayload, StoragePersistence, StorageSubscriber, StorageSubscription};
 
 #[derive(Clone)]
 pub struct LocalStorage;
 
-impl StorageBacking for LocalStorage {
+/// LocalStorage stores Option<String>.
+impl StoragePersistence for LocalStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
-        set(key, value, WebStorageType::Local);
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key, WebStorageType::Local)
     }
 
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, WebStorageType::Local)
+    fn store(key: Self::Key, value: &Self::Value) {
+        set_or_clear(key, value.as_deref(), WebStorageType::Local)
     }
 }
 
@@ -96,29 +95,43 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
 #[derive(Clone)]
 pub struct SessionStorage;
 
-impl StorageBacking for SessionStorage {
+/// LocalStorage stores Option<String>.
+impl StoragePersistence for SessionStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
-        set(key, value, WebStorageType::Session);
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key, WebStorageType::Session)
     }
 
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, WebStorageType::Session)
+    fn store(key: Self::Key, value: &Self::Value) {
+        set_or_clear(key, value.as_deref(), WebStorageType::Session)
     }
 }
 
-fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
-    let as_str = serde_to_string(value);
+fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) {
+    match value {
+        Some(str) => set(key, &str, storage_type),
+        None => clear(key, storage_type),
+    }
+}
+
+fn set(key: String, as_str: &str, storage_type: WebStorageType) {
     get_storage_by_type(storage_type)
         .unwrap()
         .set_item(&key, &as_str)
         .unwrap();
 }
 
-fn get<T: DeserializeOwned>(key: &str, storage_type: WebStorageType) -> Option<T> {
-    let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
-    try_serde_from_string(&s)
+fn clear(key: String, storage_type: WebStorageType) {
+    get_storage_by_type(storage_type)
+        .unwrap()
+        .delete(&key)
+        .unwrap();
+}
+
+fn get(key: &str, storage_type: WebStorageType) -> Option<String> {
+    get_storage_by_type(storage_type)?.get_item(key).ok()?
 }
 
 fn get_storage_by_type(storage_type: WebStorageType) -> Option<Storage> {

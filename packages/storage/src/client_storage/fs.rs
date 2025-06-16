@@ -1,13 +1,12 @@
 use crate::{StorageChannelPayload, StorageSubscription};
 use dioxus::logger::tracing::trace;
-use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::{OnceLock, RwLock};
 use tokio::sync::watch::{Receiver, channel};
 
-use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
+use crate::{StorageBacking, StoragePersistence, StorageSubscriber};
 
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
@@ -29,52 +28,63 @@ pub fn set_dir_name(name: &str) {
 static LOCATION: OnceLock<std::path::PathBuf> = OnceLock::new();
 
 /// Set a value in the configured storage location using the key as the file name.
-fn set<T: Serialize>(key: String, value: &T) {
-    let as_str = serde_to_string(value);
+fn set(key: &str, as_str: &Option<String>) {
     let path = LOCATION
         .get()
-        .expect("Call the set_dir macro before accessing persistant data");
-    std::fs::create_dir_all(path).unwrap();
+        .expect("Call the set_dir macro before accessing persistent data");
+
     let file_path = path.join(key);
-    let mut file = std::fs::File::create(file_path).unwrap();
-    file.write_all(as_str.as_bytes()).unwrap();
+
+    match as_str {
+        Some(as_str) => {
+            std::fs::create_dir_all(path).unwrap();
+            let mut file = std::fs::File::create(file_path).unwrap();
+            file.write_all(as_str.as_bytes()).unwrap()
+        }
+        None => match std::fs::remove_file(file_path) {
+            Ok(_) => {}
+            Err(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => {}
+                _ => Result::Err(error).unwrap(),
+            },
+        },
+    }
 }
 
 /// Get a value from the configured storage location using the key as the file name.
-fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
+fn get(key: &str) -> Option<String> {
     let path = LOCATION
         .get()
-        .expect("Call the set_dir macro before accessing persistant data")
+        .expect("Call the set_dir macro before accessing persistent data")
         .join(key);
-    let s = std::fs::read_to_string(path).ok()?;
-    try_serde_from_string(&s)
+    std::fs::read_to_string(path).ok()
 }
 
 #[derive(Clone)]
 pub struct LocalStorage;
 
-impl StorageBacking for LocalStorage {
+/// LocalStorage stores Option<String>.
+impl StoragePersistence for LocalStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + Clone + 'static>(key: String, value: &T) {
-        let key_clone = key.clone();
-        let value_clone = (*value).clone();
-        set(key, value);
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key)
+    }
+
+    fn store(key: Self::Key, value: &Self::Value) {
+        set(&key, value);
 
         // If the subscriptions map is not initialized, we don't need to notify any subscribers.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
-            if let Some(subscription) = read_binding.get(&key_clone) {
+            if let Some(subscription) = read_binding.get(&key) {
                 subscription
                     .tx
-                    .send(StorageChannelPayload::new(value_clone))
+                    .send(StorageChannelPayload::new(value.clone()))
                     .unwrap();
             }
         }
-    }
-
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key)
     }
 }
 

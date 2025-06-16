@@ -36,6 +36,7 @@ pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
 };
 use std::cell::RefCell;
+use std::marker::PhantomData;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
@@ -475,6 +476,74 @@ pub trait StorageBacking: Clone + 'static {
     fn set<T: Serialize + Send + Sync + Clone + 'static>(key: Self::Key, value: &T);
 }
 
+/// A trait for the persistence portion of StorageBacking.
+pub trait StoragePersistence: Clone + 'static {
+    /// The key type used to store data in storage
+    type Key: PartialEq + Clone + Debug + Send + Sync + 'static;
+    /// The type of value which can be stored.
+    type Value;
+    /// Gets a value from storage for the given key
+    fn load(key: &Self::Key) -> Self::Value;
+    /// Sets a value in storage for the given key
+    fn store(key: Self::Key, value: &Self::Value);
+}
+
+/// New trait which can be implemented to define a data format for storage.
+pub trait StorageEncoder: Clone + 'static {
+    /// The type of value which can be stored.
+    type Value;
+    fn deserialize<T: DeserializeOwned + Clone + 'static>(loaded: &Self::Value) -> T;
+    fn serialize<T: Serialize + Send + Sync + Clone + 'static>(value: &T) -> Self::Value;
+}
+
+/// A way to create a StorageEncoder out of the two layers.
+///
+/// I'm not sure if this is the best way to abstract that.
+#[derive(Clone)]
+pub struct LayeredStorage<Persistence: StoragePersistence, Encoder: StorageEncoder> {
+    persistence: PhantomData<Persistence>,
+    encoder: PhantomData<Encoder>,
+}
+
+/// StorageBacking for LayeredStorage.
+impl<Value, P: StoragePersistence<Value = Option<Value>>, E: StorageEncoder<Value = Value>>
+    StorageBacking for LayeredStorage<P, E>
+{
+    type Key = P::Key;
+
+    fn get<T: DeserializeOwned + Clone + 'static>(key: &Self::Key) -> Option<T> {
+        let loaded = P::load(key);
+        match loaded {
+            Some(t) => E::deserialize(&t),
+            None => None,
+        }
+    }
+
+    fn set<T: Serialize + Send + Sync + Clone + 'static>(key: Self::Key, value: &T) {
+        P::store(key, &Some(E::serialize(value)));
+    }
+}
+
+impl<
+    Value,
+    Key,
+    P: StoragePersistence<Value = Option<Value>, Key = Key>
+        + StorageSubscriber<P>
+        + StorageBacking<Key = Key>,
+    E: StorageEncoder<Value = Value>,
+> StorageSubscriber<LayeredStorage<P, E>> for LayeredStorage<P, E>
+{
+    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
+        key: &<LayeredStorage<P, E> as StorageBacking>::Key,
+    ) -> Receiver<StorageChannelPayload> {
+        P::subscribe::<T>(key)
+    }
+
+    fn unsubscribe(key: &<LayeredStorage<P, E> as StorageBacking>::Key) {
+        P::unsubscribe(key)
+    }
+}
+
 /// A trait for a subscriber to events from a storage backing
 pub trait StorageSubscriber<S: StorageBacking> {
     /// Subscribes to events from a storage backing for the given key
@@ -629,4 +698,33 @@ where
         }
     }
     signal
+}
+
+#[derive(Clone)]
+struct DefaultEncoder;
+
+impl StorageEncoder for DefaultEncoder {
+    type Value = String;
+
+    fn deserialize<T: DeserializeOwned + Clone + 'static>(loaded: &Self::Value) -> T {
+        // TODO: handle errors
+        try_serde_from_string(loaded).unwrap()
+    }
+
+    fn serialize<T: Serialize + Send + Sync + Clone + 'static>(value: &T) -> Self::Value {
+        serde_to_string(value)
+    }
+}
+
+/// StorageBacking using default encoder: handles LocalStorage and other built in storage implementations.
+impl<P: StoragePersistence<Value = Option<String>>> StorageBacking for P {
+    type Key = P::Key;
+
+    fn get<T: DeserializeOwned + Clone + 'static>(key: &Self::Key) -> Option<T> {
+        LayeredStorage::<P, DefaultEncoder>::get(key)
+    }
+
+    fn set<T: Serialize + Send + Sync + Clone + 'static>(key: Self::Key, value: &T) {
+        LayeredStorage::<P, DefaultEncoder>::set(key, value)
+    }
 }
