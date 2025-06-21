@@ -1,13 +1,13 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use swc_ecma_parser::EsSyntax;
 use std::sync::Arc;
 use std::{fs, path::Path};
 use swc_common::SourceMap;
 use swc_ecma_ast::{
     Decl, ExportDecl, ExportSpecifier, FnDecl, ModuleExportName, NamedExport, VarDeclarator,
 };
+use swc_ecma_parser::EsSyntax;
 use swc_ecma_parser::{Parser, StringInput, Syntax, lexer::Lexer};
 use swc_ecma_visit::{Visit, VisitWith};
 use syn::{
