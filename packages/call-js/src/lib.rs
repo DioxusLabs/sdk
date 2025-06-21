@@ -134,7 +134,6 @@ impl Visit for FunctionVisitor {
                         ModuleExportName::Str(str_lit) => str_lit.value.to_string(),
                     };
 
-                    // Mark existing function as exported
                     if let Some(func) = self.functions.iter_mut().find(|f| f.name == name) {
                         func.is_exported = true;
                     }
@@ -176,7 +175,6 @@ fn parse_js_file(file_path: &Path) -> Result<Vec<FunctionInfo>> {
 
     let mut parser = Parser::new_from(lexer);
 
-    // Parse the module
     let module = parser.parse_module().map_err(|e| {
         syn::Error::new(
             proc_macro2::Span::call_site(),
@@ -188,7 +186,6 @@ fn parse_js_file(file_path: &Path) -> Result<Vec<FunctionInfo>> {
         )
     })?;
 
-    // Visit the AST to extract function information
     let mut visitor = FunctionVisitor::new();
     module.visit_with(&mut visitor);
 
