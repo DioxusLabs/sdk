@@ -24,6 +24,7 @@ dioxus-notification = { path = "packages/notification", version = "0.1.0-alpha.1
 dioxus-sync = { path = "packages/sync", version = "0.1.0-alpha.1" }
 dioxus-util = { path = "packages/util", version = "0.1.0-alpha.1" }
 dioxus-window = { path = "packages/window", version = "0.1.0-alpha.1" }
+dioxus-call-js = { path = "packages/call-js", version = "0.1.0-alpha.1" }
 
 # Dioxus
 dioxus = "0.6.0"
