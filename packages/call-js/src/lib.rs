@@ -85,7 +85,7 @@ pub fn call_js(input: TokenStream) -> TokenStream {
             let eval = document::eval(js.as_str());
             #(#send_calls)*
             eval.await
-        }.await
+        }
     };
 
     TokenStream::from(expanded)

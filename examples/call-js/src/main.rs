@@ -10,7 +10,7 @@ fn App() -> Element {
     let future = use_resource(|| async move {
         let from = "dave";
         let to = "john";
-        let greeting = call_js!("assets/example.js", greeting(from, to)).unwrap();
+        let greeting = call_js!("assets/example.js", greeting(from, to)).await.unwrap();
         let greeting: String = serde_json::from_value(greeting).unwrap();
         return greeting;
     });
