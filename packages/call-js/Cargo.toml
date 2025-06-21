@@ -11,6 +11,10 @@ repository.workspace = true
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["full"] }
-proc-macro2 = "1"
-quote = "1"
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+swc_ecma_parser = "0.141"
+swc_ecma_ast = "0.110"
+swc_ecma_visit = "0.96"
+swc_common = "0.33"
