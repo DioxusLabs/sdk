@@ -1,13 +1,14 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
+use swc_ecma_parser::EsSyntax;
 use std::sync::Arc;
 use std::{fs, path::Path};
 use swc_common::SourceMap;
 use swc_ecma_ast::{
     Decl, ExportDecl, ExportSpecifier, FnDecl, ModuleExportName, NamedExport, VarDeclarator,
 };
-use swc_ecma_parser::{EsConfig, Parser, StringInput, Syntax, lexer::Lexer};
+use swc_ecma_parser::{Parser, StringInput, Syntax, lexer::Lexer};
 use swc_ecma_visit::{Visit, VisitWith};
 use syn::{
     Expr, ExprCall, LitStr, Result, Token,
@@ -159,12 +160,12 @@ fn parse_js_file(file_path: &Path) -> Result<Vec<FunctionInfo>> {
 
     let cm = Arc::new(SourceMap::default());
     let fm = cm.new_source_file(
-        swc_common::FileName::Custom(file_path.display().to_string()),
+        swc_common::FileName::Custom(file_path.display().to_string()).into(),
         js_content.clone(),
     );
 
     let lexer = Lexer::new(
-        Syntax::Es(EsConfig {
+        Syntax::Es(EsSyntax {
             jsx: true,
             ..Default::default()
         }),
