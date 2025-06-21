@@ -1,10 +1,12 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use swc_ecma_ast::{Decl, ExportDecl, ExportSpecifier, FnDecl, ModuleExportName, NamedExport, VarDeclarator};
 use std::sync::Arc;
 use std::{fs, path::Path};
 use swc_common::SourceMap;
+use swc_ecma_ast::{
+    Decl, ExportDecl, ExportSpecifier, FnDecl, ModuleExportName, NamedExport, VarDeclarator,
+};
 use swc_ecma_parser::{EsConfig, Parser, StringInput, Syntax, lexer::Lexer};
 use swc_ecma_visit::{Visit, VisitWith};
 use syn::{
@@ -246,15 +248,16 @@ pub fn call_js(input: TokenStream) -> TokenStream {
 
     // validate js call
     let arg_count = function_call.args.len();
-    let manifest_dir = match std::env::var("CARGO_MANIFEST_DIR")
-    {
+    let manifest_dir = match std::env::var("CARGO_MANIFEST_DIR") {
         Ok(dir) => dir,
         Err(_) => {
-            return TokenStream::from(syn::Error::new(
-                proc_macro2::Span::call_site(),
-                "CARGO_MANIFEST_DIR environment variable not found",
-            )
-            .to_compile_error());
+            return TokenStream::from(
+                syn::Error::new(
+                    proc_macro2::Span::call_site(),
+                    "CARGO_MANIFEST_DIR environment variable not found",
+                )
+                .to_compile_error(),
+            );
         }
     };
 
