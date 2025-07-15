@@ -5,5 +5,8 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_family = "wasm")] {
         mod wasm;
         pub use self::wasm::*;
+    } else {
+        mod unsupported;
+        pub use self::unsupported::*;
     }
 }

@@ -1,6 +1,9 @@
 //! Send desktop notifications.
 //!
 //! This crate only supports desktop targets (Windows, MacOS, & Linux).
+//! ## Platform-specific:
+//!
+//! **Android / iOS / wasm:** Unsupported.
 #![deny(missing_docs)]
 
 use std::{

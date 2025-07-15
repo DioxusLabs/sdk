@@ -6,7 +6,7 @@
 //! We recommend using either [`Result::unwrap_or`] or  [`Result::unwrap_or_default`] to do this.
 //!
 //! #### Platform Support
-//! Theme is available for Web, Windows, & Mac. Linux is unsupported and Android/iOS has not been tested.
+//! Theme is available for Web, Windows, & Mac. Linux is unsupported and Android/iOS are not supported.
 //!
 //! # Examples
 //! An example of using the theme to determine which class to use.
@@ -17,7 +17,7 @@
 //! #[component]
 //! fn App() -> Element {
 //!     let theme = use_system_theme();
-//!     
+//!
 //!     // Default to a light theme in the event of an error.
 //!     let class = match theme().unwrap_or(Theme::Light) {
 //!         Theme::Light => "bg-light",
@@ -166,7 +166,7 @@ fn listen(mut theme: Signal<ThemeResult>) {
 
 // The listener implementation for desktop targets. (not linux)
 // This should only be called once.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(not(any(target_family = "wasm", target_os = "linux")))]
 fn listen(mut theme: Signal<ThemeResult>) {
     use dioxus_desktop::{
         WindowEvent,
@@ -192,7 +192,7 @@ fn listen(mut theme: Signal<ThemeResult>) {
 }
 
 // The listener implementation for unsupported targets.
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "ios"))]
 fn listen(mut theme: Signal<ThemeResult>) {
     theme.set(Err(ThemeError::Unsupported));
 }
@@ -253,7 +253,7 @@ fn get_theme_platform() -> ThemeResult {
 }
 
 // The desktop (except linux) implementation to get the system theme.
-#[cfg(not(target_family = "wasm"))]
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 fn get_theme_platform() -> ThemeResult {
     use dioxus_desktop::DesktopContext;
     use dioxus_desktop::tao::window::Theme as TaoTheme;
@@ -272,7 +272,7 @@ fn get_theme_platform() -> ThemeResult {
 }
 
 // Implementation for unsupported platforms.
-#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos")))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "ios"))]
 fn get_theme_platform() -> ThemeResult {
     Err(ThemeError::Unsupported)
 }

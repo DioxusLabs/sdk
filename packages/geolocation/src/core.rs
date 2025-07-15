@@ -88,6 +88,7 @@ impl Geolocator {
 /// Describes errors that may occur when utilizing the geolocation abstraction.
 #[derive(Debug, Clone)]
 pub enum Error {
+    Unsupported,
     NotInitialized,
     AccessDenied,
     Poisoned,
@@ -98,6 +99,10 @@ impl std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Error::Unsupported => write!(
+                f,
+                "the geolocation feature is not supported on this platform"
+            ),
             Error::NotInitialized => write!(f, "not initialized"),
             Error::AccessDenied => {
                 write!(f, "access denied (access may have been revoked during use)")
