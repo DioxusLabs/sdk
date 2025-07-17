@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-window"
-version = "0.7.0-alpha.2"
+version = "0.7.0-alpha.3"
 
 description = "Window utilities and hooks for Dioxus."
 readme = "./README.md"

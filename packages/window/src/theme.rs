@@ -32,7 +32,7 @@
 //!     }
 //! }
 //! ```
-use dioxus::prelude::*;
+use dioxus::{core::provide_root_context, prelude::*};
 use std::{error::Error, fmt::Display};
 
 /// A color theme.

@@ -16,20 +16,20 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 
 [workspace.dependencies]
 # Workspace
-dioxus-sdk = { path = "packages/sdk", version = "0.7.0-alpha.2" }
-dioxus-time = { path = "packages/time", version = "0.7.0-alpha.2" }
-dioxus_storage = { path = "packages/storage", version = "0.7.0-alpha.2" }
-dioxus-geolocation = { path = "packages/geolocation", version = "0.7.0-alpha.2" }
-dioxus-notification = { path = "packages/notification", version = "0.7.0-alpha.2" }
-dioxus-sync = { path = "packages/sync", version = "0.7.0-alpha.2" }
-dioxus-util = { path = "packages/util", version = "0.7.0-alpha.2" }
-dioxus-window = { path = "packages/window", version = "0.7.0-alpha.2" }
+dioxus-sdk = { path = "packages/sdk", version = "0.7.0-alpha.3" }
+dioxus-time = { path = "packages/time", version = "0.7.0-alpha.3" }
+dioxus_storage = { path = "packages/storage", version = "0.7.0-alpha.3" }
+dioxus-geolocation = { path = "packages/geolocation", version = "0.7.0-alpha.3" }
+dioxus-notification = { path = "packages/notification", version = "0.7.0-alpha.3" }
+dioxus-sync = { path = "packages/sync", version = "0.7.0-alpha.3" }
+dioxus-util = { path = "packages/util", version = "0.7.0-alpha.3" }
+dioxus-window = { path = "packages/window", version = "0.7.0-alpha.3" }
 
 # Dioxus
-dioxus = "0.7.0-alpha.2"
-dioxus-signals = "0.7.0-alpha.2"
-dioxus-desktop = "0.7.0-alpha.2"
-dioxus-config-macro = "0.7.0-alpha.2"
+dioxus = "0.7.0-alpha.3"
+dioxus-signals = "0.7.0-alpha.3"
+dioxus-desktop = "0.7.0-alpha.3"
+dioxus-config-macro = "0.7.0-alpha.3"
 
 # Deps
 cfg-if = "1.0.0"

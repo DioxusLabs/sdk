@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{core::use_drop, prelude::*};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Scroll metrics.
