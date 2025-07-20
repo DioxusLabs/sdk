@@ -83,7 +83,7 @@ fn Storage() -> Element {
     let mut count_session = use_singleton_persistent(|| 0);
     let mut count_local = use_synced_storage::<LocalStorage, i32>("synced".to_string(), || 0);
 
-    let mut count_local_human = use_synced_storage::<HumanReadableStorage<LocalStorage>, i32>(
+    let mut count_local_human = use_synced_storage::<HumanReadableStorage<LocalStorage, i32>, i32>(
         "synced_human".to_string(),
         || 0,
     );
@@ -96,7 +96,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist for the current session. Clicked {count_session} times"
+            "I persist for the current session. Clicked {count_session} times."
         }
         div {
             button {
@@ -105,7 +105,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist across all sessions. Clicked {count_local} times"
+            "I persist across all sessions. Clicked {count_local} times."
         }
         div {
             button {
@@ -114,27 +114,29 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist a human readable value across all sessions. Clicked {count_local_human} times"
+            "I persist a human readable value across all sessions. Clicked {count_local_human} times."
         }
     )
 }
 
 // Define a "human readable" storage format which is pretty printed JSON instead of a compressed binary format.
-type HumanReadableStorage<Storage> = LayeredStorage<Storage, HumanReadableEncoding>;
+type HumanReadableStorage<Storage, T> = LayeredStorage<T, Storage, HumanReadableEncoding>;
 
 #[derive(Clone)]
 struct HumanReadableEncoding;
 
-impl StorageEncoder for HumanReadableEncoding {
-    type Value = String;
+impl<T: Serialize + DeserializeOwned + Clone + 'static> StorageEncoder<T>
+    for HumanReadableEncoding
+{
+    type EncodedValue = String;
 
-    fn deserialize<T: DeserializeOwned + Clone + 'static>(loaded: &Self::Value) -> T {
+    fn deserialize(loaded: &Self::EncodedValue) -> T {
         let parsed: Result<T, serde_json::Error> = serde_json::from_str(loaded);
         // This design probably needs an error handling policy better than panic.
         parsed.unwrap()
     }
 
-    fn serialize<T: Serialize + Send + Sync + Clone + 'static>(value: &T) -> Self::Value {
+    fn serialize(value: &T) -> Self::EncodedValue {
         serde_json::to_string_pretty(value).unwrap()
     }
 }

@@ -10,15 +10,15 @@ use crate::StorageBacking;
 #[derive(Clone)]
 pub struct SessionStorage;
 
-impl StorageBacking for SessionStorage {
+impl<T: Clone + 'static> StorageBacking<T> for SessionStorage {
     type Key = String;
 
-    fn set<T: Clone + 'static>(key: String, value: &T) {
+    fn set(key: String, value: &T) {
         let session = SessionStore::get_current_session();
         session.borrow_mut().insert(key, Arc::new(value.clone()));
     }
 
-    fn get<T: Clone + 'static>(key: &String) -> Option<T> {
+    fn get(key: &String) -> Option<T> {
         let session = SessionStore::get_current_session();
         let read_binding = session.borrow();
         let value_any = read_binding.get(key)?;

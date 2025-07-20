@@ -92,8 +92,10 @@ impl StoragePersistence for LocalStorage {
 // Note that this module contains an optimization that differs from the web version. Dioxus Desktop runs all windows in
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
-impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Serialize + Send + Sync + Clone + 'static>(
+impl<T: DeserializeOwned + Serialize + Send + Sync + Clone + 'static>
+    StorageSubscriber<LocalStorage, T> for LocalStorage
+{
+    fn subscribe(
         key: &<LocalStorage as StorageBacking<T>>::Key,
     ) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
@@ -118,7 +120,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         }
     }
 
-    fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
+    fn unsubscribe(key: &<LocalStorage as StorageBacking<T>>::Key) {
         trace!("Unsubscribing from \"{}\"", key);
 
         // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.
