@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize, de::Error};
 use serde_json::Value;
 
 /// Represents a file selection with its metadata and data
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FileSelection<T> {
     /// The file name including the extension but without the full path
     pub name: String,
@@ -15,21 +15,12 @@ pub struct FileSelection<T> {
     pub data: T,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FilePickerOptions {
     /// https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file#accept
     pub accept: Option<String>,
     /// https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file#capture
     pub capture: Option<String>,
-}
-
-impl Default for FilePickerOptions {
-    fn default() -> Self {
-        Self {
-            accept: None,
-            capture: None,
-        }
-    }
 }
 
 /// Encoding options for file data
