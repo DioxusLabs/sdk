@@ -2,21 +2,7 @@ use dioxus::document::{EvalError, eval};
 use serde::{Deserialize, Serialize, de::Error};
 use serde_json::Value;
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-enum DataEncoding {
-    /// base64-encoded with MIME type
-    DataUrl,
-    /// UTF-8 string
-    Text,
-    // Dev Note: There is no point in supporting this at the moment since `serde_json` (which dioxus uses internally)
-    // does not support bytes (js's byte buffer from `readAsArrayBuffer`). So we cant send the data back without conversions.
-    // At that point, it is just better use `DataUrl` or not request any data and perform the read on the Rust side.
-    // /// Raw bytes
-    // Bytes,
-}
-
+/// Represents a file selection with its metadata and data
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileSelection<T> {
     /// The file name including the extension but without the full path
@@ -44,6 +30,22 @@ impl Default for FilePickerOptions {
             capture: None,
         }
     }
+}
+
+/// Encoding options for file data
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+enum DataEncoding {
+    /// base64-encoded with MIME type
+    DataUrl,
+    /// UTF-8 string
+    Text,
+    // Dev Note: There is no point in supporting this at the moment since `serde_json` (which dioxus uses internally)
+    // does not support bytes (js's byte buffer from `readAsArrayBuffer`). So we cant send the data back without conversions.
+    // At that point, it is just better use `DataUrl` or not request any data and perform the read on the Rust side.
+    // /// Raw bytes
+    // Bytes,
 }
 
 #[derive(Debug, Serialize)]
