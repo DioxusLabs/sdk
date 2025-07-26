@@ -156,7 +156,7 @@ fn map_to_unit(file: FileSelection<Value>) -> Result<FileSelection<()>, EvalErro
 
     if data != Value::Null {
         return Err(EvalError::Serialization(serde_json::Error::custom(
-            "File data is not empty, but no data was requested",
+            "Expected no file data but received non-null data. This indicates a mismatch between encoding settings and returned data.",
         )));
     }
 
