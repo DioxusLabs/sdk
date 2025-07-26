@@ -15,7 +15,6 @@ repository.workspace = true
 
 [dependencies]
 dioxus = { workspace = true }
-exact_format = "0.2"
-serde_json = "1"
+serde_json = { workspace = true }
 
 serde.workspace = true
