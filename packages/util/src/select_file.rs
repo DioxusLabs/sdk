@@ -6,13 +6,13 @@ use serde_json::Value;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileSelection<T> {
     /// The file name including the extension but without the full path
-    name: String,
+    pub name: String,
     /// MIME type: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
-    r#type: String,
+    pub r#type: String,
     /// The size of the file in bytes
-    size: u64,
+    pub size: u64,
     /// The data contained in the file in the corresponding encoding if requested
-    data: T,
+    pub data: T,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
