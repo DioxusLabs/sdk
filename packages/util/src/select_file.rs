@@ -123,26 +123,7 @@ pub async fn select_file(
         encoding: None,
     })
     .await?;
-    result.map_or(Ok(None), |file| {
-        let FileSelection {
-            name,
-            r#type,
-            size,
-            data,
-        } = file;
-        if matches!(data, Value::Null) {
-            Ok(Some(FileSelection {
-                name,
-                r#type,
-                size,
-                data: (),
-            }))
-        } else {
-            Err(EvalError::Serialization(serde_json::Error::custom(
-                "File data is not empty, but no data was requested".to_string(),
-            )))
-        }
-    })
+    result.map(map_to_unit).transpose()
 }
 
 /// Select multiple files, returning no contents of the files
@@ -159,26 +140,30 @@ pub async fn select_files(
     .await?;
     result
         .into_iter()
-        .map(|e| {
-            let FileSelection {
-                name,
-                r#type,
-                size,
-                data,
-            } = e;
-            if matches!(data, Value::Null) {
-                return Ok(FileSelection {
-                    name,
-                    r#type,
-                    size,
-                    data: (),
-                });
-            }
-            Err(EvalError::Serialization(serde_json::Error::custom(
-                "File data is not empty, but no data was requested".to_string(),
-            )))
-        })
+        .map(map_to_unit)
         .collect()
+}
+
+fn map_to_unit(file: FileSelection<Value>) -> Result<FileSelection<()>, EvalError> {
+    let FileSelection {
+        name,
+        r#type,
+        size,
+        data,
+    } = file;
+
+    if data != Value::Null {
+        return Err(EvalError::Serialization(serde_json::Error::custom(
+            "File data is not empty, but no data was requested",
+        )));
+    }
+
+    Ok(FileSelection {
+        name,
+        r#type,
+        size,
+        data: (),
+    })
 }
 
 const SELECT_FILE_SCRIPT: &str = r#"
