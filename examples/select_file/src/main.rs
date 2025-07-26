@@ -1,8 +1,8 @@
 use dioxus::logger::tracing::{info, Level};
 use dioxus::prelude::*;
 use dioxus_util::select_file::{
-    select_file, select_file_base64, select_file_text, select_files,
-    select_files_base64, select_files_text, FilePickerOptions,
+    select_file, select_file_base64, select_file_text, select_files, select_files_base64,
+    select_files_text, FilePickerOptions,
 };
 
 fn main() {

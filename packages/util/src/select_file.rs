@@ -140,10 +140,7 @@ pub async fn select_files(
         encoding: None,
     })
     .await?;
-    result
-        .into_iter()
-        .map(map_to_unit)
-        .collect()
+    result.into_iter().map(map_to_unit).collect()
 }
 
 fn map_to_unit(file: FileSelection<Value>) -> Result<FileSelection<()>, EvalError> {
