@@ -13,7 +13,7 @@
 //!
 //! fn App() -> Element {
 //!     let size = use_window_size();
-//!     let size = size().unwrap();    
+//!     let size = size().unwrap();
 //!
 //!     rsx! {
 //!         p { "Width: {size.width}" }
@@ -23,7 +23,9 @@
 //! ```
 use dioxus::core::provide_root_context;
 use dioxus::hooks::use_effect;
-use dioxus::prelude::{ReadOnlySignal, ScopeId, Signal, Writable, try_use_context, use_hook};
+use dioxus::prelude::{
+    ReadOnlySignal, ReadableExt, ScopeId, Signal, WritableExt, try_use_context, use_hook,
+};
 use dioxus::signals::Readable;
 use std::error::Error;
 use std::fmt::Display;
@@ -72,7 +74,7 @@ type WindowSizeResult = Result<WindowSize, WindowSizeError>;
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
-///     
+///
 ///     let half_of_width = use_memo(move || {
 ///         let width = size.width().unwrap();
 ///         width / 2
@@ -117,7 +119,7 @@ impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult>
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
-///     let size = size().unwrap();    
+///     let size = size().unwrap();
 ///
 ///     rsx! {
 ///         p { "Width: {size.width}" }
@@ -216,7 +218,7 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
 ///
 /// fn App() -> Element {
 ///     let size = use_signal(get_window_size);
-///     let size = size().unwrap();    
+///     let size = size().unwrap();
 ///
 ///     rsx! {
 ///         p { "Width: {size.width}" }

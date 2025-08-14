@@ -1,7 +1,7 @@
 use dioxus::{
     core::Task,
     dioxus_core::SpawnIfAsync,
-    prelude::{Callback, Writable, spawn, use_hook},
+    prelude::{Callback, WritableExt, spawn, use_hook},
     signals::Signal,
 };
 use std::time::Duration;
@@ -53,7 +53,7 @@ impl UseInterval {
 ///     let mut time_elapsed = use_signal(|| 0);
 ///     // Create an interval that increases the time elapsed signal by one every second.
 ///     use_interval(Duration::from_secs(1), move |()| time_elapsed += 1);
-///     
+///
 ///     rsx! {
 ///         "It has been {time_elapsed} since the app started."
 ///     }
@@ -71,7 +71,7 @@ impl UseInterval {
 /// fn App() -> Element {
 ///     let mut time_elapsed = use_signal(|| 0);
 ///     let mut interval = use_interval(Duration::from_secs(1), move |()| time_elapsed += 1);
-///     
+///
 ///     rsx! {
 ///         "It has been {time_elapsed} since the app started."
 ///         button {
@@ -100,7 +100,7 @@ impl UseInterval {
 ///         tokio::time::sleep(Duration::from_secs(1)).await;
 ///         println!("Done!");
 ///     });
-///     
+///
 ///     rsx! {
 ///         "It has been {time_elapsed} since the app started."
 ///     }

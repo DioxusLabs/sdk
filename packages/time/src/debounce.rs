@@ -1,9 +1,5 @@
 use crate::{TimeoutHandle, UseTimeout, use_timeout};
-use dioxus::{
-    dioxus_core::SpawnIfAsync,
-    hooks::use_signal,
-    signals::{Signal, Writable},
-};
+use dioxus::{dioxus_core::SpawnIfAsync, hooks::use_signal, prelude::WritableExt, signals::Signal};
 use std::time::Duration;
 
 /// The interface for calling a debounce.
@@ -48,7 +44,7 @@ impl<Args> UseDebounce<Args> {
 ///     // Create a two second debounce.
 ///     // This will print "ran" after two seconds since the last action call.
 ///     let mut debounce = use_debounce(Duration::from_secs(2), |_| println!("ran"));
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
@@ -71,7 +67,7 @@ impl<Args> UseDebounce<Args> {
 /// #[component]
 /// fn App() -> Element {
 ///     let mut debounce = use_debounce(Duration::from_secs(5), |_| println!("ran"));
-///     
+///
 ///     rsx! {
 ///         button {
 ///             // Start the debounce on click.
@@ -102,7 +98,7 @@ impl<Args> UseDebounce<Args> {
 ///         tokio::time::sleep(Duration::from_secs(2)).await;
 ///         println!("after async");
 ///     });
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
