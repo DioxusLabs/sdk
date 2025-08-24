@@ -73,16 +73,21 @@ impl StoragePersistence for LocalStorage {
         get(key)
     }
 
-    fn store(key: Self::Key, value: &Self::Value) {
-        set(&key, value);
+    fn store<T: 'static + Clone + Send + Sync>(
+        key: &Self::Key,
+        value: &Self::Value,
+        unencoded: &T,
+    ) {
+        set(key, value);
 
         // If the subscriptions map is not initialized, we don't need to notify any subscribers.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
-            if let Some(subscription) = read_binding.get(&key) {
+            if let Some(subscription) = read_binding.get(key) {
                 subscription
                     .tx
-                    .send(StorageChannelPayload::new(value.clone()))
+                    // .send(StorageChannelPayload::new(value.clone()))
+                    .send(StorageChannelPayload::new(unencoded.clone()))
                     .unwrap();
             }
         }
@@ -92,8 +97,8 @@ impl StoragePersistence for LocalStorage {
 // Note that this module contains an optimization that differs from the web version. Dioxus Desktop runs all windows in
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
-impl<T: DeserializeOwned + Serialize + Send + Sync + Clone + 'static>
-    StorageSubscriber<LocalStorage, T> for LocalStorage
+impl<T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static>
+    StorageSubscriber<T, LocalStorage> for LocalStorage
 {
     fn subscribe(
         key: &<LocalStorage as StorageBacking<T>>::Key,
