@@ -54,6 +54,32 @@ impl StoragePersistence for SessionStorage {
     }
 }
 
+/// A StorageEncoder which encodes Optional data by cloning it's content into `Arc<dyn Any>`
+pub struct ArcEncoder;
+
+impl<T: Clone + Any> StorageEncoder<Option<T>> for ArcEncoder {
+    type EncodedValue = Value;
+
+    fn deserialize(loaded: &Self::EncodedValue) -> Option<T> {
+        match loaded {
+            Some(v) => {
+                let v: &Arc<dyn Any> = v;
+                // TODO: this downcast failing is currently handled the same as `loaded` being None.
+                v.downcast_ref::<T>().cloned()
+            }
+            None => None,
+        }
+    }
+
+    fn serialize(value: &Option<T>) -> Self::EncodedValue {
+        value.clone().map(|x| {
+            let arc: Arc<T> = Arc::new(x);
+            let arc: Arc<dyn Any> = arc;
+            arc
+        })
+    }
+}
+
 /// An in-memory session store that is tied to the current Dioxus root context.
 #[derive(Clone)]
 struct SessionStore {
@@ -93,21 +119,5 @@ impl Deref for SessionStore {
 impl DerefMut for SessionStore {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.map
-    }
-}
-
-#[derive(Clone)]
-pub struct InMemoryEncoder;
-
-impl<T: Clone + Any> StorageEncoder<T> for InMemoryEncoder {
-    type EncodedValue = Arc<dyn Any>;
-
-    fn deserialize(loaded: &Self::EncodedValue) -> T {
-        // TODO: handle errors
-        loaded.downcast_ref::<T>().cloned().unwrap()
-    }
-
-    fn serialize(value: &T) -> Self::EncodedValue {
-        Arc::new(value.clone())
     }
 }
