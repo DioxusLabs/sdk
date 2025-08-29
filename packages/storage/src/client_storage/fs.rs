@@ -7,7 +7,7 @@ use std::io::Write;
 use std::sync::{OnceLock, RwLock};
 use tokio::sync::watch::{Receiver, channel};
 
-use crate::{StorageBacking, StoragePersistence, StorageSubscriber};
+use crate::{StoragePersistence, StorageSubscriber};
 
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
@@ -100,9 +100,7 @@ impl StoragePersistence for LocalStorage {
 impl<T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static>
     StorageSubscriber<T, LocalStorage> for LocalStorage
 {
-    fn subscribe(
-        key: &<LocalStorage as StorageBacking<T>>::Key,
-    ) -> Receiver<StorageChannelPayload> {
+    fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
         let subscriptions = SUBSCRIPTIONS.get_or_init(|| RwLock::new(HashMap::new()));
 
@@ -125,7 +123,7 @@ impl<T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static>
         }
     }
 
-    fn unsubscribe(key: &<LocalStorage as StorageBacking<T>>::Key) {
+    fn unsubscribe(key: &String) {
         trace!("Unsubscribing from \"{}\"", key);
 
         // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.

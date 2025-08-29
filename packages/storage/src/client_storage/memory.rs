@@ -10,18 +10,9 @@ use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 #[derive(Clone)]
 pub struct SessionStorage;
 
-impl<T: Clone + 'static> StorageBacking<T> for SessionStorage {
-    type Key = <Self as StoragePersistence>::Key;
-
-    fn set(key: &String, value: &T) {
-        let encoded: Arc<dyn Any> = Arc::new(value.clone());
-        store::<T>(key, &Some(encoded), &value);
-    }
-
-    fn get(key: &String) -> Option<T> {
-        let value_any = SessionStorage::load(key)?;
-        value_any.downcast_ref::<T>().cloned()
-    }
+impl<T: Clone + Any + Send + Sync> StorageBacking<T> for SessionStorage {
+    type Encoder = ArcEncoder;
+    type Persistence = CurrentSession;
 }
 
 type Key = String;
@@ -39,7 +30,9 @@ fn store<T>(key: &Key, value: &Value, _unencoded: &T) {
     }
 }
 
-impl StoragePersistence for SessionStorage {
+pub struct CurrentSession;
+
+impl StoragePersistence for CurrentSession {
     type Key = Key;
     type Value = Value;
 
@@ -49,7 +42,7 @@ impl StoragePersistence for SessionStorage {
         read_binding.get(key).cloned()
     }
 
-    fn store<T: 'static + Clone>(key: &Self::Key, value: &Self::Value, unencoded: &T) {
+    fn store<T>(key: &Self::Key, value: &Self::Value, unencoded: &T) {
         store(key, value, unencoded);
     }
 }
@@ -57,26 +50,18 @@ impl StoragePersistence for SessionStorage {
 /// A StorageEncoder which encodes Optional data by cloning it's content into `Arc<dyn Any>`
 pub struct ArcEncoder;
 
-impl<T: Clone + Any> StorageEncoder<Option<T>> for ArcEncoder {
-    type EncodedValue = Value;
+impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
+    type EncodedValue = Arc<dyn Any>;
+    type DecodeError = ();
 
-    fn deserialize(loaded: &Self::EncodedValue) -> Option<T> {
-        match loaded {
-            Some(v) => {
-                let v: &Arc<dyn Any> = v;
-                // TODO: this downcast failing is currently handled the same as `loaded` being None.
-                v.downcast_ref::<T>().cloned()
-            }
-            None => None,
-        }
+    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, ()> {
+        let v: &Arc<dyn Any> = loaded;
+        // TODO: Better error message
+        v.downcast_ref::<T>().cloned().ok_or(())
     }
 
-    fn serialize(value: &Option<T>) -> Self::EncodedValue {
-        value.clone().map(|x| {
-            let arc: Arc<T> = Arc::new(x);
-            let arc: Arc<dyn Any> = arc;
-            arc
-        })
+    fn serialize(value: &T) -> Self::EncodedValue {
+        Arc::new(value.clone())
     }
 }
 

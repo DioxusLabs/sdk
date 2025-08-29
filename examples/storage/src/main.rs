@@ -144,11 +144,10 @@ struct HumanReadableEncoding;
 
 impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for HumanReadableEncoding {
     type EncodedValue = String;
+    type DecodeError = serde_json::Error;
 
-    fn deserialize(loaded: &Self::EncodedValue) -> T {
-        let parsed: Result<T, serde_json::Error> = serde_json::from_str(loaded);
-        // This design probably needs an error handling policy better than panic.
-        parsed.unwrap()
+    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, Self::DecodeError> {
+        serde_json::from_str(loaded)
     }
 
     fn serialize(value: &T) -> Self::EncodedValue {
@@ -161,11 +160,12 @@ pub struct InMemoryEncoder;
 
 impl<T: Clone + Any + Send> StorageEncoder<T> for InMemoryEncoder {
     type EncodedValue = Arc<Mutex<dyn Any + Send>>;
+    type DecodeError = ();
 
-    fn deserialize(loaded: &Self::EncodedValue) -> T {
+    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, ()> {
         let x = loaded.lock().unwrap();
         // TODO: handle errors
-        x.downcast_ref::<T>().cloned().unwrap()
+        x.downcast_ref::<T>().cloned().ok_or(())
     }
 
     fn serialize(value: &T) -> Self::EncodedValue {
