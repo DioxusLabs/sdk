@@ -11,26 +11,37 @@ use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 pub struct SessionStorage;
 
 impl<T: Clone + 'static> StorageBacking<T> for SessionStorage {
-    type Key = String;
+    type Key = <Self as StoragePersistence>::Key;
 
     fn set(key: &String, value: &T) {
-        let session = SessionStore::get_current_session();
-        session
-            .borrow_mut()
-            .insert(key.clone(), Arc::new(value.clone()));
+        let encoded: Arc<dyn Any> = Arc::new(value.clone());
+        store::<T>(key, &Some(encoded), &value);
     }
 
     fn get(key: &String) -> Option<T> {
-        let session = SessionStore::get_current_session();
-        let read_binding = session.borrow();
-        let value_any = read_binding.get(key)?;
+        let value_any = SessionStorage::load(key)?;
         value_any.downcast_ref::<T>().cloned()
     }
 }
 
+type Key = String;
+type Value = Option<Arc<dyn Any>>;
+
+fn store<T>(key: &Key, value: &Value, _unencoded: &T) {
+    let session = SessionStore::get_current_session();
+    match value {
+        Some(value) => {
+            session.borrow_mut().insert(key.clone(), value.clone());
+        }
+        None => {
+            session.borrow_mut().remove(key);
+        }
+    }
+}
+
 impl StoragePersistence for SessionStorage {
-    type Key = String;
-    type Value = Option<Arc<dyn Any>>;
+    type Key = Key;
+    type Value = Value;
 
     fn load(key: &Self::Key) -> Self::Value {
         let session = SessionStore::get_current_session();
@@ -39,15 +50,7 @@ impl StoragePersistence for SessionStorage {
     }
 
     fn store<T: 'static + Clone>(key: &Self::Key, value: &Self::Value, unencoded: &T) {
-        let session = SessionStore::get_current_session();
-        match value {
-            Some(value) => {
-                session.borrow_mut().insert(key.clone(), value.clone());
-            }
-            None => {
-                session.borrow_mut().remove(key);
-            }
-        }
+        store(key, value, unencoded);
     }
 }
 
