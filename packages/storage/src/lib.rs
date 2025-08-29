@@ -365,9 +365,10 @@ where
                     let payload = channel.borrow_and_update();
                     *storage_entry_signal.write() = payload
                         .data
-                        .downcast_ref::<T>()
+                        .downcast_ref::<Option<T>>()
                         .expect("Type mismatch with storage entry")
-                        .clone();
+                        .clone()
+                        .expect("Expected storage entry to be Some");
                 }
             }
         });
