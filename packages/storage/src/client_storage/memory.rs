@@ -12,7 +12,7 @@ pub struct SessionStorage;
 
 impl<T: Clone + Any + Send + Sync> StorageBacking<T> for SessionStorage {
     type Encoder = ArcEncoder;
-    type Persistence = CurrentSession;
+    type Persistence = SessionStorage;
 }
 
 type Key = String;
@@ -30,9 +30,7 @@ fn store<T>(key: &Key, value: &Value, _unencoded: &T) {
     }
 }
 
-pub struct CurrentSession;
-
-impl StoragePersistence for CurrentSession {
+impl StoragePersistence for SessionStorage {
     type Key = Key;
     type Value = Value;
 

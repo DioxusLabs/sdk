@@ -1,8 +1,3 @@
-use std::{
-    any::Any,
-    sync::{Arc, Mutex},
-};
-
 use dioxus::prelude::*;
 use dioxus_storage::*;
 
@@ -93,7 +88,6 @@ fn Storage() -> Element {
         || 0,
     );
 
-    // let mut in_memory = use_synced_storage::<MemoryStorage<i32>, i32>("memory".to_string(), || 0);
     let mut in_memory = use_storage::<SessionStorage, i32>("memory".to_string(), || 0);
 
     rsx!(
@@ -152,23 +146,5 @@ impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for HumanReadableEncodin
 
     fn serialize(value: &T) -> Self::EncodedValue {
         serde_json::to_string_pretty(value).unwrap()
-    }
-}
-
-#[derive(Clone)]
-pub struct InMemoryEncoder;
-
-impl<T: Clone + Any + Send> StorageEncoder<T> for InMemoryEncoder {
-    type EncodedValue = Arc<Mutex<dyn Any + Send>>;
-    type DecodeError = ();
-
-    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, ()> {
-        let x = loaded.lock().unwrap();
-        // TODO: handle errors
-        x.downcast_ref::<T>().cloned().ok_or(())
-    }
-
-    fn serialize(value: &T) -> Self::EncodedValue {
-        Arc::new(Mutex::new(value.clone()))
     }
 }
