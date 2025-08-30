@@ -1,10 +1,6 @@
 //! Storage utilities which implicitly use [LocalStorage].
 //!
 //! These do not sync: if another session writes to them it will not trigger an update.
-//!
-//! TODO:
-//! Documentation implies this just needs to live across reloads, which for web would be session storage, but for desktop would require local storage.
-//! Since docs currently say "local storage" local storage is being used.
 
 use crate::LocalStorage;
 use crate::{new_storage_entry, use_hydrate_storage};
@@ -15,6 +11,11 @@ use serde::de::DeserializeOwned;
 
 use super::StorageEntryTrait;
 
+/// What storage to use.
+///
+/// TODO:
+/// Documentation on the APIs implies this just needs to live across reloads, which for web would be session storage, but for desktop would require local storage.
+/// Since docs currently say "local storage" local storage is being used.
 type Storage = LocalStorage;
 
 /// A persistent storage hook that can be used to store data across application reloads.

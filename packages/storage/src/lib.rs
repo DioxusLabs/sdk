@@ -73,7 +73,7 @@ pub fn use_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T>,
+    S: StorageBacking<T>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -127,7 +127,7 @@ pub fn new_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T>,
+    S: StorageBacking<T>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -504,9 +504,7 @@ pub trait StorageBacking<T>: 'static {
         >;
 
     /// Gets a value from storage for the given key
-    fn get(
-        key: &<<Self as StorageBacking<T>>::Persistence as StoragePersistence<Option<T>>>::Key,
-    ) -> Option<T> {
+    fn get(key: &<Self::Persistence as StoragePersistence<Option<T>>>::Key) -> Option<T> {
         let loaded = Self::Persistence::load(key);
         match loaded {
             // TODO: this treats None the same as failed decodes.
@@ -526,10 +524,8 @@ pub trait StorageBacking<T>: 'static {
     /// Sets a value in storage for the given key
     ///
     /// TODO: this provides no way to clear (store None)
-    fn set(
-        key: &<<Self as StorageBacking<T>>::Persistence as StoragePersistence<Option<T>>>::Key,
-        value: &T,
-    ) where
+    fn set(key: &<Self::Persistence as StoragePersistence<Option<T>>>::Key, value: &T)
+    where
         T: 'static + Clone + Send + Sync,
     {
         let encoded = Self::Encoder::serialize(value);
