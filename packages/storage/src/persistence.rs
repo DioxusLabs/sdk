@@ -1,4 +1,6 @@
 //! Storage utilities which implicitly use [LocalStorage].
+//!
+//! These do not sync: if another session writes to them it will not trigger an update.
 
 use crate::LocalStorage;
 use crate::{new_storage_entry, use_hydrate_storage};
@@ -34,7 +36,7 @@ pub fn new_persistent<
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
     let storage_entry = new_storage_entry::<LocalStorage, T>(key.to_string(), init);
-    storage_entry.save_to_storage_on_change();
+    StorageEntryTrait::<LocalStorage, T>::save_to_storage_on_change(&storage_entry);
     storage_entry.data
 }
 

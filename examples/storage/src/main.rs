@@ -80,17 +80,31 @@ fn Home() -> Element {
 
 #[component]
 fn Storage() -> Element {
-    let mut count_session = use_singleton_persistent(|| 0);
-    let mut count_local = use_synced_storage::<LocalStorage, i32>("synced".to_string(), || 0);
+    // Uses default encoder and LocalStorage implicitly.
+    let mut count_persistent = use_persistent("persistent".to_string(), || 0);
 
+    // Uses session storage with the default encoder.
+    let mut count_session = use_storage::<SessionStorage, i32>("session".to_string(), || 0);
+
+    // Uses local storage with the default encoder.
+    let mut count_local = use_synced_storage::<LocalStorage, i32>("local".to_string(), || 0);
+
+    // Uses LocalStorage with our custom human readable encoder
     let mut count_local_human = use_synced_storage::<HumanReadableStorage<i32, LocalStorage>, i32>(
-        "synced_human".to_string(),
+        "local_human".to_string(),
         || 0,
     );
 
-    let mut in_memory = use_storage::<SessionStorage, i32>("memory".to_string(), || 0);
-
     rsx!(
+        div {
+            button {
+                onclick: move |_| {
+                    *count_persistent.write() += 1;
+                },
+                "Click me!"
+            }
+            "Persisted (but not synced): Clicked {count_persistent} times."
+        }
         div {
             button {
                 onclick: move |_| {
@@ -98,7 +112,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist for the current session. Clicked {count_session} times."
+            "Session: Clicked {count_session} times."
         }
         div {
             button {
@@ -107,7 +121,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist across all sessions. Clicked {count_local} times."
+            "Local: Clicked {count_local} times."
         }
         div {
             button {
@@ -116,21 +130,14 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "I persist a human readable value across all sessions. Clicked {count_local_human} times."
-        }
-        div {
-            button {
-                onclick: move |_| {
-                    *in_memory.write() += 1;
-                },
-                "Click me!"
-            }
-            "I persist a value without encoding, in memory. Clicked {in_memory} times."
+            "Human readable persisted: Clicked {count_local_human} times."
         }
     )
 }
 
 // Define a "human readable" storage format which is pretty printed JSON instead of a compressed binary format.
+//
+// `Storage` must have `Value=Option<string>` for this to work as that is what the encoder encodes to.
 type HumanReadableStorage<T, Storage> = LayeredStorage<T, Storage, HumanReadableEncoding>;
 
 #[derive(Clone)]

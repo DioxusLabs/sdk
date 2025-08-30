@@ -140,7 +140,7 @@ where
         _ => {
             // Otherwise the client is rendered normally, so we can just use the storage entry.
             let storage_entry = new_storage_entry::<S, T>(key, init);
-            storage_entry.save_to_storage_on_change();
+            StorageEntryTrait::<S, T>::save_to_storage_on_change(&storage_entry);
             storage_entry.data
         }
     }
@@ -201,7 +201,7 @@ where
 pub fn use_storage_entry<S, T>(
     key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
     init: impl FnOnce() -> T,
-) -> StorageEntry<S, T>
+) -> StorageEntry<S::Persistence, T>
 where
     S: StorageBacking<T>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
@@ -209,7 +209,7 @@ where
 {
     let mut init = Some(init);
     let signal = use_hook(|| new_storage_entry::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage::<S, T>(*signal.data(), init);
+    use_hydrate_storage::<S, T>(*StorageEntryTrait::<S, T>::data(&signal), init);
     signal
 }
 
@@ -233,7 +233,7 @@ where
 pub fn new_storage_entry<S, T: Clone>(
     key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
     init: impl FnOnce() -> T,
-) -> StorageEntry<S, T>
+) -> StorageEntry<S::Persistence, T>
 where
     S: StorageBacking<T>,
     T: Send + Sync + 'static,
@@ -314,7 +314,7 @@ pub trait StorageEntryTrait<S: StorageBacking<T>, T: 'static>: 'static {
 /// A wrapper around StorageEntry that provides a channel to subscribe to updates to the underlying storage.
 pub struct SyncedStorageEntry<S: StorageBacking<T>, T: 'static> {
     /// The underlying StorageEntry that is used to store the data and track the state
-    pub(crate) entry: StorageEntry<S, T>,
+    pub(crate) entry: StorageEntry<S::Persistence, T>,
     /// The channel to subscribe to updates to the underlying storage
     pub(crate) channel: Receiver<StorageChannelPayload>,
 }
@@ -390,15 +390,15 @@ where
                 return;
             }
         }
-        self.entry.save();
+        StorageEntryTrait::<S, T>::save(&self.entry);
     }
 
     fn update(&mut self) {
-        self.entry.update();
+        StorageEntryTrait::<S, T>::update(&mut self.entry);
     }
 
     fn key(&self) -> &<S::Persistence as StoragePersistence<Option<T>>>::Key {
-        self.entry.key()
+        StorageEntryTrait::<S, T>::key(&self.entry)
     }
 
     fn data(&self) -> &Signal<T> {
@@ -407,18 +407,18 @@ where
 }
 
 /// A storage entry that can be used to store data across application reloads. It optionally provides a channel to subscribe to updates to the underlying storage.
-pub struct StorageEntry<S: StorageBacking<T>, T: 'static> {
+pub struct StorageEntry<P: StoragePersistence<Option<T>>, T: 'static> {
     /// The key used to store the data in storage
-    pub(crate) key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
+    pub(crate) key: P::Key,
     /// A signal that can be used to read and modify the state
     pub(crate) data: Signal<T>,
 }
 
-impl<S, T> Clone for StorageEntry<S, T>
+impl<P, T> Clone for StorageEntry<P, T>
 where
-    S: StorageBacking<T>,
+    P: StoragePersistence<Option<T>>,
     T: 'static,
-    <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
+    P::Key: Clone,
 {
     fn clone(&self) -> Self {
         Self {
@@ -428,12 +428,12 @@ where
     }
 }
 
-impl<S, T> StorageEntry<S, T>
+impl<P, T> StorageEntry<P, T>
 where
-    S: StorageBacking<T>,
+    P: StoragePersistence<Option<T>>,
 {
     /// Creates a new StorageEntry
-    pub fn new(key: <S::Persistence as StoragePersistence<Option<T>>>::Key, data: T) -> Self {
+    pub fn new(key: P::Key, data: T) -> Self {
         Self {
             key,
             data: Signal::new_in_scope(
@@ -444,7 +444,7 @@ where
     }
 }
 
-impl<S, T: Clone> StorageEntryTrait<S, T> for StorageEntry<S, T>
+impl<S: StorageBacking<T>, T: Clone> StorageEntryTrait<S, T> for StorageEntry<S::Persistence, T>
 where
     S: StorageBacking<T>,
     T: PartialEq + Send + Sync + 'static,
@@ -468,7 +468,7 @@ where
     }
 }
 
-impl<S: StorageBacking<T>, T: Send + Sync> Deref for StorageEntry<S, T> {
+impl<P: StoragePersistence<Option<T>>, T: Send + Sync> Deref for StorageEntry<P, T> {
     type Target = Signal<T>;
 
     fn deref(&self) -> &Signal<T> {
@@ -476,19 +476,19 @@ impl<S: StorageBacking<T>, T: Send + Sync> Deref for StorageEntry<S, T> {
     }
 }
 
-impl<S: StorageBacking<T>, T: Send + Sync> DerefMut for StorageEntry<S, T> {
+impl<P: StoragePersistence<Option<T>>, T: Send + Sync> DerefMut for StorageEntry<P, T> {
     fn deref_mut(&mut self) -> &mut Signal<T> {
         &mut self.data
     }
 }
 
-impl<S: StorageBacking<T>, T: Display> Display for StorageEntry<S, T> {
+impl<P: StoragePersistence<Option<T>>, T: Display> Display for StorageEntry<P, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.data.fmt(f)
     }
 }
 
-impl<S: StorageBacking<T>, T: Debug> Debug for StorageEntry<S, T> {
+impl<P: StoragePersistence<Option<T>>, T: Debug> Debug for StorageEntry<P, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.data.fmt(f)
     }

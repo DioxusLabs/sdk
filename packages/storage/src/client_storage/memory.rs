@@ -8,6 +8,8 @@ use std::sync::Arc;
 use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 
 /// [StoragePersistence] backed by the current [SessionStore].
+///
+/// Skips encoding, and just stores data using `Arc<dyn Any>>`.
 #[derive(Clone)]
 pub struct SessionStorage;
 
