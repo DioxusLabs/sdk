@@ -1,4 +1,6 @@
-use crate::SessionStorage;
+//! Storage utilities which implicitly use [LocalStorage].
+
+use crate::LocalStorage;
 use crate::{new_storage_entry, use_hydrate_storage};
 use dioxus::prelude::*;
 use dioxus_signals::Signal;
@@ -18,7 +20,7 @@ pub fn use_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let storage = use_hook(|| new_persistent(key.to_string(), || init.take().unwrap()()));
-    use_hydrate_storage::<SessionStorage, T>(storage, init);
+    use_hydrate_storage::<LocalStorage, T>(storage, init);
     storage
 }
 
@@ -31,7 +33,7 @@ pub fn new_persistent<
     key: impl ToString,
     init: impl FnOnce() -> T,
 ) -> Signal<T> {
-    let storage_entry = new_storage_entry::<SessionStorage, T>(key.to_string(), init);
+    let storage_entry = new_storage_entry::<LocalStorage, T>(key.to_string(), init);
     storage_entry.save_to_storage_on_change();
     storage_entry.data
 }
@@ -48,7 +50,7 @@ pub fn use_singleton_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let signal = use_hook(|| new_singleton_persistent(|| init.take().unwrap()()));
-    use_hydrate_storage::<SessionStorage, T>(signal, init);
+    use_hydrate_storage::<LocalStorage, T>(signal, init);
     signal
 }
 

@@ -61,6 +61,7 @@ fn get(key: &str) -> Option<String> {
     std::fs::read_to_string(path).ok()
 }
 
+/// [StoragePersistence] backed by a file.
 #[derive(Clone)]
 pub struct LocalStorage;
 

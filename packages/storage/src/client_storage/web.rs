@@ -25,6 +25,7 @@ impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBac
     type Persistence = LocalStorage;
 }
 
+/// [WebStorageType::Local] backed [StoragePersistence].
 #[derive(Clone)]
 pub struct LocalStorage;
 
@@ -38,7 +39,7 @@ impl<T> StoragePersistence<T> for LocalStorage {
     }
 
     fn store(key: &Self::Key, value: &Self::Value, _unencoded: &T) {
-        set_or_clear(key.clone(), value.as_deref(), WebStorageType::Local)
+        store(key, value, WebStorageType::Local)
     }
 }
 
@@ -104,6 +105,7 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
     Arc::new(RwLock::new(HashMap::new()))
 });
 
+/// [WebStorageType::Session] backed [StoragePersistence].
 #[derive(Clone)]
 pub struct SessionStorage;
 
@@ -117,8 +119,12 @@ impl<T> StoragePersistence<T> for SessionStorage {
     }
 
     fn store(key: &Self::Key, value: &Self::Value, _unencoded: &T) {
-        set_or_clear(key.clone(), value.as_deref(), WebStorageType::Session)
+        store(key, value, WebStorageType::Session)
     }
+}
+
+fn store(key: &String, value: &Option<String>, storage_type: WebStorageType) {
+    set_or_clear(key.clone(), value.as_deref(), WebStorageType::Session)
 }
 
 fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) {

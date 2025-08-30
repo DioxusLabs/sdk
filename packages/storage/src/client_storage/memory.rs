@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 
+/// [StoragePersistence] backed by the current [SessionStore].
 #[derive(Clone)]
 pub struct SessionStorage;
 
@@ -45,7 +46,7 @@ impl<T> StoragePersistence<T> for SessionStorage {
     }
 }
 
-/// A StorageEncoder which encodes Optional data by cloning it's content into `Arc<dyn Any>`
+/// A [StorageEncoder] which encodes Optional data by cloning it's content into `Arc<dyn Any>`
 pub struct ArcEncoder;
 
 impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
