@@ -13,8 +13,8 @@ use wasm_bindgen::prelude::Closure;
 use web_sys::{Storage, window};
 
 use crate::{
-    DefaultEncoder, StorageBacking, StorageChannelPayload, StoragePersistence, StorageSubscriber,
-    StorageSubscription,
+    StorageBacking, StorageChannelPayload, StoragePersistence, StorageSubscriber,
+    StorageSubscription, default_encoder::DefaultEncoder,
 };
 
 /// StorageBacking using default encoder
