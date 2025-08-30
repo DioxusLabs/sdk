@@ -59,13 +59,17 @@ pub use client_storage::{set_dir_name, set_directory};
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{use_storage, StorageBacking};
+/// use dioxus_storage::{use_storage, StorageBacking, StoragePersistence};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn use_user_id<S>() -> Signal<usize> where S: StorageBacking<T, Key=&'static str> {
-///     use_storage::<S, _>("user-id", || 123)
+/// fn use_user_id<S>() -> Signal<usize>
+/// where
+///     S: StorageBacking<usize>,
+///     S::Persistence: StoragePersistence<Option<usize>, Key = &'static str>,
+/// {
+///     use_storage::<S, _>(&"user-id", || 123)
 /// }
 /// ```
 pub fn use_storage<S, T>(
@@ -113,13 +117,17 @@ impl StorageMode {
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{new_storage, StorageBacking};
+/// use dioxus_storage::{new_storage, StorageBacking, StoragePersistence};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn user_id<S>() -> Signal<usize> where S: StorageBacking<T, Key=&'static str> {
-///     new_storage::<S, _>("user-id", || 123)
+/// fn user_id<S>() -> Signal<usize>
+/// where
+///     S: StorageBacking<usize>,
+///     S::Persistence: StoragePersistence<Option<usize>, Key = &'static str>,
+/// {
+///     new_storage::<S, _>(&"user-id", || 123)
 /// }
 /// ```
 pub fn new_storage<S, T>(
