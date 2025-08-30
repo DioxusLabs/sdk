@@ -150,7 +150,6 @@ impl<
     type Persistence = P;
 }
 
-#[derive(Clone)]
 struct HumanReadableEncoding;
 
 impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for HumanReadableEncoding {
