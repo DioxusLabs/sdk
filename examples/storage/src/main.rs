@@ -156,3 +156,39 @@ impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for HumanReadableEncodin
         serde_json::to_string_pretty(value).unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fmt::Debug;
+
+    #[test]
+    fn round_trips() {
+        round_trip(0);
+        round_trip(999);
+        round_trip("Text".to_string());
+        round_trip((1, 2, 3));
+    }
+
+    fn round_trip<T: Serialize + DeserializeOwned + PartialEq + Debug>(value: T) {
+        let encoded = HumanReadableEncoding::serialize(&value);
+        let decoded = HumanReadableEncoding::deserialize(&encoded);
+        assert_eq!(value, decoded.unwrap());
+    }
+
+    #[test]
+    fn can_decode_irregular_json_data() {
+        let decoded: (i32, i32) =
+            HumanReadableEncoding::deserialize(&"  [  1,2]".to_string()).unwrap();
+        assert_eq!(decoded, (1, 2))
+    }
+
+    #[test]
+    fn encodes_json_with_formatting() {
+        assert_eq!(HumanReadableEncoding::serialize(&1234), "1234");
+        assert_eq!(
+            HumanReadableEncoding::serialize(&(1, "a".to_string())),
+            "[\n  1,\n  \"a\"\n]"
+        );
+    }
+}
