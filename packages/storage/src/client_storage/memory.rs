@@ -66,6 +66,7 @@ impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
 }
 
 /// An in-memory session store that is tied to the current Dioxus root context.
+#[derive(Clone)]
 struct SessionStore {
     /// The underlying map of session data.
     map: Rc<RefCell<HashMap<String, Arc<dyn Any>>>>,
