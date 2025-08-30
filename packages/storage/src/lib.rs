@@ -509,14 +509,14 @@ pub trait StorageBacking<T>: 'static {
     ) -> Option<T> {
         let loaded = Self::Persistence::load(key);
         match loaded {
-            // TODO: this treats None the same as failed decodes
+            // TODO: this treats None the same as failed decodes.
             Some(x) => {
                 let deserialized = Self::Encoder::deserialize(&x);
-                tracing::debug!("Deserialized error: {0:?}", deserialized.as_ref().err());
+                trace!("Deserialized error: {0:?}", deserialized.as_ref().err());
                 deserialized.ok()
             }
             None => {
-                tracing::debug!("Got None for key {key:?}");
+                trace!("Got None for key {key:?}");
                 None
             }
         }
