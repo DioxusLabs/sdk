@@ -22,7 +22,7 @@ impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBac
     for SessionStorage
 {
     type Encoder = DefaultEncoder;
-    type Persistence = LocalStorage;
+    type Persistence = SessionStorage;
 }
 
 /// [WebStorageType::Local] backed [StoragePersistence].
@@ -109,7 +109,7 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
 #[derive(Clone)]
 pub struct SessionStorage;
 
-/// LocalStorage stores Option<String>.
+/// SessionStorage stores Option<String>.
 impl<T> StoragePersistence<T> for SessionStorage {
     type Key = String;
     type Value = Option<String>;

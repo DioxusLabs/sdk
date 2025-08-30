@@ -84,7 +84,6 @@ fn Storage() -> Element {
     // Uses default encoder and LocalStorage implicitly.
     let mut count_persistent = use_persistent("persistent".to_string(), || 0);
 
-    // TODO: in web multiple tabs share this state: it does not seem to use session storage.
     // Uses session storage with the default encoder.
     let mut count_session = use_storage::<SessionStorage, i32>("session".to_string(), || 0);
 
@@ -107,7 +106,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "Persisted (but not synced): Clicked {count_persistent} times."
+            "Persisted to local storage (but not synced): Clicked {count_persistent} times."
         }
         div {
             button {
@@ -134,7 +133,7 @@ fn Storage() -> Element {
                 },
                 "Click me!"
             }
-            "Human readable persisted: Clicked {count_local_human} times."
+            "Human readable local: Clicked {count_local_human} times."
         }
     )
 }
