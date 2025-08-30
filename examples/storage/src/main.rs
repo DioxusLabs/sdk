@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{logger::tracing, prelude::*};
 use dioxus_storage::*;
 
 use serde::{de::DeserializeOwned, Serialize};
@@ -80,6 +80,8 @@ fn Home() -> Element {
 
 #[component]
 fn Storage() -> Element {
+    tracing::debug!("-- Start --");
+
     // TODO: maybe this should sync? (It does not currently)
     // Uses default encoder and LocalStorage implicitly.
     let mut count_persistent = use_persistent("persistent".to_string(), || 0);
