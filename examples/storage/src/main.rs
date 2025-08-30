@@ -87,7 +87,6 @@ fn Storage() -> Element {
     // Uses session storage with the default encoder.
     let mut count_session = use_storage::<SessionStorage, i32>("session".to_string(), || 0);
 
-    // TODO: this does not sync in web
     // Uses local storage with the default encoder.
     let mut count_local = use_synced_storage::<LocalStorage, i32>("local".to_string(), || 0);
 

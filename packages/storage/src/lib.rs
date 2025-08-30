@@ -369,6 +369,7 @@ where
                         .downcast_ref::<Option<T>>()
                         .expect("Type mismatch with storage entry")
                         .clone()
+                        // Currently there is no API exposed to clear storage, so it should never be changed to None
                         .expect("Expected storage entry to be Some");
                 }
             }
@@ -618,6 +619,7 @@ pub struct StorageSubscription {
     pub(crate) tx: Arc<Sender<StorageChannelPayload>>,
 }
 
+/// Sends an Option<T> over the channel, with None representing the storage being empty.
 impl StorageSubscription {
     pub fn new<
         S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
@@ -627,7 +629,7 @@ impl StorageSubscription {
         key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
     ) -> Self {
         let getter = move || {
-            let data = S::get(&key).unwrap();
+            let data = S::get(&key);
             StorageChannelPayload::new(data)
         };
         Self {
