@@ -1,4 +1,4 @@
-use crate::{StorageChannelPayload, StorageSubscription};
+use crate::{StorageBacking, StorageChannelPayload, StorageEncoder, StorageSubscription};
 use dioxus::logger::tracing::trace;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -94,8 +94,11 @@ impl<T: Clone + Send + Sync + 'static> StoragePersistence<T> for LocalStorage {
 // Note that this module contains an optimization that differs from the web version. Dioxus Desktop runs all windows in
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
-impl<T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static>
-    StorageSubscriber<T, LocalStorage> for LocalStorage
+impl<
+    T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static,
+    E: StorageEncoder<T, EncodedValue = String>,
+    S: StorageBacking<T, Encoder = E, Persistence = LocalStorage>,
+> StorageSubscriber<T, S> for LocalStorage
 {
     fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
@@ -109,7 +112,7 @@ impl<T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static>
             None => {
                 drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+                let subscription = StorageSubscription::new::<S, T>(tx, key.clone());
 
                 subscriptions
                     .write()

@@ -80,8 +80,6 @@ fn Home() -> Element {
 
 #[component]
 fn Storage() -> Element {
-    tracing::debug!("-- Start --");
-
     // TODO: maybe this should sync? (It does not currently)
     // Uses default encoder and LocalStorage implicitly.
     let mut count_persistent = use_persistent("persistent".to_string(), || 0);
@@ -92,7 +90,6 @@ fn Storage() -> Element {
     // Uses local storage with the default encoder.
     let mut count_local = use_synced_storage::<LocalStorage, i32>("local".to_string(), || 0);
 
-    // TODO: this does not sync in web
     // Uses LocalStorage with our custom human readable encoder
     let mut count_local_human = use_synced_storage::<HumanReadableStorage<i32, LocalStorage>, i32>(
         "local_human".to_string(),

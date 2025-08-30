@@ -13,7 +13,7 @@ use wasm_bindgen::prelude::Closure;
 use web_sys::{Storage, window};
 
 use crate::{
-    StorageBacking, StorageChannelPayload, StoragePersistence, StorageSubscriber,
+    StorageBacking, StorageChannelPayload, StorageEncoder, StoragePersistence, StorageSubscriber,
     StorageSubscription, default_encoder::DefaultEncoder,
 };
 
@@ -43,8 +43,11 @@ impl<T> StoragePersistence<T> for LocalStorage {
     }
 }
 
-impl<T: DeserializeOwned + Send + Sync + Clone + 'static + Serialize>
-    StorageSubscriber<T, LocalStorage> for LocalStorage
+impl<
+    T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static,
+    E: StorageEncoder<T, EncodedValue = String>,
+    S: StorageBacking<T, Encoder = E, Persistence = LocalStorage>,
+> StorageSubscriber<T, S> for LocalStorage
 {
     fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         let read_binding = SUBSCRIPTIONS.read().unwrap();
@@ -53,7 +56,7 @@ impl<T: DeserializeOwned + Send + Sync + Clone + 'static + Serialize>
             None => {
                 drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+                let subscription = StorageSubscription::new::<S, T>(tx, key.clone());
                 SUBSCRIPTIONS
                     .write()
                     .unwrap()
