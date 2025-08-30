@@ -1,4 +1,4 @@
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::prelude::*;
 use dioxus_storage::*;
 
 use serde::{de::DeserializeOwned, Serialize};

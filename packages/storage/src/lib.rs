@@ -31,7 +31,7 @@ mod default_encoder;
 mod persistence;
 
 pub use client_storage::{LocalStorage, SessionStorage};
-use dioxus::logger::tracing::{self, trace};
+use dioxus::logger::tracing::{trace, warn};
 use futures_util::stream::StreamExt;
 pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
@@ -512,11 +512,13 @@ pub trait StorageBacking<T>: 'static {
             // TODO: this treats None the same as failed decodes.
             Some(x) => {
                 let deserialized = Self::Encoder::deserialize(&x);
-                trace!("Deserialized error: {0:?}", deserialized.as_ref().err());
+                if let Err(err) = &deserialized {
+                    warn!("Deserialization error: {err:?}");
+                }
                 deserialized.ok()
             }
             None => {
-                trace!("Got None for key {key:?}");
+                warn!("Got None for key {key:?}");
                 None
             }
         }
