@@ -155,7 +155,7 @@ pub fn use_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T> + StorageSubscriber<T, S>,
+    S: Clone + StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -174,7 +174,7 @@ pub fn new_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T> + StorageSubscriber<T, S>,
+    S: Clone + StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -219,7 +219,7 @@ pub fn use_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -250,7 +250,7 @@ pub fn new_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     T: Clone + PartialEq + Send + Sync + 'static,
 {
     let data = get_from_storage::<S, T>(&key, init);
@@ -321,7 +321,7 @@ pub struct SyncedStorageEntry<S: StorageBacking<T>, T: 'static> {
 
 impl<S, T> Clone for SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: 'static,
 {
@@ -335,7 +335,7 @@ where
 
 impl<S, T> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
 {
     pub fn new(key: <S::Persistence as StoragePersistence<Option<T>>>::Key, data: T) -> Self {
         let channel = S::subscribe(&key);
@@ -378,7 +378,7 @@ where
 
 impl<S, T: Clone> StorageEntryTrait<S, T> for SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
     T: Send + Sync + PartialEq + 'static,
 {
     fn save(&self) {
@@ -565,7 +565,7 @@ pub struct LayeredStorage<T, Persistence: StoragePersistence<Option<T>>, Encoder
 /// P: Stores a Option<Value>
 /// E: Translated between T and Value
 impl<
-    T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static,
+    T: 'static,
     Value,
     P: StoragePersistence<Option<T>, Value = Option<Value>>,
     E: StorageEncoder<T, EncodedValue = Value>,
@@ -576,13 +576,13 @@ impl<
 }
 
 impl<
-    T: 'static + Clone + Send + Sync + Serialize + DeserializeOwned,
+    T: 'static,
     Value,
     P: StoragePersistence<Option<T>, Value = Option<Value>>
         + StorageSubscriber<T, P>
         + StorageBacking<T, Persistence = P>,
     E: StorageEncoder<T, EncodedValue = Value>,
-> StorageSubscriber<T, LayeredStorage<T, P, E>> for LayeredStorage<T, P, E>
+> StorageSubscriber<T, P> for LayeredStorage<T, P, E>
 {
     fn subscribe(
         key: &<P as StoragePersistence<Option<T>>>::Key,
@@ -600,13 +600,13 @@ impl<
 }
 
 /// A trait for a subscriber to events from a storage backing
-pub trait StorageSubscriber<T, S: StorageBacking<T>> {
+pub trait StorageSubscriber<T, S: StoragePersistence<Option<T>>> {
     /// Subscribes to events from a storage backing for the given key
     fn subscribe(
-        key: &<S::Persistence as StoragePersistence<Option<T>>>::Key,
+        key: &<S as StoragePersistence<Option<T>>>::Key,
     ) -> Receiver<StorageChannelPayload>;
     /// Unsubscribes from events from a storage backing for the given key
-    fn unsubscribe(key: &<S::Persistence as StoragePersistence<Option<T>>>::Key);
+    fn unsubscribe(key: &<S as StoragePersistence<Option<T>>>::Key);
 }
 
 /// A struct to hold information about processing a storage event.
@@ -619,7 +619,10 @@ pub struct StorageSubscription {
 }
 
 impl StorageSubscription {
-    pub fn new<S: StorageBacking<T> + StorageSubscriber<T, S>, T: Send + Sync + 'static>(
+    pub fn new<
+        S: StorageBacking<T> + StorageSubscriber<T, S::Persistence>,
+        T: Send + Sync + 'static,
+    >(
         tx: Sender<StorageChannelPayload>,
         key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
     ) -> Self {
