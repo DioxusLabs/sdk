@@ -110,7 +110,6 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
 /// [WebStorageType::Session] backed [StoragePersistence].
 pub struct SessionStorage;
 
-/// SessionStorage stores Option<String>.
 impl<T> StoragePersistence<T> for SessionStorage {
     type Key = String;
     type Value = Option<String>;

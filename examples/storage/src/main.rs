@@ -91,7 +91,7 @@ fn Storage() -> Element {
     let mut count_local = use_synced_storage::<LocalStorage, i32>("local".to_string(), || 0);
 
     // Uses LocalStorage with our custom human readable encoder
-    let mut count_local_human = use_synced_storage::<HumanReadableStorage<i32, LocalStorage>, i32>(
+    let mut count_local_human = use_synced_storage::<HumanReadableStorage<LocalStorage>, i32>(
         "local_human".to_string(),
         || 0,
     );
@@ -136,10 +136,19 @@ fn Storage() -> Element {
     )
 }
 
-// Define a "human readable" storage format which is pretty printed JSON instead of a compressed binary format.
-//
-// `Storage` must have `Value=Option<string>` for this to work as that is what the encoder encodes to.
-type HumanReadableStorage<T, Storage> = LayeredStorage<T, Storage, HumanReadableEncoding>;
+/// A [StorageBacking] with [HumanReadableEncoding] and selectable [StoragePersistence].
+struct HumanReadableStorage<Persistence> {
+    p: std::marker::PhantomData<Persistence>,
+}
+
+impl<
+        T: Serialize + DeserializeOwned,
+        P: 'static + StoragePersistence<std::option::Option<T>, Value = Option<String>>,
+    > StorageBacking<T> for HumanReadableStorage<P>
+{
+    type Encoder = HumanReadableEncoding;
+    type Persistence = P;
+}
 
 #[derive(Clone)]
 struct HumanReadableEncoding;

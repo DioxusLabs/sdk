@@ -7,7 +7,7 @@ use serde::de::DeserializeOwned;
 /// Default [StorageEncoder].
 ///
 /// Uses a non-human readable format.
-/// Format uses Serde, and is compressed and then encoded into a utf8 compatible string using Hex.
+/// Format uses Serde, and is compressed and then encoded into a utf8 compatible string using hexadecimal.
 pub struct DefaultEncoder;
 
 impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for DefaultEncoder {

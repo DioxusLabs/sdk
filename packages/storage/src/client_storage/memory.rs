@@ -47,17 +47,15 @@ impl<T> StoragePersistence<T> for SessionStorage {
     }
 }
 
-/// A [StorageEncoder] which encodes Optional data by cloning it's content into `Arc<dyn Any>`
+/// A [StorageEncoder] which encodes Optional data by cloning it's content into `Arc<dyn Any>`.
 pub struct ArcEncoder;
 
 impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
     type EncodedValue = Arc<dyn Any>;
-    type DecodeError = ();
+    type DecodeError = &'static str;
 
-    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, ()> {
-        let v: &Arc<dyn Any> = loaded;
-        // TODO: Better error message
-        v.downcast_ref::<T>().cloned().ok_or(())
+    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, &'static str> {
+        loaded.downcast_ref::<T>().cloned().ok_or("Failed Downcast")
     }
 
     fn serialize(value: &T) -> Self::EncodedValue {

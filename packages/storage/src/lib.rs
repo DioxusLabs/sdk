@@ -37,7 +37,6 @@ pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,
 };
 use std::cell::RefCell;
-use std::marker::PhantomData;
 use std::rc::Rc;
 
 use dioxus::prelude::*;
@@ -163,7 +162,8 @@ pub fn use_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -182,7 +182,8 @@ pub fn new_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -227,7 +228,8 @@ pub fn use_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -258,7 +260,8 @@ pub fn new_synced_storage_entry<S, T>(
     init: impl FnOnce() -> T,
 ) -> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     T: Clone + PartialEq + Send + Sync + 'static,
 {
     let data = get_from_storage::<S, T>(&key, init);
@@ -329,7 +332,8 @@ pub struct SyncedStorageEntry<S: StorageBacking<T>, T: 'static> {
 
 impl<S, T> Clone for SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: 'static,
 {
@@ -343,10 +347,11 @@ where
 
 impl<S, T> SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
 {
     pub fn new(key: <S::Persistence as StoragePersistence<Option<T>>>::Key, data: T) -> Self {
-        let channel = S::subscribe(&key);
+        let channel = S::Persistence::subscribe(&key);
         Self {
             entry: StorageEntry::new(key, data),
             channel,
@@ -387,7 +392,8 @@ where
 
 impl<S, T: Clone> StorageEntryTrait<S, T> for SyncedStorageEntry<S, T>
 where
-    S: StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T>,
+    S::Persistence: StorageSubscriber<T, S>,
     T: Send + Sync + PartialEq + 'static,
 {
     fn save(&self) {
@@ -561,48 +567,6 @@ pub trait StorageEncoder<T>: 'static {
     type DecodeError: Debug;
     fn deserialize(loaded: &Self::EncodedValue) -> Result<T, Self::DecodeError>;
     fn serialize(value: &T) -> Self::EncodedValue;
-}
-
-/// A way to create a StorageEncoder out of the two layers.
-///
-/// I'm not sure if this is the best way to abstract that.
-pub struct LayeredStorage<T, Persistence: StoragePersistence<Option<T>>, Encoder: StorageEncoder<T>>
-{
-    persistence: PhantomData<Persistence>,
-    encoder: PhantomData<Encoder>,
-    value: PhantomData<T>,
-}
-
-/// StorageBacking for LayeredStorage.
-/// T: Use facing type
-/// Value: what gets persisted
-/// P: Stores a Option<Value>
-/// E: Translated between T and Value
-impl<
-    T: 'static,
-    Value,
-    P: StoragePersistence<Option<T>, Value = Option<Value>>,
-    E: StorageEncoder<T, EncodedValue = Value>,
-> StorageBacking<T> for LayeredStorage<T, P, E>
-{
-    type Encoder = E;
-    type Persistence = P;
-}
-
-impl<
-    T: 'static,
-    Value,
-    P: StoragePersistence<Option<T>, Value = Option<Value>> + StorageSubscriber<T, Self>,
-    E: StorageEncoder<T, EncodedValue = Value>,
-> StorageSubscriber<T, Self> for LayeredStorage<T, P, E>
-{
-    fn subscribe(key: &P::Key) -> Receiver<StorageChannelPayload> {
-        P::subscribe(key)
-    }
-
-    fn unsubscribe(key: &P::Key) {
-        P::unsubscribe(key)
-    }
 }
 
 /// A trait for a subscriber to events from a storage backing
