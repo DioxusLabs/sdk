@@ -62,7 +62,6 @@ fn get(key: &str) -> Option<String> {
 }
 
 /// [StoragePersistence] backed by a file.
-#[derive(Clone)]
 pub struct LocalStorage;
 
 /// LocalStorage stores Option<String>.

@@ -26,7 +26,6 @@ impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBac
 }
 
 /// [WebStorageType::Local] backed [StoragePersistence].
-#[derive(Clone)]
 pub struct LocalStorage;
 
 /// LocalStorage stores Option<String>.
@@ -109,7 +108,6 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
 });
 
 /// [WebStorageType::Session] backed [StoragePersistence].
-#[derive(Clone)]
 pub struct SessionStorage;
 
 /// SessionStorage stores Option<String>.

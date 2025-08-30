@@ -8,7 +8,6 @@ use serde::de::DeserializeOwned;
 ///
 /// Uses a non-human readable format.
 /// Format uses Serde, and is compressed and then encoded into a utf8 compatible string.
-#[derive(Clone)]
 pub struct DefaultEncoder;
 
 impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for DefaultEncoder {

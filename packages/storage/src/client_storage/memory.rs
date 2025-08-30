@@ -10,7 +10,6 @@ use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 /// [StoragePersistence] backed by the current [SessionStore].
 ///
 /// Skips encoding, and just stores data using `Arc<dyn Any>>`.
-#[derive(Clone)]
 pub struct SessionStorage;
 
 impl<T: Clone + Any + Send + Sync> StorageBacking<T> for SessionStorage {
@@ -67,7 +66,6 @@ impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
 }
 
 /// An in-memory session store that is tied to the current Dioxus root context.
-#[derive(Clone)]
 struct SessionStore {
     /// The underlying map of session data.
     map: Rc<RefCell<HashMap<String, Arc<dyn Any>>>>,

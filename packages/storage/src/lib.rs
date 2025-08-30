@@ -64,7 +64,7 @@ pub use client_storage::{set_dir_name, set_directory};
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn use_user_id<S>() -> Signal<usize> where S: StorageBacking<T><Key=&'static str> {
+/// fn use_user_id<S>() -> Signal<usize> where S: StorageBacking<T, Key=&'static str> {
 ///     use_storage::<S, _>("user-id", || 123)
 /// }
 /// ```
@@ -118,7 +118,7 @@ impl StorageMode {
 /// use dioxus_signals::Signal;
 ///
 /// // This hook can be used with any storage backing without multiple versions of the hook
-/// fn user_id<S>() -> Signal<usize> where S: StorageBacking<T><Key=&'static str> {
+/// fn user_id<S>() -> Signal<usize> where S: StorageBacking<T, Key=&'static str> {
 ///     new_storage::<S, _>("user-id", || 123)
 /// }
 /// ```
@@ -155,7 +155,7 @@ pub fn use_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -174,7 +174,7 @@ pub fn new_synced_storage<S, T>(
     init: impl FnOnce() -> T,
 ) -> Signal<T>
 where
-    S: Clone + StorageBacking<T> + StorageSubscriber<T, S>,
+    S: StorageBacking<T> + StorageSubscriber<T, S>,
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
@@ -230,13 +230,13 @@ where
 }
 
 /// Returns a StorageEntry with the latest value from storage or the init value if it doesn't exist.
-pub fn new_storage_entry<S, T: Clone>(
+pub fn new_storage_entry<S, T>(
     key: <S::Persistence as StoragePersistence<Option<T>>>::Key,
     init: impl FnOnce() -> T,
 ) -> StorageEntry<S::Persistence, T>
 where
     S: StorageBacking<T>,
-    T: Send + Sync + 'static,
+    T: Clone + Send + Sync + 'static,
 {
     let data = get_from_storage::<S, T>(&key, init);
     StorageEntry::new(key, data)
@@ -258,7 +258,7 @@ where
 }
 
 /// Returns a value from storage or the init value if it doesn't exist.
-pub fn get_from_storage<S: StorageBacking<T>, T: Send + Sync + 'static + Clone>(
+pub fn get_from_storage<S: StorageBacking<T>, T: Send + Sync + Clone + 'static>(
     key: &<S::Persistence as StoragePersistence<Option<T>>>::Key,
     init: impl FnOnce() -> T,
 ) -> T {
@@ -270,7 +270,7 @@ pub fn get_from_storage<S: StorageBacking<T>, T: Send + Sync + 'static + Clone>(
 }
 
 /// A trait for common functionality between StorageEntry and SyncedStorageEntry
-pub trait StorageEntryTrait<S: StorageBacking<T>, T: 'static>: 'static {
+pub trait StorageEntryTrait<S: StorageBacking<T>, T>: 'static {
     /// Saves the current state to storage
     fn save(&self);
 
@@ -445,16 +445,17 @@ where
     }
 }
 
-impl<S: StorageBacking<T>, T: Clone> StorageEntryTrait<S, T> for StorageEntry<S::Persistence, T>
+impl<S: StorageBacking<T>, T> StorageEntryTrait<S, T> for StorageEntry<S::Persistence, T>
 where
     S: StorageBacking<T>,
-    T: PartialEq + Send + Sync + 'static,
+    T: Clone + PartialEq + Send + Sync + 'static,
 {
     fn save(&self) {
         S::set(&self.key, &*self.data.read());
     }
 
     fn update(&mut self) {
+        // TODO: does this need to handle the None case?
         if let Some(value) = S::get(&self.key) {
             *self.data.write() = value;
         }
@@ -557,7 +558,6 @@ pub trait StorageEncoder<T>: 'static {
 /// A way to create a StorageEncoder out of the two layers.
 ///
 /// I'm not sure if this is the best way to abstract that.
-#[derive(Clone)]
 pub struct LayeredStorage<T, Persistence: StoragePersistence<Option<T>>, Encoder: StorageEncoder<T>>
 {
     persistence: PhantomData<Persistence>,
