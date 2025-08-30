@@ -30,7 +30,7 @@ fn store<T>(key: &Key, value: &Value, _unencoded: &T) {
     }
 }
 
-impl StoragePersistence for SessionStorage {
+impl<T> StoragePersistence<T> for SessionStorage {
     type Key = Key;
     type Value = Value;
 
@@ -40,7 +40,7 @@ impl StoragePersistence for SessionStorage {
         read_binding.get(key).cloned()
     }
 
-    fn store<T>(key: &Self::Key, value: &Self::Value, unencoded: &T) {
+    fn store(key: &Self::Key, value: &Self::Value, unencoded: &T) {
         store(key, value, unencoded);
     }
 }

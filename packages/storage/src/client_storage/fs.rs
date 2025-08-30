@@ -65,7 +65,7 @@ fn get(key: &str) -> Option<String> {
 pub struct LocalStorage;
 
 /// LocalStorage stores Option<String>.
-impl StoragePersistence for LocalStorage {
+impl<T: Clone + Send + Sync + 'static> StoragePersistence<T> for LocalStorage {
     type Key = String;
     type Value = Option<String>;
 
@@ -73,11 +73,7 @@ impl StoragePersistence for LocalStorage {
         get(key)
     }
 
-    fn store<T: 'static + Clone + Send + Sync>(
-        key: &Self::Key,
-        value: &Self::Value,
-        unencoded: &T,
-    ) {
+    fn store(key: &Self::Key, value: &Self::Value, unencoded: &T) {
         set(key, value);
 
         // If the subscriptions map is not initialized, we don't need to notify any subscribers.
