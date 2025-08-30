@@ -5,13 +5,25 @@ use std::{
 
 use dioxus::logger::tracing::{error, trace};
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use serde::de::DeserializeOwned;
 use tokio::sync::watch::{Receiver, channel};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::Closure;
 use web_sys::{Storage, window};
 
-use crate::{StorageChannelPayload, StoragePersistence, StorageSubscriber, StorageSubscription};
+use crate::{
+    DefaultEncoder, StorageBacking, StorageChannelPayload, StoragePersistence, StorageSubscriber,
+    StorageSubscription,
+};
+
+/// StorageBacking using default encoder
+impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBacking<T>
+    for SessionStorage
+{
+    type Encoder = DefaultEncoder;
+    type Persistence = LocalStorage;
+}
 
 #[derive(Clone)]
 pub struct LocalStorage;
@@ -25,15 +37,19 @@ impl StoragePersistence for LocalStorage {
         get(key, WebStorageType::Local)
     }
 
-    fn store(key: Self::Key, value: &Self::Value) {
-        set_or_clear(key, value.as_deref(), WebStorageType::Local)
+    fn store<T: 'static + Clone + Send + Sync>(
+        key: &Self::Key,
+        value: &Self::Value,
+        _unencoded: &T,
+    ) {
+        set_or_clear(key.clone(), value.as_deref(), WebStorageType::Local)
     }
 }
 
-impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        key: &String,
-    ) -> Receiver<StorageChannelPayload> {
+impl<T: DeserializeOwned + Send + Sync + Clone + 'static + Serialize>
+    StorageSubscriber<T, LocalStorage> for LocalStorage
+{
+    fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         match read_binding.get(key) {
             Some(subscription) => subscription.tx.subscribe(),
@@ -104,8 +120,12 @@ impl StoragePersistence for SessionStorage {
         get(key, WebStorageType::Session)
     }
 
-    fn store(key: Self::Key, value: &Self::Value) {
-        set_or_clear(key, value.as_deref(), WebStorageType::Session)
+    fn store<T: 'static + Clone + Send + Sync>(
+        key: &Self::Key,
+        value: &Self::Value,
+        _unencoded: &T,
+    ) {
+        set_or_clear(key.clone(), value.as_deref(), WebStorageType::Session)
     }
 }
 

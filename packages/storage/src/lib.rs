@@ -785,7 +785,7 @@ impl<T: Serialize + DeserializeOwned> StorageEncoder<T> for DefaultEncoder {
     }
 }
 
-/// StorageBacking using default encoder: handles LocalStorage and other built in storage implementations.
+/// StorageBacking using default encoder
 impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBacking<T>
     for LocalStorage
 {
