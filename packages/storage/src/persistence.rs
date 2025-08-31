@@ -29,7 +29,7 @@ pub fn use_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let storage = use_hook(|| new_persistent(key.to_string(), || init.take().unwrap()()));
-    use_hydrate_storage::<Storage, T>(storage, init);
+    use_hydrate_storage(storage, init);
     storage
 }
 
@@ -59,7 +59,7 @@ pub fn use_singleton_persistent<
 ) -> Signal<T> {
     let mut init = Some(init);
     let signal = use_hook(|| new_singleton_persistent(|| init.take().unwrap()()));
-    use_hydrate_storage::<Storage, T>(signal, init);
+    use_hydrate_storage(signal, init);
     signal
 }
 

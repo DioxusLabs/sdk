@@ -46,7 +46,7 @@ fn set(key: &str, as_str: &Option<String>) {
             Ok(_) => {}
             Err(error) => match error.kind() {
                 std::io::ErrorKind::NotFound => {}
-                _ => Result::Err(error).unwrap(),
+                _ => panic!("{:?}", error),
             },
         },
     }

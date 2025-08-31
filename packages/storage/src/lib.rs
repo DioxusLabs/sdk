@@ -82,7 +82,7 @@ where
 {
     let mut init = Some(init);
     let storage = use_hook(|| new_storage::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage::<S, T>(storage, init);
+    use_hydrate_storage(storage, init);
     storage
 }
 
@@ -169,7 +169,7 @@ where
 {
     let mut init = Some(init);
     let storage = use_hook(|| new_synced_storage::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage::<S, T>(storage, init);
+    use_hydrate_storage(storage, init);
     storage
 }
 
@@ -187,7 +187,7 @@ where
     <S::Persistence as StoragePersistence<Option<T>>>::Key: Clone,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
-    let signal = {
+    {
         let mode = StorageMode::current();
 
         match mode {
@@ -202,8 +202,7 @@ where
                 *storage_entry.data()
             }
         }
-    };
-    signal
+    }
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -218,7 +217,7 @@ where
 {
     let mut init = Some(init);
     let signal = use_hook(|| new_storage_entry::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage::<S, T>(*StorageEntryTrait::<S, T>::data(&signal), init);
+    use_hydrate_storage(*StorageEntryTrait::<S, T>::data(&signal), init);
     signal
 }
 
@@ -235,7 +234,7 @@ where
 {
     let mut init = Some(init);
     let signal = use_hook(|| new_synced_storage_entry::<S, T>(key, || init.take().unwrap()()));
-    use_hydrate_storage::<S, T>(*signal.data(), init);
+    use_hydrate_storage(*signal.data(), init);
     signal
 }
 
@@ -273,7 +272,7 @@ pub fn get_from_storage<S: StorageBacking<T>, T: Send + Sync + Clone + 'static>(
     key: &<S::Persistence as StoragePersistence<Option<T>>>::Key,
     init: impl FnOnce() -> T,
 ) -> T {
-    S::get(&key).unwrap_or_else(|| {
+    S::get(key).unwrap_or_else(|| {
         let data = init();
         S::set(key, &data);
         data
@@ -400,10 +399,10 @@ where
         //  We want to save in the following conditions
         //      - The value from the channel is different from the current value
         //      - The value from the channel could not be determined, likely because it hasn't been set yet
-        if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
-            if *self.entry.data.read() == *payload {
-                return;
-            }
+        if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>()
+            && *self.entry.data.read() == *payload
+        {
+            return;
         }
         StorageEntryTrait::<S, T>::save(&self.entry);
     }
@@ -438,7 +437,7 @@ where
     fn clone(&self) -> Self {
         Self {
             key: self.key.clone(),
-            data: self.data.clone(),
+            data: self.data,
         }
     }
 }
@@ -649,13 +648,12 @@ impl<T> FailedDecode<T> {
     }
 }
 
-// Take a signal and a storage key and hydrate the value if we are hydrating the client.
-pub(crate) fn use_hydrate_storage<S, T>(
+/// Take a signal and a storage key and hydrate the value if we are hydrating the client.
+pub(crate) fn use_hydrate_storage<T>(
     mut signal: Signal<T>,
     init: Option<impl FnOnce() -> T>,
 ) -> Signal<T>
 where
-    S: StorageBacking<T>,
     T: Clone + Send + Sync + PartialEq + 'static,
 {
     let mode = StorageMode::current();
