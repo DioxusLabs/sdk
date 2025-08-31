@@ -123,8 +123,8 @@ impl<T> StoragePersistence<T> for SessionStorage {
     }
 }
 
-fn store(key: &String, value: &Option<String>, storage_type: WebStorageType) {
-    set_or_clear(key.clone(), value.as_deref(), storage_type)
+fn store(key: &str, value: &Option<String>, storage_type: WebStorageType) {
+    set_or_clear(key.to_owned(), value.as_deref(), storage_type)
 }
 
 fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) {
