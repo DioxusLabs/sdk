@@ -67,11 +67,11 @@ impl<
 
     fn unsubscribe(key: &String) {
         let read_binding = SUBSCRIPTIONS.read().unwrap();
-        if let Some(entry) = read_binding.get(key) {
-            if entry.tx.is_closed() {
-                drop(read_binding);
-                SUBSCRIPTIONS.write().unwrap().remove(key);
-            }
+        if let Some(entry) = read_binding.get(key)
+            && entry.tx.is_closed()
+        {
+            drop(read_binding);
+            SUBSCRIPTIONS.write().unwrap().remove(key);
         }
     }
 }
@@ -129,7 +129,7 @@ fn store(key: &String, value: &Option<String>, storage_type: WebStorageType) {
 
 fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) {
     match value {
-        Some(str) => set(key, &str, storage_type),
+        Some(str) => set(key, str, storage_type),
         None => clear(key, storage_type),
     }
 }
@@ -137,7 +137,7 @@ fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) 
 fn set(key: String, as_str: &str, storage_type: WebStorageType) {
     get_storage_by_type(storage_type)
         .unwrap()
-        .set_item(&key, &as_str)
+        .set_item(&key, as_str)
         .unwrap();
 }
 
