@@ -509,7 +509,7 @@ impl<P: StoragePersistence<Option<T>>, T: Debug> Debug for StorageEntry<P, T> {
     }
 }
 
-/// A trait for a storage backing
+/// A trait for a storage backing.
 pub trait StorageBacking<T>: 'static {
     type Encoder: StorageEncoder<T>;
     type Persistence: StoragePersistence<
@@ -535,9 +535,9 @@ pub trait StorageBacking<T>: 'static {
             }
         }
     }
-    /// Sets a value in storage for the given key
+    /// Sets a value in storage for the given key.
     ///
-    /// TODO: this provides no way to clear (store None)
+    /// TODO: this provides no way to clear (store None).
     fn set(key: &<Self::Persistence as StoragePersistence<Option<T>>>::Key, value: &T)
     where
         T: 'static + Clone + Send + Sync,
@@ -547,19 +547,26 @@ pub trait StorageBacking<T>: 'static {
     }
 }
 
-/// A trait for the persistence portion of StorageBacking.
+/// A trait for the persistence portion of [StorageBacking].
+///
+/// In addition to implementing this trait, storage may also implement [StorageSubscriber] to enable sync with other editors of the storage.
+/// To allow more options for how to implement [StorageSubscriber], [StoragePersistence::store] is provided the `unencoded` `T` value.
 pub trait StoragePersistence<T>: 'static {
-    /// The key type used to store data in storage
+    /// The key type used to store data in storage.
     type Key: PartialEq + Debug + Send + Sync + 'static;
     /// The type of value which can be stored.
     type Value;
-    /// Gets a value from storage for the given key
+    /// Gets a value from storage for the given key.
     fn load(key: &Self::Key) -> Self::Value;
-    /// Sets a value in storage for the given key
+    /// Sets a value in storage for the given key.
+    ///
+    ///
     fn store(key: &Self::Key, value: &Self::Value, unencoded: &T);
 }
 
 /// New trait which can be implemented to define a data format for storage.
+///
+/// Typically implemented where `T` is an `Option` with `None` being th
 pub trait StorageEncoder<T>: 'static {
     /// The type of value which can be stored.
     type EncodedValue;
@@ -568,13 +575,17 @@ pub trait StorageEncoder<T>: 'static {
     fn serialize(value: &T) -> Self::EncodedValue;
 }
 
-/// A trait for a subscriber to events from a storage backing
+/// A trait for a subscriber to events from a [StorageBacking].
+///
+/// Observes an Option<T>, where None is equivalent to nothing being stored.
+///
+/// `T` is the user facing type: already unencoded if needed.
 pub trait StorageSubscriber<T, S: StorageBacking<T>> {
-    /// Subscribes to events from a storage backing for the given key
+    /// Subscribes to events from a storage backing for the given key.
     fn subscribe(
         key: &<S::Persistence as StoragePersistence<Option<T>>>::Key,
     ) -> Receiver<StorageChannelPayload>;
-    /// Unsubscribes from events from a storage backing for the given key
+    /// Unsubscribes from events from a storage backing for the given key.
     fn unsubscribe(key: &<S::Persistence as StoragePersistence<Option<T>>>::Key);
 }
 
