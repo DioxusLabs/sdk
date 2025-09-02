@@ -547,7 +547,7 @@ pub trait StorageBacking<T>: 'static {
     }
 }
 
-/// A trait for the persistence portion of [StorageBacking].
+/// The persistence portion of [StorageBacking].
 ///
 /// In addition to implementing this trait, storage may also implement [StorageSubscriber] to enable sync with other editors of the storage.
 /// To allow more options for how to implement [StorageSubscriber], [StoragePersistence::store] is provided the `unencoded` `T` value.
@@ -564,9 +564,9 @@ pub trait StoragePersistence<T>: 'static {
     fn store(key: &Self::Key, value: &Self::Value, unencoded: &T);
 }
 
-/// New trait which can be implemented to define a data format for storage.
+/// The Encoder portion of [StorageBacking].
 ///
-/// Typically implemented where `T` is an `Option` with `None` being th
+/// Converts the a `T` into an [StorageEncoder::EncodedValue] which can be stored in the [StoragePersistence].
 pub trait StorageEncoder<T>: 'static {
     /// The type of value which can be stored.
     type EncodedValue;
