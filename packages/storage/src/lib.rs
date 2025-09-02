@@ -560,7 +560,7 @@ pub trait StoragePersistence<T>: 'static {
     fn load(key: &Self::Key) -> Self::Value;
     /// Sets a value in storage for the given key.
     ///
-    ///
+    /// `unencoded` must be the same as `value`, except not having been encoded.
     fn store(key: &Self::Key, value: &Self::Value, unencoded: &T);
 }
 
