@@ -1,4 +1,4 @@
-use crate::{StorageChannelPayload, StorageSubscription};
+use crate::{StorageBacking, StorageChannelPayload, StorageEncoder, StorageSubscription};
 use dioxus::logger::tracing::trace;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -7,7 +7,7 @@ use std::io::Write;
 use std::sync::{OnceLock, RwLock};
 use tokio::sync::watch::{Receiver, channel};
 
-use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
+use crate::{StoragePersistence, StorageSubscriber};
 
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
@@ -29,62 +29,77 @@ pub fn set_dir_name(name: &str) {
 static LOCATION: OnceLock<std::path::PathBuf> = OnceLock::new();
 
 /// Set a value in the configured storage location using the key as the file name.
-fn set<T: Serialize>(key: String, value: &T) {
-    let as_str = serde_to_string(value);
+fn set(key: &str, as_str: &Option<String>) {
     let path = LOCATION
         .get()
-        .expect("Call the set_dir macro before accessing persistant data");
-    std::fs::create_dir_all(path).unwrap();
+        .expect("Call the set_dir macro before accessing persistent data");
+
     let file_path = path.join(key);
-    let mut file = std::fs::File::create(file_path).unwrap();
-    file.write_all(as_str.as_bytes()).unwrap();
+
+    match as_str {
+        Some(as_str) => {
+            std::fs::create_dir_all(path).unwrap();
+            let mut file = std::fs::File::create(file_path).unwrap();
+            file.write_all(as_str.as_bytes()).unwrap()
+        }
+        None => match std::fs::remove_file(file_path) {
+            Ok(_) => {}
+            Err(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => {}
+                _ => panic!("{:?}", error),
+            },
+        },
+    }
 }
 
 /// Get a value from the configured storage location using the key as the file name.
-fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
+fn get(key: &str) -> Option<String> {
     let path = LOCATION
         .get()
-        .expect("Call the set_dir macro before accessing persistant data")
+        .expect("Call the set_dir macro before accessing persistent data")
         .join(key);
-    let s = std::fs::read_to_string(path).ok()?;
-    try_serde_from_string(&s)
+    std::fs::read_to_string(path).ok()
 }
 
-#[derive(Clone)]
+/// [StoragePersistence] backed by a file.
 pub struct LocalStorage;
 
-impl StorageBacking for LocalStorage {
+/// LocalStorage stores Option<String>.
+impl<T: Clone + Send + Sync + 'static> StoragePersistence<T> for LocalStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + Clone + 'static>(key: String, value: &T) {
-        let key_clone = key.clone();
-        let value_clone = (*value).clone();
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key)
+    }
+
+    fn store(key: &Self::Key, value: &Self::Value, unencoded: &T) {
         set(key, value);
 
         // If the subscriptions map is not initialized, we don't need to notify any subscribers.
         if let Some(subscriptions) = SUBSCRIPTIONS.get() {
             let read_binding = subscriptions.read().unwrap();
-            if let Some(subscription) = read_binding.get(&key_clone) {
+            if let Some(subscription) = read_binding.get(key) {
                 subscription
                     .tx
-                    .send(StorageChannelPayload::new(value_clone))
+                    // .send(StorageChannelPayload::new(value.clone()))
+                    .send(StorageChannelPayload::new(unencoded.clone()))
                     .unwrap();
             }
         }
-    }
-
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key)
     }
 }
 
 // Note that this module contains an optimization that differs from the web version. Dioxus Desktop runs all windows in
 // the same thread, meaning that we can just directly notify the subscribers via the same channels, rather than using the
 // storage event listener.
-impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        key: &<LocalStorage as StorageBacking>::Key,
-    ) -> Receiver<StorageChannelPayload> {
+impl<
+    T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static,
+    E: StorageEncoder<T, EncodedValue = String>,
+    S: StorageBacking<T, Encoder = E, Persistence = LocalStorage>,
+> StorageSubscriber<T, S> for LocalStorage
+{
+    fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         // Initialize the subscriptions map if it hasn't been initialized yet.
         let subscriptions = SUBSCRIPTIONS.get_or_init(|| RwLock::new(HashMap::new()));
 
@@ -96,7 +111,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
             None => {
                 drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+                let subscription = StorageSubscription::new::<S, T>(tx, key.clone());
 
                 subscriptions
                     .write()
@@ -107,7 +122,7 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
         }
     }
 
-    fn unsubscribe(key: &<LocalStorage as StorageBacking>::Key) {
+    fn unsubscribe(key: &String) {
         trace!("Unsubscribing from \"{}\"", key);
 
         // Fail silently if unsubscribe is called but the subscriptions map isn't initialized yet.

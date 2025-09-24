@@ -5,43 +5,57 @@ use std::{
 
 use dioxus::logger::tracing::{error, trace};
 use once_cell::sync::Lazy;
-use serde::{Serialize, de::DeserializeOwned};
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use tokio::sync::watch::{Receiver, channel};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::Closure;
 use web_sys::{Storage, window};
 
 use crate::{
-    StorageBacking, StorageChannelPayload, StorageSubscriber, StorageSubscription, serde_to_string,
-    try_serde_from_string,
+    StorageBacking, StorageChannelPayload, StorageEncoder, StoragePersistence, StorageSubscriber,
+    StorageSubscription, default_encoder::DefaultEncoder,
 };
 
-#[derive(Clone)]
+/// StorageBacking using default encoder
+impl<T: Serialize + DeserializeOwned + Send + Sync + Clone + 'static> StorageBacking<T>
+    for SessionStorage
+{
+    type Encoder = DefaultEncoder;
+    type Persistence = SessionStorage;
+}
+
+/// [WebStorageType::Local] backed [StoragePersistence].
 pub struct LocalStorage;
 
-impl StorageBacking for LocalStorage {
+/// LocalStorage stores Option<String>.
+impl<T> StoragePersistence<T> for LocalStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
-        set(key, value, WebStorageType::Local);
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key, WebStorageType::Local)
     }
 
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, WebStorageType::Local)
+    fn store(key: &Self::Key, value: &Self::Value, _unencoded: &T) {
+        store(key, value, WebStorageType::Local)
     }
 }
 
-impl StorageSubscriber<LocalStorage> for LocalStorage {
-    fn subscribe<T: DeserializeOwned + Send + Sync + Clone + 'static>(
-        key: &String,
-    ) -> Receiver<StorageChannelPayload> {
+impl<
+    T: Send + Sync + Serialize + DeserializeOwned + Clone + 'static,
+    E: StorageEncoder<T, EncodedValue = String>,
+    S: StorageBacking<T, Encoder = E, Persistence = LocalStorage>,
+> StorageSubscriber<T, S> for LocalStorage
+{
+    fn subscribe(key: &String) -> Receiver<StorageChannelPayload> {
         let read_binding = SUBSCRIPTIONS.read().unwrap();
         match read_binding.get(key) {
             Some(subscription) => subscription.tx.subscribe(),
             None => {
                 drop(read_binding);
                 let (tx, rx) = channel::<StorageChannelPayload>(StorageChannelPayload::default());
-                let subscription = StorageSubscription::new::<LocalStorage, T>(tx, key.clone());
+                let subscription = StorageSubscription::new::<S, T>(tx, key.clone());
                 SUBSCRIPTIONS
                     .write()
                     .unwrap()
@@ -53,11 +67,11 @@ impl StorageSubscriber<LocalStorage> for LocalStorage {
 
     fn unsubscribe(key: &String) {
         let read_binding = SUBSCRIPTIONS.read().unwrap();
-        if let Some(entry) = read_binding.get(key) {
-            if entry.tx.is_closed() {
-                drop(read_binding);
-                SUBSCRIPTIONS.write().unwrap().remove(key);
-            }
+        if let Some(entry) = read_binding.get(key)
+            && entry.tx.is_closed()
+        {
+            drop(read_binding);
+            SUBSCRIPTIONS.write().unwrap().remove(key);
         }
     }
 }
@@ -93,32 +107,49 @@ static SUBSCRIPTIONS: Lazy<Arc<RwLock<HashMap<String, StorageSubscription>>>> = 
     Arc::new(RwLock::new(HashMap::new()))
 });
 
-#[derive(Clone)]
+/// [WebStorageType::Session] backed [StoragePersistence].
 pub struct SessionStorage;
 
-impl StorageBacking for SessionStorage {
+impl<T> StoragePersistence<T> for SessionStorage {
     type Key = String;
+    type Value = Option<String>;
 
-    fn set<T: Serialize + Send + Sync + 'static>(key: String, value: &T) {
-        set(key, value, WebStorageType::Session);
+    fn load(key: &Self::Key) -> Self::Value {
+        get(key, WebStorageType::Session)
     }
 
-    fn get<T: DeserializeOwned>(key: &String) -> Option<T> {
-        get(key, WebStorageType::Session)
+    fn store(key: &Self::Key, value: &Self::Value, _unencoded: &T) {
+        store(key, value, WebStorageType::Session)
     }
 }
 
-fn set<T: Serialize>(key: String, value: &T, storage_type: WebStorageType) {
-    let as_str = serde_to_string(value);
+fn store(key: &str, value: &Option<String>, storage_type: WebStorageType) {
+    set_or_clear(key.to_owned(), value.as_deref(), storage_type)
+}
+
+fn set_or_clear(key: String, value: Option<&str>, storage_type: WebStorageType) {
+    match value {
+        Some(str) => set(key, str, storage_type),
+        None => clear(key, storage_type),
+    }
+}
+
+fn set(key: String, as_str: &str, storage_type: WebStorageType) {
     get_storage_by_type(storage_type)
         .unwrap()
-        .set_item(&key, &as_str)
+        .set_item(&key, as_str)
         .unwrap();
 }
 
-fn get<T: DeserializeOwned>(key: &str, storage_type: WebStorageType) -> Option<T> {
-    let s: String = get_storage_by_type(storage_type)?.get_item(key).ok()??;
-    try_serde_from_string(&s)
+fn clear(key: String, storage_type: WebStorageType) {
+    get_storage_by_type(storage_type)
+        .unwrap()
+        .delete(&key)
+        .unwrap();
+}
+
+fn get(key: &str, storage_type: WebStorageType) -> Option<String> {
+    get_storage_by_type(storage_type)?.get_item(key).ok()?
 }
 
 fn get_storage_by_type(storage_type: WebStorageType) -> Option<Storage> {

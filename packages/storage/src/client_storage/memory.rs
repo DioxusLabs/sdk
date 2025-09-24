@@ -5,24 +5,61 @@ use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::StorageBacking;
+use crate::{StorageBacking, StorageEncoder, StoragePersistence};
 
-#[derive(Clone)]
+/// [StoragePersistence] backed by the current [SessionStore].
+///
+/// Skips encoding, and just stores data using `Arc<dyn Any>>`.
 pub struct SessionStorage;
 
-impl StorageBacking for SessionStorage {
-    type Key = String;
+impl<T: Clone + Any + Send + Sync> StorageBacking<T> for SessionStorage {
+    type Encoder = ArcEncoder;
+    type Persistence = SessionStorage;
+}
 
-    fn set<T: Clone + 'static>(key: String, value: &T) {
-        let session = SessionStore::get_current_session();
-        session.borrow_mut().insert(key, Arc::new(value.clone()));
+type Key = String;
+type Value = Option<Arc<dyn Any>>;
+
+fn store<T>(key: &Key, value: &Value, _unencoded: &T) {
+    let session = SessionStore::get_current_session();
+    match value {
+        Some(value) => {
+            session.borrow_mut().insert(key.clone(), value.clone());
+        }
+        None => {
+            session.borrow_mut().remove(key);
+        }
     }
+}
 
-    fn get<T: Clone + 'static>(key: &String) -> Option<T> {
+impl<T> StoragePersistence<T> for SessionStorage {
+    type Key = Key;
+    type Value = Value;
+
+    fn load(key: &Self::Key) -> Self::Value {
         let session = SessionStore::get_current_session();
         let read_binding = session.borrow();
-        let value_any = read_binding.get(key)?;
-        value_any.downcast_ref::<T>().cloned()
+        read_binding.get(key).cloned()
+    }
+
+    fn store(key: &Self::Key, value: &Self::Value, unencoded: &T) {
+        store(key, value, unencoded);
+    }
+}
+
+/// A [StorageEncoder] which encodes Optional data by cloning it's content into `Arc<dyn Any>`.
+pub struct ArcEncoder;
+
+impl<T: Clone + Any> StorageEncoder<T> for ArcEncoder {
+    type EncodedValue = Arc<dyn Any>;
+    type DecodeError = &'static str;
+
+    fn deserialize(loaded: &Self::EncodedValue) -> Result<T, &'static str> {
+        loaded.downcast_ref::<T>().cloned().ok_or("Failed Downcast")
+    }
+
+    fn serialize(value: &T) -> Self::EncodedValue {
+        Arc::new(value.clone())
     }
 }
 
