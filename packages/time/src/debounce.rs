@@ -9,7 +9,6 @@ use std::time::Duration;
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
-#[derive(Clone, Copy, PartialEq)]
 pub struct UseDebounce<Args: 'static> {
     current_handle: Signal<Option<TimeoutHandle>>,
     timeout: UseTimeout<Args>,
@@ -27,6 +26,18 @@ impl<Args> UseDebounce<Args> {
         if let Some(handle) = self.current_handle.take() {
             handle.cancel();
         }
+    }
+}
+
+impl<Args> Clone for UseDebounce<Args> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<Args> Copy for UseDebounce<Args> {}
+impl<Args> PartialEq for UseDebounce<Args> {
+    fn eq(&self, other: &Self) -> bool {
+        self.current_handle == other.current_handle && self.timeout == other.timeout
     }
 }
 
@@ -48,7 +59,7 @@ impl<Args> UseDebounce<Args> {
 ///     // Create a two second debounce.
 ///     // This will print "ran" after two seconds since the last action call.
 ///     let mut debounce = use_debounce(Duration::from_secs(2), |_| println!("ran"));
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
@@ -71,7 +82,7 @@ impl<Args> UseDebounce<Args> {
 /// #[component]
 /// fn App() -> Element {
 ///     let mut debounce = use_debounce(Duration::from_secs(5), |_| println!("ran"));
-///     
+///
 ///     rsx! {
 ///         button {
 ///             // Start the debounce on click.
@@ -102,7 +113,7 @@ impl<Args> UseDebounce<Args> {
 ///         tokio::time::sleep(Duration::from_secs(2)).await;
 ///         println!("after async");
 ///     });
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
