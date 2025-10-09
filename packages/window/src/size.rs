@@ -24,7 +24,7 @@
 use dioxus::core::provide_root_context;
 use dioxus::hooks::use_effect;
 use dioxus::prelude::{
-    ReadOnlySignal, ReadableExt, ScopeId, Signal, WritableExt, try_use_context, use_hook,
+    ReadSignal, ReadableExt, ScopeId, Signal, WritableExt, try_use_context, use_hook,
 };
 use dioxus::signals::Readable;
 use std::error::Error;
@@ -127,7 +127,7 @@ impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult>
 ///     }
 /// }
 /// ```
-pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
+pub fn use_window_size() -> ReadSignal<WindowSizeResult> {
     let mut window_size = match try_use_context::<Signal<WindowSizeResult>>() {
         Some(w) => w,
         // This should only run once.
@@ -143,7 +143,7 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
         listen(window_size);
     });
 
-    use_hook(|| ReadOnlySignal::new(window_size))
+    use_hook(|| ReadSignal::new(window_size))
 }
 
 // Listener for the web implementation.

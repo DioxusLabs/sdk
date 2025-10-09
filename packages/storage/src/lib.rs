@@ -402,10 +402,7 @@ where
     pub fn new(key: S::Key, data: T) -> Self {
         Self {
             key,
-            data: Signal::new_in_scope(
-                data,
-                current_scope_id().expect("must be called from inside of the dioxus context"),
-            ),
+            data: Signal::new_in_scope(data, current_scope_id()),
         }
     }
 }

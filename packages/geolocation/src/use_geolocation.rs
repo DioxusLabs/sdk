@@ -3,8 +3,8 @@
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
 use dioxus::{
     prelude::{
-        ReadOnlySignal, Signal, UnboundedReceiver, provide_context, try_consume_context,
-        use_coroutine, use_hook, use_signal,
+        ReadSignal, Signal, UnboundedReceiver, provide_context, try_consume_context, use_coroutine,
+        use_hook, use_signal,
     },
     signals::{Readable, Writable},
 };
@@ -14,7 +14,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 /// Provides the latest geocoordinates. Good for navigation-type apps.
-pub fn use_geolocation() -> ReadOnlySignal<Result<Geocoordinates, Error>> {
+pub fn use_geolocation() -> ReadSignal<Result<Geocoordinates, Error>> {
     // Store the coords
     let mut coords: Signal<Result<Geocoordinates, Error>> =
         use_signal(|| Err(Error::NotInitialized));
@@ -52,7 +52,7 @@ pub fn use_geolocation() -> ReadOnlySignal<Result<Geocoordinates, Error>> {
         }
     }
 
-    use_hook(|| ReadOnlySignal::new(coords))
+    use_hook(|| ReadSignal::new(coords))
 }
 
 /// Must be called before any use of the geolocation abstraction.

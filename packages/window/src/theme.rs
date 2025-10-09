@@ -17,7 +17,7 @@
 //! #[component]
 //! fn App() -> Element {
 //!     let theme = use_system_theme();
-//!     
+//!
 //!     // Default to a light theme in the event of an error.
 //!     let class = match theme().unwrap_or(Theme::Light) {
 //!         Theme::Light => "bg-light",
@@ -109,7 +109,7 @@ type ThemeResult = Result<Theme, ThemeError>;
 ///     }
 /// }
 /// ```
-pub fn use_system_theme() -> ReadOnlySignal<ThemeResult> {
+pub fn use_system_theme() -> ReadSignal<ThemeResult> {
     let mut system_theme = match try_use_context::<Signal<ThemeResult>>() {
         Some(s) => s,
         // This should only run once.
@@ -125,7 +125,7 @@ pub fn use_system_theme() -> ReadOnlySignal<ThemeResult> {
         listen(system_theme);
     });
 
-    use_hook(|| ReadOnlySignal::new(system_theme))
+    use_hook(|| ReadSignal::new(system_theme))
 }
 
 // The listener implementation for wasm targets.
