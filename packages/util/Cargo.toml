@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-util"
-version = "0.7.0-rc.2"
+version = "0.7.0-rc.3"
 
 description = "General utilities for Dioxus apps."
 readme = "./README.md"
