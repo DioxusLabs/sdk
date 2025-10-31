@@ -7,7 +7,7 @@ on:
     paths:
       - packages/**
       - examples/**
-      
+
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
@@ -22,22 +22,22 @@ env:
 jobs:
   # Rust fmt
   fmt:
-      if: github.event.pull_request.draft == false
-      name: Rustfmt
-      runs-on: ubuntu-latest
-      steps:
-        - uses: dtolnay/rust-toolchain@stable
-        - uses: Swatinem/rust-cache@v2
-        - run: rustup component add rustfmt
-        - uses: actions/checkout@v3
-        - run: cargo fmt --all -- --check
+    if: github.event.pull_request.draft == false
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: Swatinem/rust-cache@v2
+      - run: rustup component add rustfmt
+      - uses: actions/checkout@v3
+      - run: cargo fmt --all -- --check
   # Clippy
   clippy:
     if: github.event.pull_request.draft == false
     name: Clippy
     runs-on: windows-latest
     steps:
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.85.0
       - uses: Swatinem/rust-cache@v2
       - run: rustup target add wasm32-unknown-unknown
       - run: rustup component add clippy
