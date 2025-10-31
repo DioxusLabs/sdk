@@ -1,13 +1,7 @@
 //! Provides an initialization and use_geolocation hook.
 
 use super::core::{Error, Event, Geocoordinates, Geolocator, PowerMode, Status};
-use dioxus::{
-    prelude::{
-        ReadSignal, Signal, UnboundedReceiver, provide_context, try_consume_context, use_coroutine,
-        use_hook, use_signal,
-    },
-    signals::{Readable, Writable},
-};
+use dioxus::prelude::*;
 use futures_util::stream::StreamExt;
 use std::sync::Once;
 
