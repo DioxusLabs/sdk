@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sync"
-version = "0.7.0-rc.3"
+version = "0.7.0"
 
 description = "Synchronization primitives for your Dioxus app."
 readme = "./README.md"
