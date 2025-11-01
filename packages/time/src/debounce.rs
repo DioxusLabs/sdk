@@ -2,7 +2,7 @@ use crate::{TimeoutHandle, UseTimeout, use_timeout};
 use dioxus::{
     dioxus_core::SpawnIfAsync,
     hooks::use_signal,
-    signals::{Signal, Writable},
+    signals::{Signal, WritableExt as _},
 };
 use std::time::Duration;
 

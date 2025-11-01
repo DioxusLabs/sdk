@@ -30,6 +30,7 @@ mod client_storage;
 mod persistence;
 
 pub use client_storage::{LocalStorage, SessionStorage};
+use dioxus::core::{ReactiveContext, current_scope_id, generation, needs_update};
 use dioxus::logger::tracing::trace;
 use futures_util::stream::StreamExt;
 pub use persistence::{
@@ -401,10 +402,7 @@ where
     pub fn new(key: S::Key, data: T) -> Self {
         Self {
             key,
-            data: Signal::new_in_scope(
-                data,
-                current_scope_id().expect("must be called from inside of the dioxus context"),
-            ),
+            data: Signal::new_in_scope(data, current_scope_id()),
         }
     }
 }

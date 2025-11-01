@@ -8,7 +8,6 @@ use std::{
     fmt::{self, Display},
     path::{Path, PathBuf},
 };
-
 /// Provides a builder API and contains relevant notification info.
 ///
 /// # Examples

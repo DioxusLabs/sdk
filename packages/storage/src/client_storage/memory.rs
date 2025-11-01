@@ -5,6 +5,8 @@ use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use std::sync::Arc;
 
+use dioxus::core::{consume_context_from_scope, provide_root_context};
+
 use crate::StorageBacking;
 
 #[derive(Clone)]
@@ -42,15 +44,14 @@ impl SessionStore {
 
     /// Get the current session store from the root context, or create a new one if it doesn't exist.
     fn get_current_session() -> Self {
-        dioxus::prelude::consume_context_from_scope::<Self>(dioxus::prelude::ScopeId::ROOT)
-            .map_or_else(
-                || {
-                    let session = Self::new();
-                    dioxus::prelude::provide_root_context(session.clone());
-                    session
-                },
-                |s| s,
-            )
+        consume_context_from_scope::<Self>(dioxus::prelude::ScopeId::ROOT).map_or_else(
+            || {
+                let session = Self::new();
+                provide_root_context(session.clone());
+                session
+            },
+            |s| s,
+        )
     }
 }
 

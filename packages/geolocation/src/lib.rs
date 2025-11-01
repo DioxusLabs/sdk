@@ -8,6 +8,7 @@ cfg_if::cfg_if! {
         pub use self::core::*;
         pub use self::use_geolocation::*;
     }
+
     else {
         compile_error!("the `geolocation` feature is only available on wasm and windows targets");
     }
