@@ -354,14 +354,15 @@ where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 {
+    #[allow(clippy::collapsible_if)]
     fn save(&self) {
         //  We want to save in the following conditions
         //      - The value from the channel is different from the current value
         //      - The value from the channel could not be determined, likely because it hasn't been set yet
-        if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>()
-            && *self.entry.data.read() == *payload
-        {
-            return;
+        if let Some(payload) = self.channel.borrow().data.downcast_ref::<T>() {
+            if *self.entry.data.read() == *payload {
+                return;
+            }
         }
         self.entry.save();
     }
