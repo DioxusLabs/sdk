@@ -30,7 +30,7 @@ web-sys = { workspace = true, features = [
 ] }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62.0", features = [
+windows = { version = "0.48.0", features = [
     "Foundation",
     "Devices_Geolocation",
 ] }
