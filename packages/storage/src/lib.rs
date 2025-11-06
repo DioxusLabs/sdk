@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if)]
+
 //! Local and persistent storage.
 //!
 //! Handle local storage ergonomically.

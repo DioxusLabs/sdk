@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if)]
+
 //! Interact with location services.
 
 pub mod core;
