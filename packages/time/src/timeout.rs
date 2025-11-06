@@ -1,6 +1,7 @@
 use dioxus::{
+    core::Task,
     dioxus_core::SpawnIfAsync,
-    prelude::{Callback, Task, spawn, use_hook},
+    prelude::{Callback, spawn, use_hook},
     signals::Signal,
 };
 use futures::{SinkExt, StreamExt, channel::mpsc};
@@ -91,7 +92,7 @@ impl TimeoutHandle {
 ///     // Create a timeout for two seconds.
 ///     // Once triggered, this timeout will print "timeout called" after two seconds.
 ///     let timeout = use_timeout(Duration::from_secs(2), |()| println!("timeout called"));
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
@@ -118,7 +119,7 @@ impl TimeoutHandle {
 ///         current_timeout.set(None);
 ///         println!("timeout called");
 ///     });
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
@@ -153,7 +154,7 @@ impl TimeoutHandle {
 ///         tokio::time::sleep(Duration::from_secs(2)).await;
 ///         println!("Timeout after four total seconds.");
 ///     });
-///     
+///
 ///     rsx! {
 ///         button {
 ///             onclick: move |_| {
