@@ -8,7 +8,7 @@ on:
     paths:
       - packages/**
       - examples/**
-      
+
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
@@ -26,17 +26,19 @@ jobs:
     name: WASM
     runs-on: ubuntu-latest
     steps:
+    - uses: dtolnay/rust-toolchain@1.85.0
     - uses: actions/checkout@v3
     - run: rustup target add wasm32-unknown-unknown
     - uses: Swatinem/rust-cache@v2
     - run: cargo build --all-targets --workspace --exclude *-example --verbose --target wasm32-unknown-unknown --all-features
     # need to run tests here
-    
+
   desktop:
     if: github.event.pull_request.draft == false
     name: Desktop
     runs-on: windows-latest
     steps:
+    - uses: dtolnay/rust-toolchain@1.85.0
     - uses: actions/checkout@v3
     - uses: Swatinem/rust-cache@v2
     - run: cargo build --all-targets --workspace --verbose --all-features
