@@ -26,7 +26,7 @@ jobs:
     name: WASM
     runs-on: ubuntu-latest
     steps:
-    - uses: dtolnay/rust-toolchain@1.85.0
+    - uses: dtolnay/rust-toolchain@1.90.0
     - uses: actions/checkout@v3
     - run: rustup target add wasm32-unknown-unknown
     - uses: Swatinem/rust-cache@v2
@@ -38,7 +38,7 @@ jobs:
     name: Desktop
     runs-on: windows-latest
     steps:
-    - uses: dtolnay/rust-toolchain@1.85.0
+    - uses: dtolnay/rust-toolchain@1.90.0
     - uses: actions/checkout@v3
     - uses: Swatinem/rust-cache@v2
     - run: cargo build --all-targets --workspace --verbose --all-features
