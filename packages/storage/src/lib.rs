@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if)]
+
 //! Local and persistent storage.
 //!
 //! Handle local storage ergonomically.
@@ -165,7 +167,7 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    let signal = {
+    {
         let mode = StorageMode::current();
 
         match mode {
@@ -180,8 +182,7 @@ where
                 *storage_entry.data()
             }
         }
-    };
-    signal
+    }
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -355,6 +356,7 @@ where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 {
+    #[allow(clippy::collapsible_if)]
     fn save(&self) {
         //  We want to save in the following conditions
         //      - The value from the channel is different from the current value

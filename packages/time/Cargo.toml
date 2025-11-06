@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-time"
-version = "0.1.0-alpha.1"
+version = "0.7.0"
 
 description = "Timing utilities and hooks for Dioxus."
 readme = "./README.md"
