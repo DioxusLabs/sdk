@@ -33,7 +33,7 @@ dioxus-config-macro = "0.7.0"
 
 # Deps
 cfg-if = "1.0.0"
-tokio = "1.43.0"
+tokio = "1.48.0"
 futures = "0.3.31"
 futures-util = "0.3.31"
 

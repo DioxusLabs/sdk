@@ -23,10 +23,8 @@
 //! ```
 use dioxus::core::provide_root_context;
 use dioxus::hooks::use_effect;
-use dioxus::prelude::{
-    ReadSignal, ReadableExt, ScopeId, Signal, WritableExt, try_use_context, use_hook,
-};
-use dioxus::signals::Readable;
+use dioxus::prelude::{ReadableExt, ScopeId, Signal, try_use_context, use_hook};
+use dioxus::signals::{ReadSignal, Readable, WritableExt};
 use std::error::Error;
 use std::fmt::Display;
 

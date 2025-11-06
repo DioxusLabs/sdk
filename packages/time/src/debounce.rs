@@ -1,11 +1,14 @@
 use crate::{TimeoutHandle, UseTimeout, use_timeout};
-use dioxus::{dioxus_core::SpawnIfAsync, hooks::use_signal, prelude::WritableExt, signals::Signal};
+use dioxus::{
+    dioxus_core::SpawnIfAsync,
+    hooks::use_signal,
+    signals::{Signal, WritableExt as _},
+};
 use std::time::Duration;
 
 /// The interface for calling a debounce.
 ///
 /// See [`use_debounce`] for more information.
-#[derive(Clone, Copy, PartialEq)]
 pub struct UseDebounce<Args: 'static> {
     current_handle: Signal<Option<TimeoutHandle>>,
     timeout: UseTimeout<Args>,
@@ -23,6 +26,18 @@ impl<Args> UseDebounce<Args> {
         if let Some(handle) = self.current_handle.take() {
             handle.cancel();
         }
+    }
+}
+
+impl<Args> Clone for UseDebounce<Args> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<Args> Copy for UseDebounce<Args> {}
+impl<Args> PartialEq for UseDebounce<Args> {
+    fn eq(&self, other: &Self) -> bool {
+        self.current_handle == other.current_handle && self.timeout == other.timeout
     }
 }
 

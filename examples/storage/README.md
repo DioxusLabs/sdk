@@ -3,20 +3,26 @@
 
 Use persistent allows you to create data that will persist across sessions. This example will teach you how to use the `use_persistant` hook.
 
-Desktop:
+## Desktop:
 
 ```sh
-dx serve --platform desktop --features desktop
+dx serve --platform desktop
 ```
 
-Web:
+## Web:
 
 ```sh
-dx serve --features web
+dx serve --platform web
 ```
 
-Fullstack:
+## Fullstack:
 
 ```sh
-dx serve --platform fullstack --features fullstack
+dx serve --platform web --fullstack --features fullstack
+```
+
+Or:
+
+```sh
+dx serve --platform desktop --fullstack --features fullstack
 ```
