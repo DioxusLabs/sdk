@@ -2,7 +2,7 @@
 /// Set the directory where the storage files are located on non-wasm targets.
 ///
 /// ```rust
-/// use dioxus_storage::set_dir;
+/// use dioxus_sdk_storage::set_dir;
 ///
 /// fn main(){
 ///     // set the directory to the default location
@@ -10,7 +10,7 @@
 /// }
 /// ```
 /// ```rust
-/// use dioxus_storage::set_dir;
+/// use dioxus_sdk_storage::set_dir;
 ///
 /// fn main(){
 ///     // set the directory to a custom location

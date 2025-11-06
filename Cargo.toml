@@ -17,13 +17,13 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 [workspace.dependencies]
 # Workspace
 dioxus-sdk = { path = "packages/sdk", version = "0.7.0" }
-dioxus-time = { path = "packages/time", version = "0.7.0" }
-dioxus_storage = { path = "packages/storage", version = "0.7.0" }
-dioxus-geolocation = { path = "packages/geolocation", version = "0.7.0" }
-dioxus-notification = { path = "packages/notification", version = "0.7.0" }
-dioxus-sync = { path = "packages/sync", version = "0.7.0" }
-dioxus-util = { path = "packages/util", version = "0.7.0" }
-dioxus-window = { path = "packages/window", version = "0.7.0" }
+dioxus-sdk-time = { path = "packages/time", version = "0.7.0" }
+dioxus-sdk-storage = { path = "packages/storage", version = "0.7.0" }
+dioxus-sdk-geolocation = { path = "packages/geolocation", version = "0.7.0" }
+dioxus-sdk-notification = { path = "packages/notification", version = "0.7.0" }
+dioxus-sdk-sync = { path = "packages/sync", version = "0.7.0" }
+dioxus-sdk-util = { path = "packages/util", version = "0.7.0" }
+dioxus-sdk-window = { path = "packages/window", version = "0.7.0" }
 
 # Dioxus
 dioxus = "0.7.0"

@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-time"
+name = "dioxus-sdk-time"
 version = "0.7.0"
 
 description = "Timing utilities and hooks for Dioxus."

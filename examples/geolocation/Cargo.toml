@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus = { workspace = true } 
-dioxus-geolocation = { workspace = true }
+dioxus = { workspace = true }
+dioxus-sdk-geolocation = { workspace = true }
 
 [features]
 default = ["desktop"]

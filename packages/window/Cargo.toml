@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-window"
+name = "dioxus-sdk-window"
 version = "0.7.0"
 
 description = "Window utilities and hooks for Dioxus."

@@ -9,12 +9,12 @@ Local and persistent storage utilities for Dioxus.
 Add `dioxus-storage` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus_storage = "0.1"
+dioxus_sdk_storage = "0.1"
 ```
 
 Example:
 ```rs
-use dioxus_storage::use_persistent;
+use dioxus_sdk_storage::use_persistent;
 use dioxus::prelude::*;
 
 #[component]

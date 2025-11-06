@@ -7,20 +7,20 @@ Timing utilities and hooks for Dioxus.
 - [ ] Timeouts
 
 ## Usage
-Add `dioxus-time` to your `Cargo.toml`:
+Add `dioxus-sdk-time` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-time = "0.1"
+dioxus-sdk-time = "0.1"
 ```
 
 Example:
 ```rs
 use dioxus::{logger::tracing::info, prelude::*};
-use dioxus_time::{use_debounce, use_interval};
+use dioxus_sdk_time::{use_debounce, use_interval};
 use std::time::Duration;
 
 fn main() {
-    launch(App);
+    dioxus::launch(App);
 }
 
 #[component]

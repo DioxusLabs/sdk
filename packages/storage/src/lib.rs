@@ -6,7 +6,7 @@
 //!
 //! ## Usage
 //! ```rust
-//! use dioxus_storage::use_persistent;
+//! use dioxus_sdk_storage::use_persistent;
 //! use dioxus::prelude::*;
 //!
 //! #[component]
@@ -60,7 +60,7 @@ pub use client_storage::{set_dir_name, set_directory};
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{use_storage, StorageBacking};
+/// use dioxus_sdk_storage::{use_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
@@ -111,7 +111,7 @@ impl StorageMode {
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{new_storage, StorageBacking};
+/// use dioxus_sdk_storage::{new_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///

@@ -9,7 +9,7 @@
 //!
 //! ```rust
 //! use dioxus::prelude::*;
-//! use dioxus_window::size::use_window_size;
+//! use dioxus_sdk_window::size::use_window_size;
 //!
 //! fn App() -> Element {
 //!     let size = use_window_size();
@@ -68,7 +68,7 @@ type WindowSizeResult = Result<WindowSize, WindowSizeError>;
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::{use_window_size, ReadableWindowSizeExt};
+/// use dioxus_sdk_window::size::{use_window_size, ReadableWindowSizeExt};
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
@@ -113,7 +113,7 @@ impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult>
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::use_window_size;
+/// use dioxus_sdk_window::size::use_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
@@ -212,7 +212,7 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::get_window_size;
+/// use dioxus_sdk_window::size::get_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_signal(get_window_size);

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-util.workspace = true
+dioxus-sdk-util.workspace = true
 dioxus.workspace = true
 
 [features]

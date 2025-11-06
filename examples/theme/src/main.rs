@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_window::theme::use_system_theme;
+use dioxus_sdk_window::theme::use_system_theme;
 
 fn main() {
     launch(App);

@@ -29,20 +29,20 @@
 `dioxus-sdk` is a development kit for Dioxus that provides cross-platform APIs for your Dioxus app. SDK is organized into many different crates accessible through the `dioxus-sdk` crate with the corresponding feature flags.
 
 ## Features
-- `dioxus-storage`
-- `dioxus-geolocation` - Web & Windows
-- `dioxus-notifications` - Desktop
-- `dioxus-window`
+- `dioxus-sdk-storage`
+- `dioxus-sdk-geolocation` - Web & Windows
+- `dioxus-sdk-notifications` - Desktop
+- `dioxus-sdk-window`
   - [x] Theme - (Web, Windows, Mac)
   - [x] Window Size
-- `dioxus-time`
+- `dioxus-sdk-time`
   - [x] Sleep
   - [x] Intervals
   - [x] Debounce
   - [x] Timeouts
-- `dioxus-sync`
+- `dioxus-sdk-sync`
   - [x] Channels
-- `dioxus-util`
+- `dioxus-sdk-util`
   - [x] `use_root_scroll`
 - [ ] Camera
 - [ ] WiFi
@@ -51,9 +51,9 @@
 Geolocation example:
 
 ```rust
-// dioxus-geolocation= { version = "*" }
+// dioxus-sdk-geolocation= { version = "*" }
 use dioxus::prelude::*;
-use dioxus_geolocation::{
+use dioxus_sdk_geolocation::{
     init_geolocator, use_geolocation, PowerMode
 };
 

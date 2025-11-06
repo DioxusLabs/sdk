@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { workspace = true }
-dioxus-sync = { workspace = true }
+dioxus-sdk-sync = { workspace = true }
 
 [features]
 default = ["desktop"]

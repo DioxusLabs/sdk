@@ -84,7 +84,7 @@ impl TimeoutHandle {
 /// Example of using a timeout:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_timeout;
+/// use dioxus_sdk_time::use_timeout;
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -109,7 +109,7 @@ impl TimeoutHandle {
 /// Example of cancelling a timeout. This is the equivalent of a debounce.
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::{use_timeout, TimeoutHandle};
+/// use dioxus_sdk_time::{use_timeout, TimeoutHandle};
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -142,7 +142,7 @@ impl TimeoutHandle {
 /// Timeouts can accept an async callback:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_timeout;
+/// use dioxus_sdk_time::use_timeout;
 /// use std::time::Duration;
 ///
 /// #[component]

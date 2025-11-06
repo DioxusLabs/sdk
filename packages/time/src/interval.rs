@@ -45,7 +45,7 @@ impl UseInterval {
 /// Example of using an interval:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_interval;
+/// use dioxus_sdk_time::use_interval;
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -64,7 +64,7 @@ impl UseInterval {
 /// Example of cancelling an interval:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_interval;
+/// use dioxus_sdk_time::use_interval;
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -87,7 +87,7 @@ impl UseInterval {
 /// Intervals can accept an async callback:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_interval;
+/// use dioxus_sdk_time::use_interval;
 /// use std::time::Duration;
 ///
 /// #[component]

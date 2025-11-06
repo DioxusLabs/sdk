@@ -12,7 +12,7 @@
 //! An example of using the theme to determine which class to use.
 //! ```rust
 //! use dioxus::prelude::*;
-//! use dioxus_window::theme::{use_system_theme, Theme};
+//! use dioxus_sdk_window::theme::{use_system_theme, Theme};
 //!
 //! #[component]
 //! fn App() -> Element {
@@ -96,7 +96,7 @@ type ThemeResult = Result<Theme, ThemeError>;
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::theme::{use_system_theme, Theme};
+/// use dioxus_sdk_window::theme::{use_system_theme, Theme};
 ///
 /// #[component]
 /// fn App() -> Element {
@@ -208,7 +208,7 @@ fn listen(mut theme: Signal<ThemeResult>) {
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::theme::{Theme, get_theme};
+/// use dioxus_sdk_window::theme::{Theme, get_theme};
 ///
 /// #[component]
 /// fn App() -> Element {

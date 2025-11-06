@@ -51,7 +51,7 @@ impl<Args> PartialEq for UseDebounce<Args> {
 /// Example of using a debounce:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_debounce;
+/// use dioxus_sdk_time::use_debounce;
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -76,7 +76,7 @@ impl<Args> PartialEq for UseDebounce<Args> {
 /// If you need to cancel the currently active debounce, you can call [`UseDebounce::cancel`]:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_debounce;
+/// use dioxus_sdk_time::use_debounce;
 /// use std::time::Duration;
 ///
 /// #[component]
@@ -102,7 +102,7 @@ impl<Args> PartialEq for UseDebounce<Args> {
 /// Debounces can accept an async callback:
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_time::use_debounce;
+/// use dioxus_sdk_time::use_debounce;
 /// use std::time::Duration;
 ///
 /// #[component]

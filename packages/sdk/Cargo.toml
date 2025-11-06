@@ -14,22 +14,22 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus-geolocation = { workspace = true, optional = true }
-dioxus-notification = { workspace = true, optional = true }
-dioxus_storage = { workspace = true, optional = true }
-dioxus-sync = { workspace = true, optional = true }
-dioxus-time = { workspace = true, optional = true }
-dioxus-util = { workspace = true, optional = true }
-dioxus-window = { workspace = true, optional = true }
+dioxus-sdk-geolocation = { workspace = true, optional = true }
+dioxus-sdk-notification = { workspace = true, optional = true }
+dioxus-sdk-storage = { workspace = true, optional = true }
+dioxus-sdk-sync = { workspace = true, optional = true }
+dioxus-sdk-time = { workspace = true, optional = true }
+dioxus-sdk-util = { workspace = true, optional = true }
+dioxus-sdk-window = { workspace = true, optional = true }
 
 [features]
-geolocation = ["dep:dioxus-geolocation"]
-notification = ["dep:dioxus-notification"]
-storage = ["dep:dioxus_storage"]
-sync = ["dep:dioxus-sync"]
-time = ["dep:dioxus-time"]
-util = ["dep:dioxus-util"]
-window = ["dep:dioxus-window"]
+geolocation = ["dep:dioxus-sdk-geolocation"]
+notification = ["dep:dioxus-sdk-notification"]
+storage = ["dep:dioxus-sdk-storage"]
+sync = ["dep:dioxus-sdk-sync"]
+time = ["dep:dioxus-sdk-time"]
+util = ["dep:dioxus-sdk-util"]
+window = ["dep:dioxus-sdk-window"]
 
 [package.metadata.docs.rs]
 all-features = true

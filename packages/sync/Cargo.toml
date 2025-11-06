@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-sync"
+name = "dioxus-sdk-sync"
 version = "0.7.0"
 
 description = "Synchronization primitives for your Dioxus app."

@@ -10,16 +10,16 @@ Geolocation utilities and hooks for Dioxus.
 - [ ] iOs
 
 ## Usage
-Add `dioxus-geolocation` to your `Cargo.toml`:
+Add `dioxus-sdk-geolocation` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-geolocation = "0.1"
+dioxus-sdk-geolocation = "0.1"
 ```
 
 Example:
 ```rs
 use dioxus::prelude::*;
-use dioxus_geolocation::{
+use dioxus_sdk_geolocation::{
     init_geolocator, use_geolocation, PowerMode
 };
 

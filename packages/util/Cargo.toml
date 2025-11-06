@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-util"
+name = "dioxus-sdk-util"
 version = "0.7.0"
 
 description = "General utilities for Dioxus apps."

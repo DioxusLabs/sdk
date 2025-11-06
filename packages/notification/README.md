@@ -17,7 +17,7 @@ dioxus-notification = "0.1"
 
 Example:
 ```rs
-use dioxus_notification::Notification;
+use dioxus_sdk_notification::Notification;
 
 Notification::new()
     .app_name("dioxus test".to_string())
