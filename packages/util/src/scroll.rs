@@ -49,7 +49,7 @@ static SCROLL_TRACKER_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub fn use_root_scroll() -> Signal<ScrollMetrics> {
     let callback_name = use_hook(|| {
         let instance_id = SCROLL_TRACKER_COUNTER.fetch_add(1, Ordering::SeqCst);
-        format!("scrollCallback_{}", instance_id)
+        format!("scrollCallback_{instance_id}")
     });
 
     let mut scroll_metrics = use_signal(|| ScrollMetrics {
