@@ -27,6 +27,10 @@ macro_rules! set_dir {
         #[cfg(not(target_family = "wasm"))]
         $crate::set_directory(std::path::PathBuf::from($path))
     };
+    ($path:expr) => {
+        #[cfg(not(target_family = "wasm"))]
+        $crate::set_directory($path);
+    };
 }
 
 cfg_if::cfg_if! {
