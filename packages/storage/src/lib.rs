@@ -1,10 +1,12 @@
+#![allow(clippy::collapsible_if)]
+
 //! Local and persistent storage.
 //!
 //! Handle local storage ergonomically.
 //!
 //! ## Usage
 //! ```rust
-//! use dioxus_storage::use_persistent;
+//! use dioxus_sdk_storage::use_persistent;
 //! use dioxus::prelude::*;
 //!
 //! #[component]
@@ -30,6 +32,7 @@ mod client_storage;
 mod persistence;
 
 pub use client_storage::{LocalStorage, SessionStorage};
+use dioxus::core::{ReactiveContext, current_scope_id, generation, needs_update};
 use dioxus::logger::tracing::trace;
 use futures_util::stream::StreamExt;
 pub use persistence::{
@@ -57,7 +60,7 @@ pub use client_storage::{set_dir_name, set_directory};
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{use_storage, StorageBacking};
+/// use dioxus_sdk_storage::{use_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
@@ -108,7 +111,7 @@ impl StorageMode {
 /// ## Usage
 ///
 /// ```rust
-/// use dioxus_storage::{new_storage, StorageBacking};
+/// use dioxus_sdk_storage::{new_storage, StorageBacking};
 /// use dioxus::prelude::*;
 /// use dioxus_signals::Signal;
 ///
@@ -164,7 +167,7 @@ where
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
     S::Key: Clone,
 {
-    let signal = {
+    {
         let mode = StorageMode::current();
 
         match mode {
@@ -179,8 +182,7 @@ where
                 *storage_entry.data()
             }
         }
-    };
-    signal
+    }
 }
 
 /// A hook that creates a StorageEntry with the latest value from storage or the init value if it doesn't exist.
@@ -354,6 +356,7 @@ where
     S: StorageBacking + StorageSubscriber<S>,
     T: Serialize + DeserializeOwned + Clone + Send + Sync + PartialEq + 'static,
 {
+    #[allow(clippy::collapsible_if)]
     fn save(&self) {
         //  We want to save in the following conditions
         //      - The value from the channel is different from the current value
@@ -401,10 +404,7 @@ where
     pub fn new(key: S::Key, data: T) -> Self {
         Self {
             key,
-            data: Signal::new_in_scope(
-                data,
-                current_scope_id().expect("must be called from inside of the dioxus context"),
-            ),
+            data: Signal::new_in_scope(data, current_scope_id()),
         }
     }
 }

@@ -1,9 +1,9 @@
 use dioxus::{logger::tracing::info, prelude::*};
-use dioxus_time::{use_debounce, use_interval, use_timeout};
+use dioxus_sdk_time::{use_debounce, use_interval, use_timeout};
 use std::time::Duration;
 
 fn main() {
-    launch(App);
+    dioxus::launch(App);
 }
 
 #[component]

@@ -1,5 +1,5 @@
 use dioxus::{logger::tracing::info, prelude::*};
-use dioxus_sync::channel::{use_channel, use_listen_channel};
+use dioxus_sdk_sync::channel::{use_channel, use_listen_channel};
 
 fn main() {
     launch(App);

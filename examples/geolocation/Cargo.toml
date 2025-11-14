@@ -2,10 +2,11 @@
 name = "geolocation-example"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [dependencies]
-dioxus = { workspace = true } 
-dioxus-geolocation = { workspace = true }
+dioxus = { workspace = true }
+dioxus-sdk-geolocation = { workspace = true }
 
 [features]
 default = ["desktop"]

@@ -9,11 +9,11 @@
 //!
 //! ```rust
 //! use dioxus::prelude::*;
-//! use dioxus_window::size::use_window_size;
+//! use dioxus_sdk_window::size::use_window_size;
 //!
 //! fn App() -> Element {
 //!     let size = use_window_size();
-//!     let size = size().unwrap();    
+//!     let size = size().unwrap();
 //!
 //!     rsx! {
 //!         p { "Width: {size.width}" }
@@ -21,13 +21,10 @@
 //!     }
 //! }
 //! ```
+use dioxus::core::provide_root_context;
 use dioxus::hooks::use_effect;
-use dioxus::prelude::{
-    ReadOnlySignal, ScopeId, Signal, Writable, provide_root_context, try_use_context, use_hook,
-    warnings::signal_write_in_component_body,
-};
-use dioxus::signals::Readable;
-use dioxus::warnings::Warning as _;
+use dioxus::prelude::{ReadableExt, ScopeId, Signal, try_use_context, use_hook};
+use dioxus::signals::{ReadSignal, Readable, WritableExt};
 use std::error::Error;
 use std::fmt::Display;
 
@@ -71,11 +68,11 @@ type WindowSizeResult = Result<WindowSize, WindowSizeError>;
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::{use_window_size, ReadableWindowSizeExt};
+/// use dioxus_sdk_window::size::{use_window_size, ReadableWindowSizeExt};
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
-///     
+///
 ///     let half_of_width = use_memo(move || {
 ///         let width = size.width().unwrap();
 ///         width / 2
@@ -116,11 +113,11 @@ impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult>
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::use_window_size;
+/// use dioxus_sdk_window::size::use_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_window_size();
-///     let size = size().unwrap();    
+///     let size = size().unwrap();
 ///
 ///     rsx! {
 ///         p { "Width: {size.width}" }
@@ -128,7 +125,7 @@ impl<R> ReadableWindowSizeExt for R where R: Readable<Target = WindowSizeResult>
 ///     }
 /// }
 /// ```
-pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
+pub fn use_window_size() -> ReadSignal<WindowSizeResult> {
     let mut window_size = match try_use_context::<Signal<WindowSizeResult>>() {
         Some(w) => w,
         // This should only run once.
@@ -144,7 +141,7 @@ pub fn use_window_size() -> ReadOnlySignal<WindowSizeResult> {
         listen(window_size);
     });
 
-    use_hook(|| ReadOnlySignal::new(window_size))
+    use_hook(|| ReadSignal::new(window_size))
 }
 
 // Listener for the web implementation.
@@ -177,9 +174,7 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
             _ => Err(WindowSizeError::CheckFailed),
         };
 
-        signal_write_in_component_body::allow(move || {
-            window_size.set(value);
-        });
+        window_size.set(value);
     }) as Box<dyn FnMut()>);
 
     let on_resize_cb = on_resize.as_ref().clone();
@@ -199,12 +194,10 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
             ..
         } = event
         {
-            signal_write_in_component_body::allow(move || {
-                window_size.set(Ok(WindowSize {
-                    width: size.width,
-                    height: size.height,
-                }));
-            });
+            window_size.set(Ok(WindowSize {
+                width: size.width,
+                height: size.height,
+            }));
         }
     });
 }
@@ -219,11 +212,11 @@ fn listen(mut window_size: Signal<WindowSizeResult>) {
 ///
 /// ```rust
 /// use dioxus::prelude::*;
-/// use dioxus_window::size::get_window_size;
+/// use dioxus_sdk_window::size::get_window_size;
 ///
 /// fn App() -> Element {
 ///     let size = use_signal(get_window_size);
-///     let size = size().unwrap();    
+///     let size = size().unwrap();
 ///
 ///     rsx! {
 ///         p { "Width: {size.width}" }

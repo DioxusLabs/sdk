@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_storage::*;
+use dioxus_sdk_storage::*;
 
 fn main() {
-    dioxus_storage::set_dir!();
+    dioxus_sdk_storage::set_dir!();
     launch(App);
 }
 

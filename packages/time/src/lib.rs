@@ -30,10 +30,10 @@ pub use timeout::{TimeoutHandle, UseTimeout, use_timeout};
 /// #[component]
 /// pub fn App() -> Element {
 ///     let mut has_slept = use_signal(|| false);
-///     
+///
 ///     use_effect(move || {
 ///         spawn(async move {
-///             dioxus_time::sleep(Duration::from_secs(3)).await;
+///             dioxus_sdk_time::sleep(Duration::from_secs(3)).await;
 ///             has_slept.set(true);
 ///         });
 ///     });

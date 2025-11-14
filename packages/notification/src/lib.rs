@@ -8,13 +8,12 @@ use std::{
     fmt::{self, Display},
     path::{Path, PathBuf},
 };
-
 /// Provides a builder API and contains relevant notification info.
 ///
 /// # Examples
 ///
 /// ```
-/// use dioxus_notification::Notification;
+/// use dioxus_sdk_notification::Notification;
 ///
 /// Notification::new()
 ///     .app_name("dioxus test".to_string())

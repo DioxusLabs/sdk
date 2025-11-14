@@ -2,10 +2,11 @@
 name = "theme-example"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [dependencies]
 dioxus = { workspace = true }
-dioxus-window = { workspace = true }
+dioxus-sdk-window = { workspace = true }
 
 [features]
 default = ["desktop"]

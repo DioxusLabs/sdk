@@ -5,10 +5,10 @@ Synchronization primitives for your Dioxus app.
 - [x] `channel`
 
 ## Usage
-Add `dioxus-sync` to your `Cargo.toml`:
+Add `dioxus-sdk-sync` to your `Cargo.toml`:
 ```toml
 [dependencies]
-dioxus-sync = "0.1"
+dioxus-sdk-sync = "0.1"
 ```
 
 ### Dioxus Compatibility

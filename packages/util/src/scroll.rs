@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{core::use_drop, prelude::*};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Scroll metrics.
@@ -26,12 +26,12 @@ static SCROLL_TRACKER_COUNTER: AtomicUsize = AtomicUsize::new(0);
 /// Creates a signal that tracks root scrolling.
 /// ```rust
 /// use dioxus::{logger::tracing::{info, Level}, prelude::*};
-/// use dioxus_util::scroll::use_root_scroll;
+/// use dioxus_sdk_util::scroll::use_root_scroll;
 ///
 /// #[component]
 /// fn App() -> Element {
 ///     let random_text = "This is some random repeating text. ".repeat(1000);
-///     
+///
 ///     let scroll_metrics = use_root_scroll();
 ///     use_effect(move || {
 ///         let scroll_metrics = scroll_metrics();
@@ -40,9 +40,9 @@ static SCROLL_TRACKER_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///         let scroll_percentage = (scroll_metrics.scroll_top + scroll_metrics.client_height) / scroll_metrics.scroll_height;
 ///         info!("Scroll percentage: {}", scroll_percentage);
 ///     });
-///  
+///
 ///     rsx! {
-///         p { "{random_text}" }  
+///         p { "{random_text}" }
 ///     }
 /// }
 /// ```

@@ -92,6 +92,7 @@ pub enum Error {
     AccessDenied,
     Poisoned,
     DeviceError(String),
+    Unsupported,
 }
 
 impl std::error::Error for Error {}
@@ -104,6 +105,7 @@ impl fmt::Display for Error {
             }
             Error::Poisoned => write!(f, "the internal read/write lock has been poisioned"),
             Error::DeviceError(e) => write!(f, "a device error has occurred: {}", e),
+            Error::Unsupported => write!(f, "the current platform is not supported"),
         }
     }
 }

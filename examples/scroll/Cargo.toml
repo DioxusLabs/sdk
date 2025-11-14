@@ -2,9 +2,10 @@
 name = "use-scroll-example"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [dependencies]
-dioxus-util.workspace = true
+dioxus-sdk-util.workspace = true
 dioxus.workspace = true
 
 [features]

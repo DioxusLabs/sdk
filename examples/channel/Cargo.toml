@@ -2,10 +2,11 @@
 name = "channel-example"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [dependencies]
 dioxus = { workspace = true }
-dioxus-sync = { workspace = true }
+dioxus-sdk-sync = { workspace = true }
 
 [features]
 default = ["desktop"]

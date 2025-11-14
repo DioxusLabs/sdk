@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_window::size::{get_window_size, use_window_size};
+use dioxus_sdk_window::size::{get_window_size, use_window_size};
 
 fn main() {
-    launch(App);
+    dioxus::launch(App);
 }
 
 #[component]
