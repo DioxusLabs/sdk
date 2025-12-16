@@ -44,6 +44,7 @@
   - [x] Channels
 - `dioxus-sdk-util`
   - [x] `use_root_scroll`
+  - [x] `select_file*`
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
