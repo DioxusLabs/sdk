@@ -23,13 +23,9 @@ macro_rules! set_dir {
         #[cfg(not(target_family = "wasm"))]
         $crate::set_dir_name(env!("CARGO_PKG_NAME"))
     };
-    ($path: literal) => {
-        #[cfg(not(target_family = "wasm"))]
-        $crate::set_directory(std::path::PathBuf::from($path))
-    };
     ($path:expr) => {
         #[cfg(not(target_family = "wasm"))]
-        $crate::set_directory($path);
+        $crate::set_directory(std::path::PathBuf::from($path))
     };
 }
 
