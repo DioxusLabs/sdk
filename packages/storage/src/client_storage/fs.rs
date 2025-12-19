@@ -9,6 +9,38 @@ use tokio::sync::watch::{Receiver, channel};
 
 use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
 
+
+#[doc(hidden)]
+#[cfg(target_os = "android")]
+pub fn data_directory() -> std::path::PathBuf {
+    use jni::objects::{JObject, JString};
+    use jni::JNIEnv;
+    use std::sync::mpsc::channel;
+
+    let (tx, rx) = channel();
+
+    dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _webview| {
+        let files_dir = env
+            .call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
+            .unwrap()
+            .l()
+            .unwrap();
+
+        let abs_path = env
+            .call_method(files_dir, "getAbsolutePath", "()Ljava/lang/String;", &[])
+            .unwrap()
+            .l()
+            .unwrap();
+
+        let abs_path: JString = abs_path.into();
+        let abs_path: String = env.get_string(&abs_path).unwrap().into();
+
+        tx.send(std::path::PathBuf::from(abs_path)).unwrap();
+    });
+
+    rx.recv().unwrap()
+}
+
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
 pub fn set_directory(path: std::path::PathBuf) {

@@ -21,11 +21,27 @@
 macro_rules! set_dir {
     () => {
         #[cfg(not(target_family = "wasm"))]
-        $crate::set_dir_name(env!("CARGO_PKG_NAME"))
+        {
+            #[cfg(target_os="android")]
+            {
+                let path = $crate::data_directory().join(env!("CARGO_PKG_NAME"));
+                $crate::set_directory(path);
+            }
+            #[cfg(not(target_os="android"))]
+            $crate::set_dir_name(env!("CARGO_PKG_NAME"))
+        }
     };
     ($path:expr) => {
         #[cfg(not(target_family = "wasm"))]
-        $crate::set_directory(std::path::PathBuf::from($path))
+        {
+            #[cfg(target_os="android")]
+            {
+                let path = $crate::data_directory().join($path);
+                $crate::set_directory(path);
+            }
+            #[cfg(not(target_os="android"))]
+            $crate::set_directory(std::path::PathBuf::from($path));
+        }
     };
 }
 
