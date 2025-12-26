@@ -9,33 +9,34 @@ use tokio::sync::watch::{Receiver, channel};
 
 use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
 
-
 #[cfg(target_os = "android")]
 pub fn data_directory() -> std::path::PathBuf {
-    use jni::objects::{JObject, JString};
     use jni::JNIEnv;
+    use jni::objects::{JObject, JString};
     use std::sync::mpsc::channel;
 
     let (tx, rx) = channel();
 
-    dioxus::mobile::wry::prelude::dispatch(move |env: &mut JNIEnv, activity: &JObject, _webview| {
-        let files_dir = env
-            .call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
-            .unwrap()
-            .l()
-            .unwrap();
+    dioxus::mobile::wry::prelude::dispatch(
+        move |env: &mut JNIEnv, activity: &JObject, _webview| {
+            let files_dir = env
+                .call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
+                .unwrap()
+                .l()
+                .unwrap();
 
-        let abs_path = env
-            .call_method(files_dir, "getAbsolutePath", "()Ljava/lang/String;", &[])
-            .unwrap()
-            .l()
-            .unwrap();
+            let abs_path = env
+                .call_method(files_dir, "getAbsolutePath", "()Ljava/lang/String;", &[])
+                .unwrap()
+                .l()
+                .unwrap();
 
-        let abs_path: JString = abs_path.into();
-        let abs_path: String = env.get_string(&abs_path).unwrap().into();
+            let abs_path: JString = abs_path.into();
+            let abs_path: String = env.get_string(&abs_path).unwrap().into();
 
-        tx.send(std::path::PathBuf::from(abs_path)).unwrap();
-    });
+            tx.send(std::path::PathBuf::from(abs_path)).unwrap();
+        },
+    );
 
     rx.recv().unwrap()
 }
@@ -48,12 +49,9 @@ pub fn set_directory(path: std::path::PathBuf) {
 
 #[doc(hidden)]
 pub fn set_dir_name(name: &str) {
-
     #[cfg(target_os = "android")]
     {
-        set_directory(
-            data_directory().join(name)
-        )
+        set_directory(data_directory().join(name))
     }
 
     #[cfg(not(target_os = "android"))]
@@ -62,10 +60,9 @@ pub fn set_dir_name(name: &str) {
             directories::BaseDirs::new()
                 .unwrap()
                 .data_local_dir()
-                .join(name)
+                .join(name),
         )
     }
-    
 }
 
 /// The location where the storage files are located.
