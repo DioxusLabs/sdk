@@ -51,10 +51,7 @@ use tokio::sync::watch::error::SendError;
 use tokio::sync::watch::{Receiver, Sender};
 
 #[cfg(not(target_family = "wasm"))]
-pub use client_storage::{set_dir_name, set_directory};
-
-#[cfg(target_os = "android")]
-pub use client_storage::data_directory;
+pub use client_storage::{data_directory, set_dir_name, set_directory};
 
 /// A storage hook that can be used to store data that will persist across application reloads. This hook is generic over the storage location which can be useful for other hooks.
 ///
