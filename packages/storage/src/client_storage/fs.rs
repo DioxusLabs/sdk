@@ -9,6 +9,62 @@ use tokio::sync::watch::{Receiver, channel};
 
 use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
 
+/// Get the default data directory for the current platform.
+///
+/// # Example
+/// ```rust
+/// use dioxus_sdk_storage::{data_directory, set_dir};
+///
+/// // Set the storage directory to a folder named "my_app" in the default data directory.
+/// set_dir!(data_directory().join("my_app"));
+/// ```
+pub fn data_directory() -> std::path::PathBuf {
+    #[cfg(target_os = "android")]
+    {
+        android_data_directory()
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
+        directories::BaseDirs::new()
+            .unwrap()
+            .data_local_dir()
+            .to_path_buf()
+    }
+}
+
+#[cfg(target_os = "android")]
+fn android_data_directory() -> std::path::PathBuf {
+    use jni::JNIEnv;
+    use jni::objects::{JObject, JString};
+    use std::sync::mpsc::channel;
+
+    let (tx, rx) = channel();
+
+    dioxus::mobile::wry::prelude::dispatch(
+        move |env: &mut JNIEnv, activity: &JObject, _webview| {
+            let files_dir = env
+                .call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
+                .unwrap()
+                .l()
+                .unwrap();
+
+            let abs_path = env
+                .call_method(files_dir, "getAbsolutePath", "()Ljava/lang/String;", &[])
+                .unwrap()
+                .l()
+                .unwrap();
+
+            let abs_path: JString = abs_path.into();
+            let abs_path: String = env.get_string(&abs_path).unwrap().into();
+
+            tx.send(std::path::PathBuf::from(abs_path)).unwrap();
+        },
+    );
+
+    rx.recv().unwrap()
+}
+
 #[doc(hidden)]
 /// Sets the directory where the storage files are located.
 pub fn set_directory(path: std::path::PathBuf) {
@@ -17,12 +73,7 @@ pub fn set_directory(path: std::path::PathBuf) {
 
 #[doc(hidden)]
 pub fn set_dir_name(name: &str) {
-    set_directory(
-        directories::BaseDirs::new()
-            .unwrap()
-            .data_local_dir()
-            .join(name),
-    )
+    set_directory(data_directory().join(name))
 }
 
 /// The location where the storage files are located.
