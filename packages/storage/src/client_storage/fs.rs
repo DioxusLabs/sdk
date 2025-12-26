@@ -54,17 +54,18 @@ pub fn set_dir_name(name: &str) {
     {
         set_directory(
             data_directory().join(name)
-        );
+        )
     }
+
     #[cfg(not(target_os = "android"))]
     {
         set_directory(
             directories::BaseDirs::new()
                 .unwrap()
                 .data_local_dir()
-                .join(name),
+                .join(name)
         )
-    };
+    }
     
 }
 
