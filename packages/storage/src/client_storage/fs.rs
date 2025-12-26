@@ -49,12 +49,23 @@ pub fn set_directory(path: std::path::PathBuf) {
 
 #[doc(hidden)]
 pub fn set_dir_name(name: &str) {
-    set_directory(
-        directories::BaseDirs::new()
-            .unwrap()
-            .data_local_dir()
-            .join(name),
-    )
+
+    #[cfg(target_os = "android")]
+    {
+        set_directory(
+            data_directory().join(name)
+        );
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        set_directory(
+            directories::BaseDirs::new()
+                .unwrap()
+                .data_local_dir()
+                .join(name),
+        )
+    };
+    
 }
 
 /// The location where the storage files are located.
