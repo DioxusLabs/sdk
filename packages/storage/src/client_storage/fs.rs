@@ -10,7 +10,6 @@ use tokio::sync::watch::{Receiver, channel};
 use crate::{StorageBacking, StorageSubscriber, serde_to_string, try_serde_from_string};
 
 
-#[doc(hidden)]
 #[cfg(target_os = "android")]
 pub fn data_directory() -> std::path::PathBuf {
     use jni::objects::{JObject, JString};
