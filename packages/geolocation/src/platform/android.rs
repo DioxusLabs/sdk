@@ -38,10 +38,21 @@ impl Geolocator {
 
             dioxus::mobile::wry::prelude::dispatch(
                 move |env: &mut JNIEnv, activity: &JObject, _webview| {
-                    let permission_str = env.new_string(permission).unwrap();
-                    let permissions = env
-                        .new_object_array(1, "java/lang/String", &permission_str)
-                        .unwrap();
+                    let permission_str = match env.new_string(permission) {
+                        Ok(s) => s,
+                        Err(_) => {
+                            let _ = tx.send(false);
+                            return;
+                        }
+                    };
+                    let permissions =
+                        match env.new_object_array(1, "java/lang/String", &permission_str) {
+                            Ok(arr) => arr,
+                            Err(_) => {
+                                let _ = tx.send(false);
+                                return;
+                            }
+                        };
 
                     let result = env.call_method(
                         activity,
@@ -50,7 +61,7 @@ impl Geolocator {
                         &[JValue::Object(&permissions.into()), JValue::Int(1)],
                     );
 
-                    tx.send(result.is_ok()).unwrap();
+                    let _ = tx.send(result.is_ok());
                 },
             );
 
@@ -84,6 +95,12 @@ impl Geolocator {
     }
 }
 
+impl Drop for Geolocator {
+    fn drop(&mut self) {
+        self.stop_listening.store(true, Ordering::SeqCst);
+    }
+}
+
 fn check_location_permission(permission: &'static str) -> Result<bool, Error> {
     use std::sync::mpsc::channel;
 
@@ -91,7 +108,13 @@ fn check_location_permission(permission: &'static str) -> Result<bool, Error> {
 
     dioxus::mobile::wry::prelude::dispatch(
         move |env: &mut JNIEnv, activity: &JObject, _webview| {
-            let permission_str = env.new_string(permission).unwrap();
+            let permission_str = match env.new_string(permission) {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
 
             let check_result = env
                 .call_method(
@@ -102,11 +125,12 @@ fn check_location_permission(permission: &'static str) -> Result<bool, Error> {
                 )
                 .and_then(|v| v.i());
 
-            match check_result {
-                Ok(0) => tx.send(Ok(true)).unwrap(),
-                Ok(_) => tx.send(Ok(false)).unwrap(),
-                Err(e) => tx.send(Err(Error::DeviceError(e.to_string()))).unwrap(),
-            }
+            let result = match check_result {
+                Ok(0) => Ok(true),
+                Ok(_) => Ok(false),
+                Err(e) => Err(Error::DeviceError(e.to_string())),
+            };
+            let _ = tx.send(result);
         },
     );
 
@@ -127,7 +151,13 @@ pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, 
     dioxus::mobile::wry::prelude::dispatch(
         move |env: &mut JNIEnv, activity: &JObject, _webview| {
             // Get LocationManager
-            let location_service = env.new_string("location").unwrap();
+            let location_service = match env.new_string("location") {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
             let location_manager = env
                 .call_method(
                     activity,
@@ -140,7 +170,7 @@ pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, 
             let location_manager = match location_manager {
                 Ok(lm) => lm,
                 Err(e) => {
-                    tx.send(Err(Error::DeviceError(e.to_string()))).unwrap();
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
                     return;
                 }
             };
@@ -150,7 +180,13 @@ pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, 
                 PowerMode::High => "gps",
                 PowerMode::Low => "network",
             };
-            let provider_str = env.new_string(provider).unwrap();
+            let provider_str = match env.new_string(provider) {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
 
             // Get last known location
             let location = env
@@ -174,20 +210,18 @@ pub async fn get_coordinates(geolocator: &Geolocator) -> Result<Geocoordinates, 
                         .and_then(|v| v.d())
                         .unwrap_or(0.0);
 
-                    tx.send(Ok(Geocoordinates {
+                    let _ = tx.send(Ok(Geocoordinates {
                         latitude,
                         longitude,
-                    }))
-                    .unwrap();
+                    }));
                 }
                 Ok(_) => {
-                    tx.send(Err(Error::DeviceError(
+                    let _ = tx.send(Err(Error::DeviceError(
                         "No last known location available".to_string(),
-                    )))
-                    .unwrap();
+                    )));
                 }
                 Err(e) => {
-                    tx.send(Err(Error::DeviceError(e.to_string()))).unwrap();
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
                 }
             }
         },
@@ -220,7 +254,13 @@ pub fn listen(
     dioxus::mobile::wry::prelude::dispatch(
         move |env: &mut JNIEnv, activity: &JObject, _webview| {
             // Get LocationManager
-            let location_service = env.new_string("location").unwrap();
+            let location_service = match env.new_string("location") {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
             let location_manager = env
                 .call_method(
                     activity,
@@ -233,7 +273,7 @@ pub fn listen(
             let location_manager = match location_manager {
                 Ok(lm) => lm,
                 Err(e) => {
-                    tx.send(Err(Error::DeviceError(e.to_string()))).unwrap();
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
                     return;
                 }
             };
@@ -242,7 +282,13 @@ pub fn listen(
                 PowerMode::High => "gps",
                 PowerMode::Low => "network",
             };
-            let provider_str = env.new_string(provider).unwrap();
+            let provider_str = match env.new_string(provider) {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
 
             let is_enabled = env
                 .call_method(
@@ -261,7 +307,13 @@ pub fn listen(
             }
 
             // Get initial location
-            let provider_str = env.new_string(provider).unwrap();
+            let provider_str = match env.new_string(provider) {
+                Ok(s) => s,
+                Err(e) => {
+                    let _ = tx.send(Err(Error::DeviceError(e.to_string())));
+                    return;
+                }
+            };
             let location = env
                 .call_method(
                     &location_manager,
@@ -298,7 +350,7 @@ pub fn listen(
                 callback_init(Event::NewGeocoordinates(coords));
             }
 
-            tx.send(Ok(initial_coords)).unwrap();
+            let _ = tx.send(Ok(initial_coords));
         },
     );
 
@@ -333,7 +385,13 @@ pub fn listen(
             dioxus::mobile::wry::prelude::dispatch(
                 move |env: &mut JNIEnv, activity: &JObject, _webview| {
                     // Check if permission is still granted
-                    let permission_str = env.new_string(permission_poll).unwrap();
+                    let permission_str = match env.new_string(permission_poll) {
+                        Ok(s) => s,
+                        Err(_) => {
+                            let _ = tx.send(true);
+                            return;
+                        }
+                    };
 
                     let has_permission = env
                         .call_method(
@@ -348,11 +406,17 @@ pub fn listen(
 
                     if !has_permission {
                         callback_poll(Event::StatusChanged(Status::NotAvailable));
-                        tx.send(false).unwrap();
+                        let _ = tx.send(false);
                         return;
                     }
 
-                    let location_service = env.new_string("location").unwrap();
+                    let location_service = match env.new_string("location") {
+                        Ok(s) => s,
+                        Err(_) => {
+                            let _ = tx.send(true);
+                            return;
+                        }
+                    };
                     let location_manager = env
                         .call_method(
                             activity,
@@ -365,7 +429,7 @@ pub fn listen(
                     let location_manager = match location_manager {
                         Ok(lm) => lm,
                         Err(_) => {
-                            tx.send(true).unwrap();
+                            let _ = tx.send(true);
                             return;
                         }
                     };
@@ -374,7 +438,13 @@ pub fn listen(
                         PowerMode::High => "gps",
                         PowerMode::Low => "network",
                     };
-                    let provider_str = env.new_string(provider).unwrap();
+                    let provider_str = match env.new_string(provider) {
+                        Ok(s) => s,
+                        Err(_) => {
+                            let _ = tx.send(true);
+                            return;
+                        }
+                    };
 
                     let location = env
                         .call_method(
@@ -402,7 +472,10 @@ pub fn listen(
                                 longitude,
                             };
 
-                            let mut last = last_coords_poll.lock().unwrap();
+                            let Ok(mut last) = last_coords_poll.lock() else {
+                                let _ = tx.send(true);
+                                return;
+                            };
                             let should_notify = match &*last {
                                 Some(prev) => {
                                     (prev.latitude - latitude).abs() > 0.00001
@@ -418,7 +491,7 @@ pub fn listen(
                         }
                     }
 
-                    tx.send(true).unwrap();
+                    let _ = tx.send(true);
                 },
             );
 
