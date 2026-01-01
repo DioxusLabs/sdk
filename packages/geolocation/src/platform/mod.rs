@@ -8,7 +8,12 @@ mod wasm;
 #[cfg(target_family = "wasm")]
 pub use self::wasm::*;
 
-#[cfg(not(any(target_family = "wasm", windows)))]
+#[cfg(target_os = "android")]
+mod android;
+#[cfg(target_os = "android")]
+pub use self::android::*;
+
+#[cfg(not(any(target_family = "wasm", windows, target_os = "android")))]
 mod unsupported {
     use std::sync::Arc;
 
@@ -42,5 +47,5 @@ mod unsupported {
     }
 }
 
-#[cfg(not(any(target_family = "wasm", windows)))]
+#[cfg(not(any(target_family = "wasm", windows, target_os = "android")))]
 pub use self::unsupported::*;

@@ -13,7 +13,7 @@ pub struct Geocoordinates {
 }
 
 /// To conserve battery, some devices allow setting a desired accuracy based on your use-case.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum PowerMode {
     /// Will generally enable the on-board GPS for precise coordinates.
     High,
