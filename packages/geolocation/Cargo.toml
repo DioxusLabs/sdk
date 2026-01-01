@@ -34,3 +34,7 @@ windows = { version = "0.48.0", features = [
     "Foundation",
     "Devices_Geolocation",
 ] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+dioxus = { workspace = true, features = ["mobile"] }
+jni = "0.21.1"
