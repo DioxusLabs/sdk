@@ -272,7 +272,7 @@ fn get_theme_platform() -> ThemeResult {
 }
 
 // Implementation for unsupported platforms.
-#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos")))]
+#[cfg(not(any(target_family = "wasm", target_os = "windows", target_os = "macos", target_os = "ios")))]
 fn get_theme_platform() -> ThemeResult {
     Err(ThemeError::Unsupported)
 }
