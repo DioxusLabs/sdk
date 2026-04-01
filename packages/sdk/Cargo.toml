@@ -21,6 +21,7 @@ dioxus-sdk-sync = { workspace = true, optional = true }
 dioxus-sdk-time = { workspace = true, optional = true }
 dioxus-sdk-util = { workspace = true, optional = true }
 dioxus-sdk-window = { workspace = true, optional = true }
+dioxus-sdk-haptics = { workspace = true, optional = true }
 
 [features]
 geolocation = ["dep:dioxus-sdk-geolocation"]
@@ -30,6 +31,7 @@ sync = ["dep:dioxus-sdk-sync"]
 time = ["dep:dioxus-sdk-time"]
 util = ["dep:dioxus-sdk-util"]
 window = ["dep:dioxus-sdk-window"]
+haptics = ["dep:dioxus-sdk-haptics"]
 
 [package.metadata.docs.rs]
 all-features = true
