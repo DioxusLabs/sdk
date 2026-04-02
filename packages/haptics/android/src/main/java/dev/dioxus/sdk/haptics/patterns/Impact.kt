@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-package app.tauri.haptics.patterns
+package dev.dioxus.sdk.haptics.patterns
 
 val ImpactPatternLight = Pattern(
     longArrayOf(0, 50),

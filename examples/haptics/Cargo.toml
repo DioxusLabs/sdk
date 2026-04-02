@@ -1,0 +1,15 @@
+[package]
+name = "haptics-example"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+dioxus = { workspace = true }
+dioxus-sdk-haptics = { workspace = true }
+
+[features]
+default = ["android"]
+android = []
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]

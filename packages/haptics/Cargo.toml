@@ -23,4 +23,7 @@ serde = { workspace = true }
 wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 
+[target.'cfg(target_os = "android")'.dependencies]
+manganis = "0.7.4"
+
 [target.'cfg(windows)'.dependencies]
