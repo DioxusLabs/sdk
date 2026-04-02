@@ -68,13 +68,14 @@ impl Display for HapticsError {
     }
 }
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn failed_to_vibrate(err: impl Display) -> HapticsError {
+    HapticsError::FailedToVibrate(std::io::Error::other(err.to_string()).into())
+}
+
 cfg_if::cfg_if! {
     if #[cfg(target_os = "android")] {
         mod android;
-
-        fn failed_to_vibrate(err: String) -> HapticsError {
-            HapticsError::FailedToVibrate(std::io::Error::other(err).into())
-        }
 
         pub fn vibrate(duration: u32) -> Result<(), HapticsError> {
             android::vibrate(duration).map_err(failed_to_vibrate)
@@ -90,6 +91,24 @@ cfg_if::cfg_if! {
 
         pub fn selection_feedback() -> Result<(), HapticsError> {
             android::selection_feedback().map_err(failed_to_vibrate)
+        }
+    } else if #[cfg(target_os = "ios")] {
+        mod ios;
+
+        pub fn vibrate(duration: u32) -> Result<(), HapticsError> {
+            ios::vibrate(duration).map_err(failed_to_vibrate)
+        }
+
+        pub fn impact_feedback(style: ImpactFeedbackStyle) -> Result<(), HapticsError> {
+            ios::impact_feedback(style).map_err(failed_to_vibrate)
+        }
+
+        pub fn notification_feedback(style: NotificationFeedbackType) -> Result<(), HapticsError> {
+            ios::notification_feedback(style).map_err(failed_to_vibrate)
+        }
+
+        pub fn selection_feedback() -> Result<(), HapticsError> {
+            ios::selection_feedback().map_err(failed_to_vibrate)
         }
     } else {
         pub fn vibrate(_duration: u32) -> Result<(), HapticsError> {

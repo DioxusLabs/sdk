@@ -18,12 +18,8 @@ dioxus = { workspace = true }
 cfg-if = { workspace = true }
 serde = { workspace = true }
 
-
-[target.'cfg(target_family = "wasm")'.dependencies]
-wasm-bindgen = { workspace = true }
-js-sys = { workspace = true }
-
 [target.'cfg(target_os = "android")'.dependencies]
 manganis = "0.7.4"
 
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(target_os = "ios")'.dependencies]
+manganis = "0.7.4"
