@@ -1,4 +1,5 @@
 use crate::{ImpactFeedbackStyle, NotificationFeedbackType};
+use std::sync::OnceLock;
 
 mod ffi {
     #[allow(non_snake_case)]
@@ -13,8 +14,13 @@ mod ffi {
     }
 }
 
-fn plugin() -> Result<ffi::HapticsPlugin, &'static str> {
-    ffi::HapticsPlugin::new()
+static PLUGIN: OnceLock<Result<ffi::HapticsPlugin, &'static str>> = OnceLock::new();
+
+fn plugin() -> Result<&'static ffi::HapticsPlugin, &'static str> {
+    PLUGIN
+        .get_or_init(ffi::HapticsPlugin::new)
+        .as_ref()
+        .map_err(|err| *err)
 }
 
 pub fn vibrate(duration: u32) -> Result<(), &'static str> {

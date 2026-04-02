@@ -1,6 +1,5 @@
 package dev.dioxus.sdk.haptics
 
-import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
@@ -17,14 +16,16 @@ import dev.dioxus.sdk.haptics.patterns.NotificationPatternWarning
 import dev.dioxus.sdk.haptics.patterns.Pattern
 import dev.dioxus.sdk.haptics.patterns.SelectionPattern
 
-class HapticsPlugin(private val activity: Activity) {
+class HapticsPlugin(context: Context) {
+    private val appContext = context.applicationContext
+
     private val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager =
-            activity.applicationContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
         vibratorManager.defaultVibrator
     } else {
         @Suppress("DEPRECATION")
-        activity.applicationContext.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        appContext.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
 
     fun vibrate(duration: Long) {
