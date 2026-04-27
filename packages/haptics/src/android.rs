@@ -1,158 +1,50 @@
-use manganis::{
-    android::with_activity,
-    jni::{
-        JNIEnv,
-        objects::{GlobalRef, JClass, JObject},
-    },
-};
-use std::sync::OnceLock;
+#![allow(non_snake_case)]
 
 use crate::{ImpactFeedbackStyle, NotificationFeedbackType};
+use std::sync::OnceLock;
 
-const PLUGIN_CLASS: &str = "dev.dioxus.sdk.haptics.HapticsPlugin";
-static PLUGIN: OnceLock<Result<GlobalRef, String>> = OnceLock::new();
+mod ffi {
+    #[cfg(target_os = "android")]
+    #[manganis::ffi("android")]
+    extern "Kotlin" {
+        pub type HapticsPlugin;
 
-// Bundle the Android Gradle module into the generated Dioxus app.
-#[manganis::ffi("/android")]
-unsafe extern "Kotlin" {}
-
-fn find_plugin_class<'env>(
-    env: &mut JNIEnv<'env>,
-    activity: &JObject<'_>,
-) -> Result<JClass<'env>, String> {
-    let class_name = env
-        .new_string(PLUGIN_CLASS)
-        .map_err(|err| format!("failed to build plugin class name: {err:?}"))?;
-
-    env.call_method(
-        activity,
-        "getAppClass",
-        "(Ljava/lang/String;)Ljava/lang/Class;",
-        &[(&class_name).into()],
-    )
-    .and_then(|class| class.l())
-    .map(Into::into)
-    .map_err(|err| format!("failed to load {PLUGIN_CLASS}: {err:?}"))
-}
-
-fn create_plugin() -> Result<GlobalRef, String> {
-    let result = with_activity(|env, activity| {
-        let class = match find_plugin_class(env, activity) {
-            Ok(class) => class,
-            Err(err) => return Some(Err(err)),
-        };
-
-        let context = match env
-            .call_method(
-                activity,
-                "getApplicationContext",
-                "()Landroid/content/Context;",
-                &[],
-            )
-            .and_then(|context| context.l())
-        {
-            Ok(context) => context,
-            Err(err) => {
-                return Some(Err(format!(
-                    "failed to access application context: {err:?}"
-                )));
-            }
-        };
-
-        let plugin =
-            match env.new_object(&class, "(Landroid/content/Context;)V", &[(&context).into()]) {
-                Ok(plugin) => plugin,
-                Err(err) => {
-                    return Some(Err(format!("failed to create HapticsPlugin: {err:?}")));
-                }
-            };
-
-        match env.new_global_ref(&plugin) {
-            Ok(plugin) => Some(Ok(plugin)),
-            Err(err) => Some(Err(format!(
-                "failed to create global plugin reference: {err:?}"
-            ))),
-        }
-    });
-
-    match result {
-        Some(result) => result,
-        None => Err("failed to access Android activity".to_string()),
+        pub fn vibrate(this: &HapticsPlugin, duration: i64);
+        pub fn impactFeedback(this: &HapticsPlugin, style: String);
+        pub fn notificationFeedback(this: &HapticsPlugin, kind: String);
+        pub fn selectionFeedback(this: &HapticsPlugin);
     }
 }
 
-fn plugin() -> Result<&'static GlobalRef, String> {
+static PLUGIN: OnceLock<Result<ffi::HapticsPlugin, String>> = OnceLock::new();
+
+fn plugin() -> Result<&'static ffi::HapticsPlugin, String> {
     PLUGIN
-        .get_or_init(create_plugin)
+        .get_or_init(ffi::HapticsPlugin::new)
         .as_ref()
         .map_err(Clone::clone)
 }
 
-fn with_plugin<R>(
-    f: impl FnOnce(&mut JNIEnv<'_>, &GlobalRef) -> Result<R, String>,
-) -> Result<R, String> {
-    let plugin = plugin()?;
-    let result = with_activity(|env, _activity| Some(f(env, plugin)));
-
-    match result {
-        Some(result) => result,
-        None => Err("failed to access Android activity".to_string()),
-    }
-}
-
 pub fn vibrate(duration: u32) -> Result<(), String> {
-    with_plugin(|env, plugin| {
-        env.call_method(
-            plugin.as_obj(),
-            "vibrate",
-            "(J)V",
-            &[i64::from(duration).into()],
-        )
-        .map_err(|err| format!("failed to vibrate: {err:?}"))?;
-        Ok(())
-    })
+    let plugin = plugin()?;
+    let _ = ffi::vibrate(plugin, duration as i64)?;
+    Ok(())
 }
 
 pub fn impact_feedback(style: ImpactFeedbackStyle) -> Result<(), String> {
-    with_plugin(|env, plugin| {
-        let style = env
-            .new_string(style.to_string())
-            .map_err(|err| format!("failed to build impact style string: {err:?}"))?;
-
-        env.call_method(
-            plugin.as_obj(),
-            "impactFeedback",
-            "(Ljava/lang/String;)V",
-            &[(&style).into()],
-        )
-        .map_err(|err| format!("failed to run impact feedback: {err:?}"))?;
-
-        Ok(())
-    })
+    let plugin = plugin()?;
+    let _ = ffi::impactFeedback(plugin, style.to_string())?;
+    Ok(())
 }
 
 pub fn notification_feedback(kind: NotificationFeedbackType) -> Result<(), String> {
-    with_plugin(|env, plugin| {
-        let kind = env
-            .new_string(kind.to_string())
-            .map_err(|err| format!("failed to build notification type string: {err:?}"))?;
-
-        env.call_method(
-            plugin.as_obj(),
-            "notificationFeedback",
-            "(Ljava/lang/String;)V",
-            &[(&kind).into()],
-        )
-        .map_err(|err| format!("failed to run notification feedback: {err:?}"))?;
-
-        Ok(())
-    })
+    let plugin = plugin()?;
+    let _ = ffi::notificationFeedback(plugin, kind.to_string())?;
+    Ok(())
 }
 
 pub fn selection_feedback() -> Result<(), String> {
-    with_plugin(|env, plugin| {
-        env.call_method(plugin.as_obj(), "selectionFeedback", "()V", &[])
-            .map_err(|err| format!("failed to run selection feedback: {err:?}"))?;
-        Ok(())
-    })
+    let plugin = plugin()?;
+    let _ = ffi::selectionFeedback(plugin)?;
+    Ok(())
 }

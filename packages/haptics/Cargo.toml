@@ -19,7 +19,7 @@ cfg-if = { workspace = true }
 serde = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
-manganis = "0.7.4"
+manganis = "0.7.6"
 
 [target.'cfg(target_os = "ios")'.dependencies]
-manganis = "0.7.4"
+manganis = "0.7.6"
