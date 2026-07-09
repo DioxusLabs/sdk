@@ -44,6 +44,7 @@
   - [x] Channels
 - `dioxus-sdk-util`
   - [x] `use_root_scroll`
+- `dioxus-sdk-haptics` - Android & iOS 
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth

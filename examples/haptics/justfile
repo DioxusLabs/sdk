@@ -1,0 +1,33 @@
+default:
+    @just --list
+
+android-haptics device='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    serial='{{device}}'
+
+    adb start-server >/dev/null
+
+    if [[ -z "$serial" ]]; then
+        mapfile -t devices < <(adb devices | awk 'NR > 1 && $2 == "device" { print $1 }')
+
+        if [[ ${#devices[@]} -eq 0 ]]; then
+            echo 'No adb device is connected.' >&2
+            echo 'Connect an Android device over USB and make sure USB debugging is enabled.' >&2
+            exit 1
+        fi
+
+        if [[ ${#devices[@]} -gt 1 ]]; then
+            echo 'Multiple adb devices are connected. Pass a serial explicitly:' >&2
+            echo '  just android-haptics <serial>' >&2
+            adb devices -l >&2
+            exit 1
+        fi
+
+        serial="${devices[0]}"
+    fi
+
+    echo "Using adb device: $serial"
+    adb -s "$serial" wait-for-device
+    dx run --platform android --device "$serial"

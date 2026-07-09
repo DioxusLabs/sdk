@@ -20,6 +20,7 @@
 //! | [`dioxus-sdk-notification`]   | Send notifications.                   | `notification`    |
 //! | [`dioxus-sdk-sync`]           | Synchronization primities for Dioxus. | `sync`            |
 //! | [`dioxus-sdk-util`]           | Misc utilities for Dioxus.            | `util`            |
+//! | [`dioxus-sdk-haptics`]        | Haptics utilities for Dioxus.         | `haptics`         |
 //!
 //! [`dioxus-sdk-geolocation`]: https://crates.io/crates/dioxus-sdk-geolocation
 //! [`dioxus-sdk-storage`]: https://crates.io/crates/dioxus-sdk-storage
@@ -28,6 +29,7 @@
 //! [`dioxus-sdk-notification`]: https://crates.io/crates/dioxus-sdk-notification
 //! [`dioxus-sdk-sync`]: https://crates.io/crates/dioxus-sdk-sync
 //! [`dioxus-sdk-util`]: https://crates.io/crates/dioxus-sdk-util
+//! [`dioxus-sdk-haptics`]: https://crates.io/crates/dioxus-sdk-haptics
 
 #[cfg(feature = "geolocation")]
 pub use dioxus_sdk_geolocation as geolocation;
@@ -49,3 +51,6 @@ pub use dioxus_sdk_util as util;
 
 #[cfg(feature = "window")]
 pub use dioxus_sdk_window as window;
+
+#[cfg(feature = "haptics")]
+pub use dioxus_sdk_haptics as haptics;

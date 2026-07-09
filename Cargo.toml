@@ -24,6 +24,7 @@ dioxus-sdk-notification = { path = "packages/notification", version = "0.7.0" }
 dioxus-sdk-sync = { path = "packages/sync", version = "0.7.0" }
 dioxus-sdk-util = { path = "packages/util", version = "0.7.0" }
 dioxus-sdk-window = { path = "packages/window", version = "0.7.0" }
+dioxus-sdk-haptics = { path = "packages/haptics", version = "0.7.0" }
 
 # Dioxus
 dioxus = { version = "0.7.0", default-features = false }
