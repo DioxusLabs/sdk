@@ -14,7 +14,7 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { workspace = true, features = ["hooks", "signals"] }
 cfg-if = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }

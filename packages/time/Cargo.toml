@@ -14,7 +14,7 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { workspace = true, features = ["hooks", "signals"] }
 futures = { workspace = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

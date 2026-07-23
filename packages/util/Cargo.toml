@@ -14,5 +14,5 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { workspace = true, features = ["document", "hooks", "logger", "signals"] }
 serde.workspace = true

@@ -14,7 +14,7 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { workspace = true, features = ["hooks", "signals"] }
 dioxus-config-macro = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]

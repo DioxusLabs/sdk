@@ -26,7 +26,7 @@ dioxus-sdk-util = { path = "packages/util", version = "0.7.0" }
 dioxus-sdk-window = { path = "packages/window", version = "0.7.0" }
 
 # Dioxus
-dioxus = "0.7.0"
+dioxus = { version = "0.7.0", default-features = false }
 dioxus-signals = "0.7.0"
 dioxus-desktop = "0.7.0"
 dioxus-config-macro = "0.7.0"

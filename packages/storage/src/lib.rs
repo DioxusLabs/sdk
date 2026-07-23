@@ -34,6 +34,7 @@ mod persistence;
 pub use client_storage::{LocalStorage, SessionStorage};
 use dioxus::core::{ReactiveContext, current_scope_id, generation, needs_update};
 use dioxus::logger::tracing::trace;
+use dioxus_config_macro::{fullstack, server_only};
 use futures_util::stream::StreamExt;
 pub use persistence::{
     new_persistent, new_singleton_persistent, use_persistent, use_singleton_persistent,

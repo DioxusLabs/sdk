@@ -5,11 +5,10 @@ edition = "2021"
 publish = false
 
 [dependencies]
-dioxus = { workspace = true }
+dioxus = { workspace = true, features = ["launch", "lib"] }
 dioxus-sdk-geolocation = { workspace = true }
 
 [features]
 default = ["desktop"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
-

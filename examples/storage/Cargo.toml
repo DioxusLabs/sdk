@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-dioxus = { workspace = true, features = ["router"] }
+dioxus = { workspace = true, features = ["launch", "lib", "router"] }
 dioxus-sdk-storage = { workspace = true }
 
 [features]

@@ -6,6 +6,8 @@ on:
     branches:
       - main
     paths:
+      - Cargo.toml
+      - Cargo.lock
       - packages/**
       - examples/**
 
@@ -14,6 +16,8 @@ on:
     branches:
       - main
     paths:
+      - Cargo.toml
+      - Cargo.lock
       - packages/**
       - examples/**
 

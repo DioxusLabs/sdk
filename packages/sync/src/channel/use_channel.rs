@@ -3,12 +3,14 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 /// Send and listen for messages between multiple components.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct UseChannel<MessageType: Clone + 'static> {
     id: Uuid,
     sender: Signal<Sender<MessageType>>,
     inactive_receiver: Signal<InactiveReceiver<MessageType>>,
 }
+
+impl<T: Clone> Copy for UseChannel<T> {}
 
 impl<T: Clone> PartialEq for UseChannel<T> {
     fn eq(&self, other: &Self) -> bool {

@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 dioxus-sdk-util.workspace = true
-dioxus.workspace = true
+dioxus = { workspace = true, features = ["launch", "lib"] }
 
 [features]
 default = ["desktop"]
