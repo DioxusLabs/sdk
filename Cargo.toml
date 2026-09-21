@@ -26,10 +26,10 @@ dioxus-sdk-util = { path = "packages/util", version = "0.7.0" }
 dioxus-sdk-window = { path = "packages/window", version = "0.7.0" }
 
 # Dioxus
-dioxus = { version = "0.7.0", default-features = false }
-dioxus-signals = "0.7.0"
-dioxus-desktop = "0.7.0"
-dioxus-config-macro = "0.7.0"
+dioxus = { version = "0.8.0-alpha.1", git = "https://github.com/DioxusLabs/dioxus", default-features = false }
+dioxus-signals = { version = "0.8.0-alpha.1", git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-desktop = { version = "0.8.0-alpha.1", git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-config-macro = { version = "0.8.0-alpha.1", git = "https://github.com/DioxusLabs/dioxus" }
 
 # Deps
 cfg-if = "1.0.0"
