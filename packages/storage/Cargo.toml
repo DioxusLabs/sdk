@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk-storage"
-version = "0.7.0"
+version = "0.8.0-alpha.3"
 
 description = "Local and persistent storage utilities for Dioxus."
 readme = "./README.md"
