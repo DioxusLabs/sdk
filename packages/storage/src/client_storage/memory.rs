@@ -44,14 +44,11 @@ impl SessionStore {
 
     /// Get the current session store from the root context, or create a new one if it doesn't exist.
     fn get_current_session() -> Self {
-        consume_context_from_scope::<Self>(dioxus::prelude::ScopeId::ROOT).map_or_else(
-            || {
-                let session = Self::new();
-                provide_root_context(session.clone());
-                session
-            },
-            |s| s,
-        )
+        consume_context_from_scope::<Self>(dioxus::prelude::ScopeId::ROOT).unwrap_or_else(|| {
+            let session = Self::new();
+            provide_root_context(session.clone());
+            session
+        })
     }
 }
 

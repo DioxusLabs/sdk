@@ -28,15 +28,24 @@ fn Footer() -> Element {
     let new_window = {
         #[cfg(feature = "desktop")]
         {
-            let window = dioxus::desktop::use_window();
+            let mut windows = use_signal(Vec::<usize>::new);
+            let mut next_window_id = use_signal(|| 0usize);
             rsx! {
                 div {
                     button {
                         onclick: move |_| {
-                            let dom = VirtualDom::new(App);
-                            window.new_window(dom, Default::default());
+                            let id = next_window_id();
+                            next_window_id.set(id + 1);
+                            windows.write().push(id);
                         },
                         "New Window"
+                    }
+                    for id in windows() {
+                        dioxus::desktop::Window {
+                            key: "{id}",
+                            onclose: move |_| windows.write().retain(|window_id| *window_id != id),
+                            App {}
+                        }
                     }
                 }
             }
