@@ -1,6 +1,6 @@
 use crate::{TimeoutHandle, UseTimeout, use_timeout};
 use dioxus::{
-    dioxus_core::SpawnIfAsync,
+    dioxus_vdom::SpawnIfAsync,
     hooks::use_signal,
     signals::{Signal, WritableExt as _},
 };
