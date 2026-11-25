@@ -1,6 +1,5 @@
 use dioxus::{
-    core::Task,
-    dioxus_core::SpawnIfAsync,
+    core::{SpawnIfAsync, Task},
     prelude::{Callback, spawn, use_hook},
     signals::{Signal, WritableExt as _},
 };
