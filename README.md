@@ -35,11 +35,6 @@
 - `dioxus-sdk-window`
   - [x] Theme - (Web, Windows, Mac)
   - [x] Window Size
-- `dioxus-sdk-time`
-  - [x] Sleep
-  - [x] Intervals
-  - [x] Debounce
-  - [x] Timeouts
 - `dioxus-sdk-sync`
   - [x] Channels
 - `dioxus-sdk-util`
@@ -47,6 +42,8 @@
 - [ ] Camera
 - [ ] WiFi
 - [ ] Bluetooth
+
+Timers (`use_interval`, `use_timeout`, `use_debounce`, `sleep`) have moved into Dioxus: enable the `timers` feature of `dioxus` and use `dioxus::timers`, or depend on [`dioxus-timers`](https://crates.io/crates/dioxus-timers) directly.
 
 Geolocation example:
 

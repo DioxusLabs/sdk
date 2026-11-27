@@ -15,7 +15,6 @@
 //! | ------------------------- | ------------------------------------- | ----------------- |
 //! | [`dioxus-sdk-geolocation`]    | Access user location services.        | `geolocation`     |
 //! | [`dioxus-sdk-storage`]        | Store local and persistent data.      | `storage`         |
-//! | [`dioxus-sdk-time`]           | Common timing utilities.              | `time`            |
 //! | [`dioxus-sdk-window`]         | Common window utilities.              | `window`          |
 //! | [`dioxus-sdk-notification`]   | Send notifications.                   | `notification`    |
 //! | [`dioxus-sdk-sync`]           | Synchronization primities for Dioxus. | `sync`            |
@@ -23,7 +22,6 @@
 //!
 //! [`dioxus-sdk-geolocation`]: https://crates.io/crates/dioxus-sdk-geolocation
 //! [`dioxus-sdk-storage`]: https://crates.io/crates/dioxus-sdk-storage
-//! [`dioxus-sdk-time`]: https://crates.io/crates/dioxus-sdk-time
 //! [`dioxus-sdk-window`]: https://crates.io/crates/dioxus-sdk-window
 //! [`dioxus-sdk-notification`]: https://crates.io/crates/dioxus-sdk-notification
 //! [`dioxus-sdk-sync`]: https://crates.io/crates/dioxus-sdk-sync
@@ -40,9 +38,6 @@ pub use dioxus_sdk_storage as storage;
 
 #[cfg(feature = "sync")]
 pub use dioxus_sdk_sync as sync;
-
-#[cfg(feature = "time")]
-pub use dioxus_sdk_time as time;
 
 #[cfg(feature = "util")]
 pub use dioxus_sdk_util as util;

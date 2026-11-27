@@ -17,7 +17,6 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 [workspace.dependencies]
 # Workspace
 dioxus-sdk = { path = "packages/sdk", version = "0.8.0-alpha.3" }
-dioxus-sdk-time = { path = "packages/time", version = "0.8.0-alpha.3" }
 dioxus-sdk-storage = { path = "packages/storage", version = "0.8.0-alpha.3" }
 dioxus-sdk-geolocation = { path = "packages/geolocation", version = "0.8.0-alpha.3" }
 dioxus-sdk-notification = { path = "packages/notification", version = "0.8.0-alpha.3" }
@@ -30,7 +29,6 @@ dioxus = { version = "=0.8.0-alpha.4", default-features = false }
 dioxus-signals = "=0.8.0-alpha.4"
 dioxus-desktop = "=0.8.0-alpha.4"
 dioxus-config-macro = "=0.8.0-alpha.4"
-dioxus-timers = "=0.8.0-alpha.4"
 
 # Deps
 cfg-if = "1.0.0"
