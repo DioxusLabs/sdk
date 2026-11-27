@@ -30,6 +30,7 @@ dioxus = { version = "=0.8.0-alpha.4", default-features = false }
 dioxus-signals = "=0.8.0-alpha.4"
 dioxus-desktop = "=0.8.0-alpha.4"
 dioxus-config-macro = "=0.8.0-alpha.4"
+dioxus-timers = "=0.8.0-alpha.4"
 
 # Deps
 cfg-if = "1.0.0"

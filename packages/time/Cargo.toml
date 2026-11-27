@@ -2,7 +2,7 @@
 name = "dioxus-sdk-time"
 version = "0.8.0-alpha.3"
 
-description = "Timing utilities and hooks for Dioxus."
+description = "Deprecated re-export of dioxus-timers: timing utilities and hooks for Dioxus."
 readme = "./README.md"
 keywords = ["gui", "dioxus", "hooks"]
 categories = ["gui", "wasm"]
@@ -14,11 +14,4 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-dioxus = { workspace = true, features = ["hooks", "signals"] }
-futures = { workspace = true }
-
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-tokio = { workspace = true, features = ["time"]}
-
-[target.'cfg(target_family = "wasm")'.dependencies]
-gloo-timers = { version = "0.3.0", features = ["futures"] }
+dioxus-timers = { workspace = true }
