@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk-notification"
-version = "0.8.0-alpha.3"
+version = "0.8.0-alpha.4"
 
 description = "Send notifications from your Dioxus apps."
 readme = "./README.md"

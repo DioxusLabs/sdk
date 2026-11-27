@@ -16,13 +16,13 @@ package.repository = "https://github.com/DioxusLabs/sdk/"
 
 [workspace.dependencies]
 # Workspace
-dioxus-sdk = { path = "packages/sdk", version = "0.8.0-alpha.3" }
-dioxus-sdk-storage = { path = "packages/storage", version = "0.8.0-alpha.3" }
-dioxus-sdk-geolocation = { path = "packages/geolocation", version = "0.8.0-alpha.3" }
-dioxus-sdk-notification = { path = "packages/notification", version = "0.8.0-alpha.3" }
-dioxus-sdk-sync = { path = "packages/sync", version = "0.8.0-alpha.3" }
-dioxus-sdk-util = { path = "packages/util", version = "0.8.0-alpha.3" }
-dioxus-sdk-window = { path = "packages/window", version = "0.8.0-alpha.3" }
+dioxus-sdk = { path = "packages/sdk", version = "0.8.0-alpha.4" }
+dioxus-sdk-storage = { path = "packages/storage", version = "0.8.0-alpha.4" }
+dioxus-sdk-geolocation = { path = "packages/geolocation", version = "0.8.0-alpha.4" }
+dioxus-sdk-notification = { path = "packages/notification", version = "0.8.0-alpha.4" }
+dioxus-sdk-sync = { path = "packages/sync", version = "0.8.0-alpha.4" }
+dioxus-sdk-util = { path = "packages/util", version = "0.8.0-alpha.4" }
+dioxus-sdk-window = { path = "packages/window", version = "0.8.0-alpha.4" }
 
 # Dioxus
 dioxus = { version = "=0.8.0-alpha.4", default-features = false }

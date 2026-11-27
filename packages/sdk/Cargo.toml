@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk"
-version = "0.8.0-alpha.3"
+version = "0.8.0-alpha.4"
 
 description = "A platform agnostic library for supercharging your productivity with Dioxus."
 readme = "../../README.md"

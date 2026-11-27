@@ -1,6 +1,6 @@
 [package]
 name = "dioxus-sdk-geolocation"
-version = "0.8.0-alpha.3"
+version = "0.8.0-alpha.4"
 
 description = "Geolocation utilities and hooks for Dioxus."
 readme = "./README.md"
